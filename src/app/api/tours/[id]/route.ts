@@ -1,0 +1,127 @@
+import { NextRequest, NextResponse } from "next/server";
+import { connectToDatabase } from "@/lib/mongodb";
+import Tour from "@/models/Tour";
+import Destination from "@/models/Destination";
+import { getAuthFromRequest } from "@/lib/auth";
+import { calculateDistanceKm } from "@/lib/geo";
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    await connectToDatabase();
+    if (!Destination) {}
+
+    // Find by ID or by slug
+    const isObjectId = id.match(/^[0-9a-fA-F]{24}$/);
+    const query = isObjectId ? { _id: id } : { slug: id };
+
+    const tour = await Tour.findOne(query).populate(
+      "destinationId",
+      "name state coordinates coverImage description"
+    );
+
+    if (!tour) {
+      return NextResponse.json({ error: "Tour not found" }, { status: 404 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const latStr = searchParams.get("lat");
+    const lngStr = searchParams.get("lng");
+
+    let distanceKm: number | null = null;
+    if (latStr && lngStr) {
+      const uLat = parseFloat(latStr);
+      const uLng = parseFloat(lngStr);
+      const destCoords = (tour.destinationId as any)?.coordinates;
+      if (destCoords?.lat !== undefined && destCoords?.lng !== undefined) {
+        distanceKm = calculateDistanceKm(uLat, uLng, destCoords.lat, destCoords.lng);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...tour.toObject(),
+        distanceKm,
+      },
+    });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const auth = getAuthFromRequest(req);
+    if (!auth || auth.role !== "admin") {
+      return NextResponse.json(
+        { error: "Unauthorized. Admin access required." },
+        { status: 403 }
+      );
+    }
+
+    const { id } = await params;
+    await connectToDatabase();
+    const body = await req.json();
+
+    const tour = await Tour.findById(id);
+    if (!tour) {
+      return NextResponse.json({ error: "Tour not found" }, { status: 404 });
+    }
+
+    // If destination changed, update state, starting & ending point
+    if (body.destinationId && body.destinationId !== tour.destinationId.toString()) {
+      const dest = await Destination.findById(body.destinationId);
+      if (dest) {
+        body.state = dest.state;
+        if (!body.startingPoint) body.startingPoint = dest.name;
+        if (!body.endingPoint) body.endingPoint = dest.name;
+      }
+    }
+
+    const updated = await Tour.findByIdAndUpdate(id, body, { new: true }).populate(
+      "destinationId",
+      "name state coordinates coverImage"
+    );
+
+    return NextResponse.json({ success: true, data: updated });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const auth = getAuthFromRequest(req);
+    if (!auth || auth.role !== "admin") {
+      return NextResponse.json(
+        { error: "Unauthorized. Admin access required." },
+        { status: 403 }
+      );
+    }
+
+    const { id } = await params;
+    await connectToDatabase();
+
+    const tour = await Tour.findByIdAndDelete(id);
+    if (!tour) {
+      return NextResponse.json({ error: "Tour not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Tour deleted successfully",
+    });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
