@@ -4,6 +4,7 @@ import Tour from "@/models/Tour";
 import Destination from "@/models/Destination";
 import { getAuthFromRequest } from "@/lib/auth";
 import { calculateDistanceKm } from "@/lib/geo";
+import { sanitizeDepartures, deriveFromDepartures } from "@/lib/departures";
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,6 +13,8 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const destinationId = searchParams.get("destinationId");
+    const toCity = searchParams.get("to"); // target city (Destination id)
+    const fromCity = searchParams.get("from"); // start & end city (Destination id)
     const state = searchParams.get("state");
     const search = searchParams.get("search");
     const all = searchParams.get("all") === "true";
@@ -22,17 +25,21 @@ export async function GET(req: NextRequest) {
     const filter: any = {};
     if (!all) filter.isActive = true;
     if (destinationId) filter.destinationId = destinationId;
+    if (toCity) filter.destinationId = toCity;
+    if (fromCity) filter["departures.cityId"] = fromCity;
     if (state && state !== "All") filter.state = state;
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: "i" } },
         { startingPoint: { $regex: search, $options: "i" } },
+        { targetCity: { $regex: search, $options: "i" } },
         { state: { $regex: search, $options: "i" } },
       ];
     }
 
     const tours = await Tour.find(filter)
       .populate("destinationId", "name state coordinates coverImage")
+      .populate("departures.cityId", "name state coordinates")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -40,21 +47,20 @@ export async function GET(req: NextRequest) {
     const userLng = lngStr ? parseFloat(lngStr) : null;
     const radius = radiusStr && radiusStr !== "all" ? parseFloat(radiusStr) : null;
 
+    // Distance is measured to the nearest start/end city of the tour (or only the selected one),
+    // falling back to the target city for tours without dated departures.
     let processedTours = tours.map((tour: any) => {
       let distanceKm: number | null = null;
-      const destCoords = tour.destinationId?.coordinates;
-      if (
-        userLat !== null &&
-        userLng !== null &&
-        destCoords?.lat !== undefined &&
-        destCoords?.lng !== undefined
-      ) {
-        distanceKm = calculateDistanceKm(
-          userLat,
-          userLng,
-          destCoords.lat,
-          destCoords.lng
+      if (userLat !== null && userLng !== null) {
+        let cities = (tour.departures || [])
+          .map((d: any) => d.cityId)
+          .filter((c: any) => c?.coordinates);
+        if (fromCity) cities = cities.filter((c: any) => String(c._id) === fromCity);
+        if (cities.length === 0 && tour.destinationId?.coordinates) cities = [tour.destinationId];
+        const dists = cities.map((c: any) =>
+          calculateDistanceKm(userLat, userLng, c.coordinates.lat, c.coordinates.lng)
         );
+        if (dists.length) distanceKm = Math.min(...dists);
       }
       return {
         ...tour,
@@ -120,12 +126,24 @@ export async function POST(req: NextRequest) {
       images,
     } = body;
 
-    if (!title || !destinationId || !priceInr || !state) {
+    if (!title || !destinationId) {
       return NextResponse.json(
-        { error: "Title, state, destination, and price are required." },
+        { error: "Title and target city are required." },
         { status: 400 }
       );
     }
+
+    const deps = await sanitizeDepartures(body.departures);
+    if (deps.error) {
+      return NextResponse.json({ error: deps.error }, { status: 400 });
+    }
+    if (!deps.data || deps.data.length === 0) {
+      return NextResponse.json(
+        { error: "Add at least one date with a start & end city and price." },
+        { status: 400 }
+      );
+    }
+    const derived: any = deriveFromDepartures(deps.data, deps.cities!);
 
     const dest = await Destination.findById(destinationId);
     if (!dest) {
@@ -146,22 +164,23 @@ export async function POST(req: NextRequest) {
       slug = `${baseSlug}-${count++}`;
     }
 
-    // Starting destination and ending destination match
-    const finalStartingPoint = startingPoint || dest.name;
-    const finalEndingPoint = endingPoint || dest.name;
+    // Start/end city now lives on each date; the tour-level values mirror the first date.
+    const finalStartingPoint = derived.startingPoint || dest.name;
+    const finalEndingPoint = derived.endingPoint || dest.name;
 
     const tour = await Tour.create({
       title: title.trim(),
       slug,
       shortDescription: shortDescription || "",
       description: description || "",
-      state: state || dest.state,
+      state: dest.state,
       destinationId,
       startingPoint: finalStartingPoint,
       endingPoint: finalEndingPoint,
+      targetCity: dest.name,
       durationDays: Number(durationDays) || 3,
       durationNights: Number(durationNights) || 2,
-      priceInr: Number(priceInr),
+      priceInr: derived.priceInr,
       highlights: Array.isArray(highlights) ? highlights : [],
       itinerary: Array.isArray(itinerary) ? itinerary : [],
       inclusions: Array.isArray(inclusions) ? inclusions : [],
@@ -169,8 +188,9 @@ export async function POST(req: NextRequest) {
       travelStyles: Array.isArray(body.travelStyles) ? body.travelStyles : [],
       physicalRating: body.physicalRating || "Easy / Relaxed",
       journeyType: body.journeyType || "Guided Group Tour",
-      discountPercentage: Number(body.discountPercentage) || 0,
+      discountPercentage: derived.discountPercentage || 0,
       maxGroupSize: Number(maxGroupSize) || 15,
+      departures: deps.data,
       coverImage:
         coverImage ||
         dest.coverImage ||

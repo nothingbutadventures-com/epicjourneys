@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Rubik } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import ThemeRegistry from "@/theme/ThemeRegistry";
 
-const rubik = Rubik({
+const font = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
-  variable: "--font-rubik",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-sans",
   display: "swap",
 });
 
@@ -22,12 +22,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={rubik.variable}>
+    <html lang="en" className={font.variable}>
       <head>
         <link rel="icon" href="/favicon.ico" />
         <meta name="viewport" content="initial-scale=1, width=device-width" />
       </head>
-      <body className={rubik.className}>
+      <body className={font.className}>
         <ThemeRegistry>{children}</ThemeRegistry>
       </body>
     </html>

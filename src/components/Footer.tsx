@@ -2,91 +2,128 @@
 
 import React from "react";
 import Link from "next/link";
-import { Box, Container, Typography, Grid, Divider } from "@mui/material";
+import { Box, Container, Typography, Grid, Divider, IconButton } from "@mui/material";
+import FacebookRoundedIcon from "@mui/icons-material/FacebookRounded";
+import InstagramIcon from "@mui/icons-material/Instagram";
+import XIcon from "@mui/icons-material/X";
+import YouTubeIcon from "@mui/icons-material/YouTube";
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
+import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
+
+const COLUMNS = [
+  {
+    title: "Explore",
+    links: [
+      { label: "Destinations", href: "/#destinations" },
+      { label: "All Tours", href: "/#tour-results" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "Help & Support", href: "/help" },
+      { label: "Partner Portal", href: "/partner/login" },
+      { label: "Admin Panel", href: "/admin/login" },
+    ],
+  },
+  {
+    title: "Popular States",
+    links: [
+      { label: "Himachal Pradesh", href: "/" },
+      { label: "Rajasthan", href: "/" },
+      { label: "Uttarakhand", href: "/" },
+      { label: "Kerala", href: "/" },
+    ],
+  },
+];
+
+const linkSx = {
+  color: "#475569",
+  fontSize: "0.9rem",
+  textDecoration: "none",
+  "&:hover": { color: "#a16207" },
+} as const;
 
 export default function Footer() {
   return (
-    <Box
-      component="footer"
-      sx={{
-        backgroundColor: "#ffffff",
-        borderTop: "1px solid #e2e8f0",
-        mt: "auto",
-        pt: 5,
-        pb: 4,
-      }}
-    >
+    <Box component="footer" sx={{ bgcolor: "#f8fafc", color: "#0f172a", mt: "auto", pt: 8, pb: 3 }}>
       <Container maxWidth="lg">
-        <Grid container spacing={4}>
-          <Grid size={{ xs: 12, md: 5 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+        <Grid container spacing={5}>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, mb: 2 }}>
               <Box
                 sx={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: "4px",
-                  backgroundColor: "#0f172a",
+                  width: 38,
+                  height: 38,
+                  borderRadius: "6px",
+                  bgcolor: "#facc15",
+                  color: "#0f172a",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#ffffff",
                   fontWeight: 800,
-                  fontSize: "0.75rem",
+                  fontSize: "0.85rem",
                 }}
               >
                 EJ
               </Box>
-              <Typography variant="h6" sx={{ fontWeight: 800, color: "#0f172a", fontSize: "1rem" }}>
-                EpicJourneys
-              </Typography>
+              <Typography sx={{ fontWeight: 800, fontSize: "1.2rem", letterSpacing: "-0.01em", color: "#0f172a" }}>EpicJourneys</Typography>
             </Box>
-            <Typography variant="body2" sx={{ color: "#64748b", maxWidth: 380, mb: 2, fontSize: "0.82rem" }}>
-              Curated Indian adventures starting closest to your location. Verified destination partners, authentic itineraries, and 100% roundtrip guarantee.
+            <Typography sx={{ color: "#475569", fontSize: "0.92rem", lineHeight: 1.7, maxWidth: 360, mb: 3 }}>
+              Curated Indian journeys starting closest to you. Verified local partners, transparent pricing in ₹ and
+              roundtrip itineraries.
             </Typography>
-            <Typography variant="caption" sx={{ color: "#94a3b8", display: "block" }}>
-              Domain: <strong style={{ color: "#0f172a" }}>epicjourneys.in</strong> • Transparent Pricing in INR (₹)
-            </Typography>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 3 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "#334155", fontSize: "0.9rem" }}>
+                <EmailOutlinedIcon sx={{ fontSize: 18, color: "#ca8a04" }} /> support@epicjourneys.in
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "#334155", fontSize: "0.9rem" }}>
+                <PhoneOutlinedIcon sx={{ fontSize: 18, color: "#ca8a04" }} /> +91 00000 00000
+              </Box>
+            </Box>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              {[
+                { label: "Facebook", icon: <FacebookRoundedIcon fontSize="small" /> },
+                { label: "Instagram", icon: <InstagramIcon fontSize="small" /> },
+                { label: "X", icon: <XIcon fontSize="small" /> },
+                { label: "YouTube", icon: <YouTubeIcon fontSize="small" /> },
+              ].map((s) => (
+                <IconButton
+                  key={s.label}
+                  aria-label={s.label}
+                  sx={{ color: "#334155", bgcolor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", "&:hover": { bgcolor: "#facc15", color: "#0f172a" } }}
+                >
+                  {s.icon}
+                </IconButton>
+              ))}
+            </Box>
           </Grid>
 
-          <Grid size={{ xs: 6, md: 3 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#0f172a", mb: 1.5, fontSize: "0.82rem" }}>
-              Navigation
-            </Typography>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <Link href="/" style={{ color: "#475569", fontSize: "0.8rem" }}>
-                Explore Tours
-              </Link>
-              <Link href="/help" style={{ color: "#475569", fontSize: "0.8rem" }}>
-                Help & Support
-              </Link>
-              <Link href="/partner/login" style={{ color: "#475569", fontSize: "0.8rem" }}>
-                Partner Portal
-              </Link>
-              <Link href="/admin/login" style={{ color: "#475569", fontSize: "0.8rem" }}>
-                Admin Panel
-              </Link>
-            </Box>
-          </Grid>
-
-          <Grid size={{ xs: 6, md: 4 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#0f172a", mb: 1.5, fontSize: "0.82rem" }}>
-              Key Indian Destinations
-            </Typography>
-            <Typography variant="body2" sx={{ color: "#64748b", lineHeight: 1.8, fontSize: "0.8rem" }}>
-              Himachal Pradesh (Manali, Shimla) • Rajasthan (Jaipur, Udaipur) • Uttarakhand (Rishikesh) • Kerala (Munnar) • Goa
-            </Typography>
-          </Grid>
+          {COLUMNS.map((col) => (
+            <Grid size={{ xs: 6, md: 8 / 3 }} key={col.title}>
+              <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", mb: 2, color: "#0f172a" }}>{col.title}</Typography>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
+                {col.links.map((l) => (
+                  <Link key={l.label} href={l.href} style={{ textDecoration: "none" }}>
+                    <Typography component="span" sx={linkSx}>{l.label}</Typography>
+                  </Link>
+                ))}
+              </Box>
+            </Grid>
+          ))}
         </Grid>
 
-        <Divider sx={{ my: 3.5, borderColor: "#f1f5f9" }} />
+        <Divider sx={{ my: 5, borderColor: "#e2e8f0" }} />
 
-        <Box sx={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 1 }}>
-          <Typography variant="caption" sx={{ color: "#94a3b8" }}>
-            © {new Date().getFullYear()} EpicJourneys (epicjourneys.in). All rights reserved.
+        <Box sx={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
+          <Typography sx={{ color: "#64748b", fontSize: "0.85rem" }}>
+            © {new Date().getFullYear()} EpicJourneys. All rights reserved.
           </Typography>
-          <Typography variant="caption" sx={{ color: "#94a3b8" }}>
-            Pure Material UI • MongoDB Atlas
-          </Typography>
+          <Box sx={{ display: "flex", gap: 3 }}>
+            {["Privacy Policy", "Terms of Service", "Cancellation Policy"].map((t) => (
+              <Typography key={t} sx={{ ...linkSx, fontSize: "0.85rem", cursor: "pointer" }}>{t}</Typography>
+            ))}
+          </Box>
         </Box>
       </Container>
     </Box>

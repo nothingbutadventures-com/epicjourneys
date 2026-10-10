@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AppBar,
@@ -15,10 +15,6 @@ import {
   MenuItem,
 } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
-import ExploreRoundedIcon from "@mui/icons-material/ExploreRounded";
-import HandshakeRoundedIcon from "@mui/icons-material/HandshakeRounded";
-import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSettingsRounded";
-import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 
 interface NavbarProps {
@@ -31,10 +27,25 @@ export default function Navbar({
   onLocationClick,
 }: NavbarProps) {
   const [mobileAnchor, setMobileAnchor] = useState<null | HTMLElement>(null);
+  const [account, setAccount] = useState<{ name: string; role: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d?.authenticated && setAccount({ name: d.user.name, role: d.user.role }))
+      .catch(() => {});
+  }, []);
+
+  const logout = async () => {
+    await fetch("/api/auth/me", { method: "POST" });
+    setAccount(null);
+    window.location.href = "/";
+  };
 
   return (
+    <>
     <AppBar
-      position="sticky"
+      position="fixed"
       color="inherit"
       elevation={0}
       sx={{
@@ -45,19 +56,19 @@ export default function Navbar({
       }}
     >
       <Container maxWidth="lg">
-        <Toolbar disableGutters sx={{ minHeight: "56px !important", height: 56, gap: 1.5 }}>
+        <Toolbar disableGutters sx={{ minHeight: "68px !important", height: 68, gap: 1.5 }}>
           {/* Brand Logo */}
           <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
             <Box
               sx={{
-                width: 32,
-                height: 32,
-                borderRadius: "4px",
-                backgroundColor: "#0f172a",
+                width: 38,
+                height: 38,
+                borderRadius: "6px",
+                backgroundColor: "#facc15",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#ffffff",
+                color: "#0f172a",
                 fontWeight: 800,
                 fontSize: "0.8rem",
               }}
@@ -71,7 +82,7 @@ export default function Navbar({
                   fontWeight: 800,
                   color: "#0f172a",
                   lineHeight: 1.15,
-                  fontSize: "0.95rem",
+                  fontSize: "1.1rem",
                   letterSpacing: "-0.01em",
                 }}
               >
@@ -95,7 +106,7 @@ export default function Navbar({
           {/* Location indicator button */}
           {userLocationName && (
             <Chip
-              icon={<LocationOnIcon sx={{ fontSize: "14px !important", color: "#2563eb !important" }} />}
+              icon={<LocationOnIcon sx={{ fontSize: "14px !important", color: "#ca8a04 !important" }} />}
               label={`Near ${userLocationName}`}
               onClick={onLocationClick}
               size="small"
@@ -106,7 +117,7 @@ export default function Navbar({
                 fontWeight: 600,
                 color: "#1e293b",
                 fontSize: "0.75rem",
-                borderRadius: "4px",
+                borderRadius: "6px",
                 cursor: "pointer",
                 "&:hover": {
                   backgroundColor: "#f1f5f9",
@@ -119,63 +130,65 @@ export default function Navbar({
           <Box sx={{ flexGrow: 1 }} />
 
           {/* Desktop Navigation */}
-          <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 1 }}>
-            <Button
-              component={Link}
-              href="/"
-              variant="text"
-              size="small"
-              sx={{ color: "#334155", fontWeight: 600, borderRadius: "4px", fontSize: "0.8rem", px: 1.5 }}
-            >
-              Explore Tours
-            </Button>
-
-            <Button
-              component={Link}
-              href="/help"
-              startIcon={<HelpOutlineRoundedIcon sx={{ fontSize: 16 }} />}
-              variant="text"
-              size="small"
-              sx={{ color: "#64748b", fontWeight: 600, borderRadius: "4px", fontSize: "0.8rem", px: 1.5 }}
-            >
-              Help & Support
-            </Button>
-
-            <Button
-              component={Link}
-              href="/partner/login"
-              startIcon={<HandshakeRoundedIcon sx={{ fontSize: 16 }} />}
-              variant="outlined"
-              size="small"
-              sx={{
-                borderColor: "#e2e8f0",
-                color: "#334155",
-                borderRadius: "4px",
-                fontSize: "0.78rem",
-                px: 1.5,
-                "&:hover": { borderColor: "#cbd5e1", backgroundColor: "#f8fafc" },
-              }}
-            >
-              Partner
-            </Button>
-
-            <Button
-              component={Link}
-              href="/admin/login"
-              startIcon={<AdminPanelSettingsRoundedIcon sx={{ fontSize: 16 }} />}
-              variant="contained"
-              size="small"
-              sx={{
-                backgroundColor: "#0f172a",
-                color: "#ffffff",
-                borderRadius: "4px",
-                fontSize: "0.78rem",
-                px: 1.5,
-                "&:hover": { backgroundColor: "#1e293b" },
-              }}
-            >
-              Admin
-            </Button>
+          <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 0.5 }}>
+            {[
+              { label: "Destinations", href: "/#destinations" },
+              { label: "Tours", href: "/#tour-results" },
+              { label: "Help & Support", href: "/help" },
+            ].map((l) => (
+              <Button
+                key={l.label}
+                component={Link}
+                href={l.href}
+                variant="text"
+                sx={{ color: "#334155", fontWeight: 600, borderRadius: "6px", fontSize: "0.88rem", px: 1.75, "&:hover": { bgcolor: "#f1f5f9", color: "#0f172a" } }}
+              >
+                {l.label}
+              </Button>
+            ))}
+            <Box sx={{ width: "1px", height: 24, bgcolor: "#e2e8f0", mx: 1.5 }} />
+            {account ? (
+              <>
+                <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.88rem", px: 1.5 }}>
+                  Hi, {account.name.split(" ")[0]}
+                </Typography>
+                <Button
+                  onClick={logout}
+                  variant="outlined"
+                  sx={{ borderRadius: "6px", fontSize: "0.88rem", fontWeight: 700, px: 2.25 }}
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  component={Link}
+                  href="/login"
+                  variant="text"
+                  sx={{ color: "#0f172a", fontWeight: 700, borderRadius: "6px", fontSize: "0.88rem", px: 2 }}
+                >
+                  Login
+                </Button>
+                <Button
+                  component={Link}
+                  href="/register"
+                  variant="contained"
+                  sx={{
+                    bgcolor: "#facc15",
+                    color: "#0f172a",
+                    borderRadius: "6px",
+                    fontSize: "0.88rem",
+                    fontWeight: 700,
+                    px: 2.5,
+                    py: 0.9,
+                    "&:hover": { bgcolor: "#eab308" },
+                  }}
+                >
+                  Register
+                </Button>
+              </>
+            )}
           </Box>
 
           {/* Mobile Navigation Menu */}
@@ -193,46 +206,55 @@ export default function Navbar({
               onClose={() => setMobileAnchor(null)}
               slotProps={{
                 paper: {
-                  sx: { width: 190, mt: 1, borderRadius: "4px", border: "1px solid #e2e8f0" },
+                  sx: { width: 190, mt: 1, borderRadius: "6px", border: "1px solid #e2e8f0" },
                 },
               }}
             >
               <MenuItem
                 component={Link}
-                href="/"
+                href="/#destinations"
                 onClick={() => setMobileAnchor(null)}
-                sx={{ fontSize: "0.82rem" }}
+                sx={{ fontSize: "0.88rem", fontWeight: 500 }}
               >
-                Explore Tours
+                Destinations
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                href="/#tour-results"
+                onClick={() => setMobileAnchor(null)}
+                sx={{ fontSize: "0.88rem", fontWeight: 500 }}
+              >
+                Tours
               </MenuItem>
               <MenuItem
                 component={Link}
                 href="/help"
                 onClick={() => setMobileAnchor(null)}
-                sx={{ fontSize: "0.82rem" }}
+                sx={{ fontSize: "0.88rem", fontWeight: 500 }}
               >
                 Help & Support
               </MenuItem>
-              <MenuItem
-                component={Link}
-                href="/partner/login"
-                onClick={() => setMobileAnchor(null)}
-                sx={{ fontSize: "0.82rem" }}
-              >
-                Partner Portal
-              </MenuItem>
-              <MenuItem
-                component={Link}
-                href="/admin/login"
-                onClick={() => setMobileAnchor(null)}
-                sx={{ fontSize: "0.82rem" }}
-              >
-                Admin Panel
-              </MenuItem>
+              {account ? (
+                <MenuItem onClick={logout} sx={{ fontSize: "0.88rem", fontWeight: 700 }}>
+                  Logout ({account.name.split(" ")[0]})
+                </MenuItem>
+              ) : (
+                [
+                  <MenuItem key="l" component={Link} href="/login" onClick={() => setMobileAnchor(null)} sx={{ fontSize: "0.88rem" }}>
+                    Login
+                  </MenuItem>,
+                  <MenuItem key="r" component={Link} href="/register" onClick={() => setMobileAnchor(null)} sx={{ fontSize: "0.88rem", fontWeight: 700 }}>
+                    Register
+                  </MenuItem>,
+                ]
+              )}
             </Menu>
           </Box>
         </Toolbar>
       </Container>
     </AppBar>
+      {/* Spacer so page content starts below the fixed header */}
+      <Box sx={{ height: 68 }} />
+    </>
   );
 }

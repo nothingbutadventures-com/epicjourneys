@@ -6,6 +6,11 @@ export interface IUser extends Document {
   password?: string;
   role: "admin" | "partner" | "user";
   phone?: string;
+  emailVerified?: boolean;
+  otpHash?: string;
+  otpExpires?: Date;
+  otpAttempts?: number;
+  otpLastSent?: Date;
   assignedDestination?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -22,6 +27,12 @@ const UserSchema = new Schema<IUser>(
       default: "user",
     },
     phone: { type: String, default: "" },
+    // Accounts created before email verification existed have no value and are treated as verified.
+    emailVerified: { type: Boolean },
+    otpHash: { type: String, select: false },
+    otpExpires: { type: Date, select: false },
+    otpAttempts: { type: Number, default: 0, select: false },
+    otpLastSent: { type: Date, select: false },
     assignedDestination: {
       type: Schema.Types.ObjectId,
       ref: "Destination",

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Container,
@@ -14,6 +14,7 @@ import {
   Paper,
   Alert,
   Dialog,
+  Autocomplete,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -28,8 +29,18 @@ import CurrencyRupeeRoundedIcon from "@mui/icons-material/CurrencyRupeeRounded";
 import SyncAltRoundedIcon from "@mui/icons-material/SyncAltRounded";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import HeroSlider from "@/components/HeroSlider";
 import TourCard from "@/components/TourCard";
+import { calculateDistanceKm, formatDistance } from "@/lib/geo";
 import { KNOWN_DESTINATION_COORDINATES } from "@/lib/constants";
+
+interface CityOption {
+  id: string;
+  name: string;
+  state: string;
+  lat?: number;
+  lng?: number;
+}
 
 interface UserLocation {
   lat: number;
@@ -47,80 +58,95 @@ export default function HomePage() {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locating, setLocating] = useState<boolean>(false);
 
+  // Search: start & end city (From) and target city (To)
+  const [fromCity, setFromCity] = useState<CityOption | null>(null);
+  const [toCity, setToCity] = useState<CityOption | null>(null);
+
   // Filters
-  const [selectedRadius, setSelectedRadius] = useState<string>("50"); // 50km default
+  const [selectedRadius, setSelectedRadius] = useState<string>("all");
   const [selectedState, setSelectedState] = useState<string>("All");
-  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Location selector dialog
   const [locationDialogOpen, setLocationDialogOpen] = useState<boolean>(false);
 
-  // 1. Initial Location Resolution on page load
+  // 1. Location: cached value renders instantly, IP lookup runs in parallel with the
+  // browser GPS prompt, and a GPS fix (more precise) overrides the IP estimate.
   useEffect(() => {
+    try {
+      const cached = localStorage.getItem("ej_location");
+      if (cached) setUserLocation(JSON.parse(cached));
+    } catch {}
     resolveUserLocation();
   }, []);
 
+  const updateLocation = (loc: UserLocation) => {
+    setUserLocation(loc);
+    try {
+      localStorage.setItem("ej_location", JSON.stringify(loc));
+    } catch {}
+  };
+
+  const nearestCityName = (lat: number, lng: number) => {
+    let best = "";
+    let bestD = Infinity;
+    for (const [name, c] of Object.entries(KNOWN_DESTINATION_COORDINATES)) {
+      const d = calculateDistanceKm(lat, lng, c.lat, c.lng);
+      if (d < bestD) {
+        bestD = d;
+        best = name;
+      }
+    }
+    return bestD < 60 ? best : `Near ${best}`;
+  };
+
   const resolveUserLocation = () => {
     setLocating(true);
+    let gpsDone = false;
+
+    fetchLocationFromIp(() => gpsDone);
 
     if (typeof window !== "undefined" && "geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({
-            lat: latitude,
-            lng: longitude,
-            name: "GPS Location",
+        ({ coords }) => {
+          gpsDone = true;
+          updateLocation({
+            lat: coords.latitude,
+            lng: coords.longitude,
+            name: nearestCityName(coords.latitude, coords.longitude),
             source: "gps",
           });
           setLocating(false);
         },
-        async () => {
-          // Geolocation denied or failed -> Fallback to IP address automatically
-          await fetchLocationFromIp();
-        },
-        { timeout: 7000 }
+        () => setLocating(false),
+        { timeout: 10000, maximumAge: 600000 }
       );
-    } else {
-      fetchLocationFromIp();
     }
   };
 
-  const fetchLocationFromIp = async () => {
+  const fetchLocationFromIp = async (gpsResolved: () => boolean) => {
     try {
       const res = await fetch("/api/geo/ip-location");
       const data = await res.json();
+      if (gpsResolved()) return;
       if (data.success && data.data) {
-        setUserLocation({
+        updateLocation({
           lat: data.data.lat,
           lng: data.data.lng,
           name: `${data.data.city || "Detected City"}, ${data.data.region || "India"}`,
           source: "ip",
         });
-      } else {
-        setUserLocation({
-          lat: 28.6139,
-          lng: 77.209,
-          name: "New Delhi (Central)",
-          source: "manual",
-        });
       }
     } catch {
-      setUserLocation({
-        lat: 28.6139,
-        lng: 77.209,
-        name: "New Delhi (Central)",
-        source: "manual",
-      });
-    } finally {
-      setLocating(false);
+      if (!gpsResolved()) {
+        updateLocation({ lat: 28.6139, lng: 77.209, name: "New Delhi (Central)", source: "manual" });
+      }
     }
   };
 
   // 2. Fetch tours from MongoDB with distance calculation
   useEffect(() => {
     fetchTours();
-  }, [userLocation, selectedRadius, selectedState, searchQuery]);
+  }, [userLocation, selectedRadius, selectedState, fromCity?.id, toCity?.id]);
 
   const fetchTours = async () => {
     setLoading(true);
@@ -130,21 +156,20 @@ export default function HomePage() {
       const queryParams = new URLSearchParams();
 
       if (userLocation) {
-        queryParams.set("userLat", userLocation.lat.toString());
-        queryParams.set("userLng", userLocation.lng.toString());
+        queryParams.set("lat", userLocation.lat.toString());
+        queryParams.set("lng", userLocation.lng.toString());
       }
 
       if (selectedRadius && selectedRadius !== "all") {
-        queryParams.set("radiusKm", selectedRadius);
+        queryParams.set("radius", selectedRadius);
       }
 
       if (selectedState && selectedState !== "All") {
         queryParams.set("state", selectedState);
       }
 
-      if (searchQuery.trim()) {
-        queryParams.set("search", searchQuery.trim());
-      }
+      if (fromCity) queryParams.set("from", fromCity.id);
+      if (toCity) queryParams.set("to", toCity.id);
 
       const res = await fetch(`/api/tours?${queryParams.toString()}`);
       const data = await res.json();
@@ -174,8 +199,68 @@ export default function HomePage() {
     }
   };
 
+  const [allTours, setAllTours] = useState<any[]>([]);
+  const [dbDestinations, setDbDestinations] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("/api/tours")
+      .then((r) => r.json())
+      .then((d) => d.success && setAllTours(d.data || []))
+      .catch(() => {});
+    fetch("/api/destinations")
+      .then((r) => r.json())
+      .then((d) => d.success && setDbDestinations(d.data || []))
+      .catch(() => {});
+  }, []);
+
+  // "From" = every start & end city used by a tour date; "To" = every tour's target city.
+  const fromOptions = useMemo<CityOption[]>(() => {
+    const map = new Map<string, CityOption>();
+    for (const t of allTours) {
+      for (const d of t.departures || []) {
+        const c = d.cityId;
+        if (c?._id && !map.has(c._id)) {
+          map.set(c._id, { id: c._id, name: c.name, state: c.state, lat: c.coordinates?.lat, lng: c.coordinates?.lng });
+        }
+      }
+    }
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [allTours]);
+
+  const toOptions = useMemo<CityOption[]>(() => {
+    const map = new Map<string, CityOption>();
+    for (const t of allTours) {
+      const c = t.destinationId;
+      if (c?._id && !map.has(c._id)) {
+        map.set(c._id, { id: c._id, name: c.name, state: c.state, lat: c.coordinates?.lat, lng: c.coordinates?.lng });
+      }
+    }
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [allTours]);
+
+  const nearbyDestinations = useMemo(() => {
+    const entries = dbDestinations
+      .filter((d) => d.tourCount > 0)
+      .map((d) => ({
+        id: d._id as string,
+        name: d.name as string,
+        state: d.state as string,
+        tourCount: d.tourCount as number,
+        distance: userLocation ? calculateDistanceKm(userLocation.lat, userLocation.lng, d.coordinates?.lat, d.coordinates?.lng) : null,
+      }));
+    if (userLocation) entries.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
+    return entries.slice(0, 8);
+  }, [dbDestinations, userLocation]);
+
+  const selectFromCity = (c: CityOption | null) => {
+    setFromCity(c);
+    if (c && c.lat !== undefined && c.lng !== undefined) {
+      setUserLocation({ lat: c.lat, lng: c.lng, name: `${c.name}, ${c.state}`, source: "manual" });
+    }
+  };
+
   const radiusOptions = [
-    { label: "Within 50 km (Default)", value: "50" },
+    { label: "Within 50 km", value: "50" },
     { label: "100 km", value: "100" },
     { label: "250 km", value: "250" },
     { label: "500 km", value: "500" },
@@ -198,233 +283,161 @@ export default function HomePage() {
         onLocationClick={() => setLocationDialogOpen(true)}
       />
 
-      {/* Hero Section */}
-      <Box
-        component="section"
-        sx={{
-          bgcolor: "#0f172a",
-          color: "#ffffff",
-          backgroundImage:
-            "linear-gradient(180deg, rgba(15, 23, 42, 0.68) 0%, rgba(15, 23, 42, 0.84) 62%, #0f172a 100%), url('/images/hero-bg.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center 32%",
-          backgroundRepeat: "no-repeat",
-          pt: { xs: 7, sm: 9, md: 10 },
-          pb: { xs: 8, sm: 10, md: 11 },
-          borderBottom: "1px solid #1e293b",
-          position: "relative",
-        }}
-      >
-        <Container maxWidth="lg">
-          <Box sx={{ maxWidth: 840, mx: "auto", textAlign: "center" }}>
-            {/* Hero Main Heading */}
-            <Typography
-              variant="h1"
-              sx={{
-                fontSize: { xs: "2.2rem", sm: "3.1rem", md: "3.7rem" },
-                fontWeight: 800,
-                lineHeight: 1.15,
-                letterSpacing: "-0.03em",
-                color: "#ffffff",
-                mb: 2,
-                textShadow: "0 2px 10px rgba(0, 0, 0, 0.4)",
-              }}
-            >
-              Curated Indian Journeys,{" "}
-              <Box component="span" sx={{ color: "#38bdf8" }}>
-                Starting Near You.
-              </Box>
-            </Typography>
+      <HeroSlider onBook={() => document.getElementById("journey-search")?.scrollIntoView({ behavior: "smooth" })} />
 
-            {/* Subtitle */}
-            <Typography
-              variant="body1"
-              sx={{
-                color: "#cbd5e1",
-                fontSize: { xs: "0.95rem", sm: "1.08rem" },
-                lineHeight: 1.6,
-                maxWidth: 680,
-                mx: "auto",
-                mb: 4.5,
-                textShadow: "0 1px 4px rgba(0, 0, 0, 0.5)",
-              }}
-            >
-              Every tour starts and concludes at the same destination city with verified local partners.
-              Real-time driving distance computed directly from your current location in India.
-            </Typography>
-
-            {/* Integrated Search & Location Bar */}
-            <Paper
-              elevation={0}
-              sx={{
-                p: 1,
-                borderRadius: "4px",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                bgcolor: "#ffffff",
-                display: "flex",
-                flexDirection: { xs: "column", sm: "row" },
-                gap: 1,
-                alignItems: "center",
-                maxWidth: 800,
-                mx: "auto",
-                mb: 3.5,
-                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.35)",
-              }}
-            >
-              {/* Search text input */}
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Search tour title, city, or Indian state..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchRoundedIcon sx={{ color: "#64748b", fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    bgcolor: "#f8fafc",
-                    borderRadius: "4px",
-                    fontSize: "0.82rem",
-                  },
-                }}
-              />
-
-              {/* Location Pill Button */}
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => setLocationDialogOpen(true)}
-                startIcon={<LocationOnIcon sx={{ color: "#2563eb", fontSize: 18 }} />}
-                sx={{
-                  whiteSpace: "nowrap",
-                  minWidth: { xs: "100%", sm: 200 },
-                  borderColor: "#e2e8f0",
-                  color: "#0f172a",
-                  height: 40,
-                  borderRadius: "4px",
-                  fontSize: "0.78rem",
-                  fontWeight: 600,
-                  bgcolor: "#ffffff",
-                  "&:hover": { borderColor: "#cbd5e1", bgcolor: "#f8fafc" },
-                }}
-              >
-                {locating ? "Detecting GPS..." : userLocation ? userLocation.name : "Choose City"}
-              </Button>
-
-              {/* Search Action Button */}
-              <Button
-                variant="contained"
-                size="small"
-                onClick={fetchTours}
-                sx={{
-                  whiteSpace: "nowrap",
-                  minWidth: { xs: "100%", sm: 120 },
-                  bgcolor: "#0f172a",
-                  color: "#ffffff",
-                  height: 40,
-                  borderRadius: "4px",
-                  fontSize: "0.8rem",
-                  fontWeight: 700,
-                  px: 2.5,
-                  "&:hover": { bgcolor: "#1e293b" },
-                }}
-              >
-                Find Tours
-              </Button>
-            </Paper>
-
-            {/* Trust Badges */}
+      {/* Search Your Journey */}
+      <Container maxWidth="lg" id="journey-search" sx={{ pt: 2.5 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 1.5, md: 1 },
+            borderRadius: "6px",
+            border: "1px solid #e2e8f0",
+            bgcolor: "#ffffff",
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            alignItems: "stretch",
+            gap: { xs: 2, md: 0 },
+            boxShadow: "0 12px 32px -12px rgba(15, 23, 42, 0.18)",
+          }}
+        >
+          {[
+            { label: "From", placeholder: "Select Starting point", value: fromCity, options: fromOptions, icon: <MyLocationRoundedIcon sx={{ color: "#ca8a04" }} />,
+              onChange: selectFromCity },
+            { label: "To", placeholder: "Select Destination", value: toCity, options: toOptions, icon: <LocationOnIcon sx={{ color: "#ef4444" }} />,
+              onChange: setToCity },
+          ].map((f, i) => (
             <Box
+              key={f.label}
               sx={{
+                flex: 1,
                 display: "flex",
-                justifyContent: "center",
-                flexWrap: "wrap",
-                gap: { xs: 1.5, sm: 3 },
-                color: "#e2e8f0",
-                fontSize: "0.75rem",
+                alignItems: "center",
+                gap: 1.5,
+                px: { md: 2.5 },
+                borderLeft: { md: i ? "1px solid #e2e8f0" : "none" },
               }}
             >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.75,
-                  bgcolor: "rgba(15, 23, 42, 0.55)",
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: "4px",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <CheckCircleRoundedIcon sx={{ fontSize: 15, color: "#10b981" }} />
-                <span>50 km Default Distance Filter</span>
-              </Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.75,
-                  bgcolor: "rgba(15, 23, 42, 0.55)",
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: "4px",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <SyncAltRoundedIcon sx={{ fontSize: 15, color: "#38bdf8" }} />
-                <span>Roundtrip Departure & End</span>
-              </Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.75,
-                  bgcolor: "rgba(15, 23, 42, 0.55)",
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: "4px",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <CurrencyRupeeRoundedIcon sx={{ fontSize: 15, color: "#fbbf24" }} />
-                <span>100% Indian Currency (₹)</span>
-              </Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.75,
-                  bgcolor: "rgba(15, 23, 42, 0.55)",
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: "4px",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <HandshakeRoundedIcon sx={{ fontSize: 15, color: "#c084fc" }} />
-                <span>Verified City Partners</span>
+              {f.icon}
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  {f.label}
+                </Typography>
+                <Autocomplete
+                  options={f.options}
+                  value={f.value}
+                  getOptionLabel={(o) => o.name}
+                  isOptionEqualToValue={(o, v) => o.id === v.id}
+                  noOptionsText="No cities available"
+                  onChange={(_, v) => f.onChange(v)}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      variant="standard"
+                      placeholder={f.placeholder}
+                      slotProps={{
+                        ...params.slotProps,
+                        input: { ...params.slotProps.input, disableUnderline: true },
+                      }}
+                      sx={{ "& input": { fontSize: "1rem", fontWeight: 600, color: "#0f172a", py: 0.5 } }}
+                    />
+                  )}
+                />
               </Box>
             </Box>
-          </Box>
-        </Container>
-      </Box>
+          ))}
+          <Button
+            variant="contained"
+            startIcon={<SearchRoundedIcon />}
+            onClick={() => {
+              fetchTours();
+              document.getElementById("tour-results")?.scrollIntoView({ behavior: "smooth" });
+            }}
+            sx={{ minWidth: { md: 170 }, py: 1.1, bgcolor: "#facc15", color: "#0f172a", fontSize: "0.95rem", fontWeight: 700, borderRadius: "6px", boxShadow: "none", "&:hover": { bgcolor: "#eab308" } }}
+          >
+            Search
+          </Button>
+        </Paper>
+      </Container>
+
+      {/* Nearby Destinations */}
+      <Container maxWidth="lg" id="destinations" sx={{ pt: 8 }}>
+        <Box sx={{ textAlign: "center", mb: 4 }}>
+          <Typography sx={{ fontSize: { xs: "1.5rem", md: "1.9rem" }, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.02em" }}>
+            {userLocation ? "Destinations Near " : "Popular Destinations"}
+            {userLocation && (
+              <Box component="span" sx={{ color: "#ca8a04" }}>{userLocation.name.split(",")[0]}</Box>
+            )}
+          </Typography>
+          <Typography sx={{ color: "#64748b", fontSize: "0.95rem", mt: 0.75 }}>
+            Sorted by distance from your location, nearest first.
+          </Typography>
+        </Box>
+        <Grid container spacing={2.5}>
+          {nearbyDestinations.map(({ id, name, state, distance, tourCount }) => {
+            const count = tourCount;
+            const active = toCity?.id === id;
+            return (
+              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={id}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2.5,
+                    borderRadius: "6px",
+                    border: active ? "1px solid #94a3b8" : "1px solid #e2e8f0",
+                    bgcolor: "#fff",
+                    height: "100%",
+                    transition: "box-shadow .2s, transform .2s",
+                    "&:hover": { boxShadow: "0 14px 30px -14px rgba(15,23,42,0.25)", transform: "translateY(-2px)" },
+                  }}
+                >
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
+                    <Typography sx={{ color: "#64748b", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                      {state}
+                    </Typography>
+                    {distance !== null && (
+                      <Chip
+                        label={formatDistance(distance)}
+                        size="small"
+                        sx={{ height: 22, fontSize: "0.7rem", fontWeight: 600, bgcolor: "#fefce8", color: "#a16207", borderRadius: "6px" }}
+                      />
+                    )}
+                  </Box>
+                  <Typography sx={{ fontWeight: 800, color: "#0f172a", fontSize: "1.3rem", lineHeight: 1.3, mb: 2 }}>
+                    {name}
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Typography sx={{ color: "#475569", fontSize: "0.85rem", fontWeight: 500 }}>
+                      {count} {count === 1 ? "Tour" : "Tours"}
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => {
+                        setToCity(toOptions.find((o) => o.id === id) || { id, name, state });
+                        document.getElementById("tour-results")?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                      sx={{ color: "#0f172a", borderColor: "#cbd5e1", fontWeight: 600, borderRadius: "6px", "&:hover": { borderColor: "#0f172a", bgcolor: "#f8fafc" } }}
+                    >
+                      View Tours
+                    </Button>
+                  </Box>
+                </Paper>
+              </Grid>
+            );
+          })}
+        </Grid>
+      </Container>
 
       {/* Main Catalog Area */}
-      <Container maxWidth="lg" sx={{ py: 4.5, flexGrow: 1 }}>
+      <Container maxWidth="lg" id="tour-results" sx={{ py: 4.5, flexGrow: 1 }}>
         {/* Distance Filter Console Paper */}
         <Paper
           elevation={0}
           sx={{
             p: 2,
             mb: 3,
-            borderRadius: "4px",
+            borderRadius: "6px",
             border: "1px solid #e2e8f0",
             bgcolor: "#ffffff",
             display: "flex",
@@ -440,9 +453,9 @@ export default function HomePage() {
               sx={{
                 width: 32,
                 height: 32,
-                borderRadius: "4px",
-                bgcolor: "#eff6ff",
-                color: "#2563eb",
+                borderRadius: "6px",
+                bgcolor: "#fefce8",
+                color: "#ca8a04",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -465,7 +478,7 @@ export default function HomePage() {
                 <Box
                   component="span"
                   onClick={() => setLocationDialogOpen(true)}
-                  sx={{ color: "#2563eb", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}
+                  sx={{ color: "#ca8a04", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}
                 >
                   Change City
                 </Box>
@@ -489,7 +502,7 @@ export default function HomePage() {
                   sx={{
                     fontWeight: active ? 700 : 500,
                     fontSize: "0.72rem",
-                    borderRadius: "4px",
+                    borderRadius: "6px",
                     cursor: "pointer",
                     bgcolor: active ? "#0f172a" : "#f1f5f9",
                     color: active ? "#ffffff" : "#475569",
@@ -517,7 +530,7 @@ export default function HomePage() {
                 sx={{
                   fontWeight: active ? 700 : 500,
                   fontSize: "0.75rem",
-                  borderRadius: "4px",
+                  borderRadius: "6px",
                   cursor: "pointer",
                   bgcolor: active ? "#0f172a" : "#ffffff",
                   color: active ? "#ffffff" : "#475569",
@@ -548,7 +561,7 @@ export default function HomePage() {
             size="small"
             startIcon={<RefreshRoundedIcon sx={{ fontSize: 16 }} />}
             onClick={fetchTours}
-            sx={{ color: "#64748b", borderRadius: "4px", fontSize: "0.75rem" }}
+            sx={{ color: "#64748b", borderRadius: "6px", fontSize: "0.75rem" }}
           >
             Refresh
           </Button>
@@ -562,7 +575,7 @@ export default function HomePage() {
         )}
 
         {error && (
-          <Alert severity="error" sx={{ mb: 3, borderRadius: "4px" }}>
+          <Alert severity="error" sx={{ mb: 3, borderRadius: "6px" }}>
             {error}
           </Alert>
         )}
@@ -572,7 +585,7 @@ export default function HomePage() {
           <Grid container spacing={2.5}>
             {tours.map((tour) => (
               <Grid size={{ xs: 12, sm: 6, md: 4 }} key={tour._id}>
-                <TourCard tour={tour} />
+                <TourCard tour={tour} fromCityId={fromCity?.id} />
               </Grid>
             ))}
           </Grid>
@@ -585,7 +598,7 @@ export default function HomePage() {
             sx={{
               p: 5,
               textAlign: "center",
-              borderRadius: "4px",
+              borderRadius: "6px",
               border: "1px dashed #cbd5e1",
               bgcolor: "#ffffff",
               my: 3,
@@ -603,7 +616,7 @@ export default function HomePage() {
                 variant="outlined"
                 size="small"
                 onClick={() => setSelectedRadius("250")}
-                sx={{ borderRadius: "4px", borderColor: "#e2e8f0", color: "#0f172a" }}
+                sx={{ borderRadius: "6px", borderColor: "#e2e8f0", color: "#0f172a" }}
               >
                 Try 250 km
               </Button>
@@ -611,7 +624,7 @@ export default function HomePage() {
                 variant="contained"
                 size="small"
                 onClick={() => setSelectedRadius("all")}
-                sx={{ borderRadius: "4px", bgcolor: "#0f172a" }}
+                sx={{ borderRadius: "6px", bgcolor: "#0f172a" }}
               >
                 View All India
               </Button>
@@ -626,7 +639,7 @@ export default function HomePage() {
         onClose={() => setLocationDialogOpen(false)}
         maxWidth="xs"
         fullWidth
-        slotProps={{ paper: { sx: { borderRadius: "4px", p: 1 } } }}
+        slotProps={{ paper: { sx: { borderRadius: "6px", p: 1 } } }}
       >
         <DialogTitle sx={{ fontWeight: 800, color: "#0f172a", pb: 1, fontSize: "1rem" }}>
           Select Starting City
@@ -647,9 +660,9 @@ export default function HomePage() {
             }}
             sx={{
               mb: 2.5,
-              borderColor: "#2563eb",
-              color: "#2563eb",
-              borderRadius: "4px",
+              borderColor: "#cbd5e1",
+              color: "#ca8a04",
+              borderRadius: "6px",
               fontWeight: 600,
               fontSize: "0.78rem",
             }}
@@ -684,7 +697,7 @@ export default function HomePage() {
                   color: "#334155",
                   fontWeight: 600,
                   fontSize: "0.72rem",
-                  borderRadius: "4px",
+                  borderRadius: "6px",
                   cursor: "pointer",
                   "&:hover": { bgcolor: "#e2e8f0" },
                 }}
@@ -696,7 +709,7 @@ export default function HomePage() {
           <Button
             size="small"
             onClick={() => setLocationDialogOpen(false)}
-            sx={{ color: "#64748b", borderRadius: "4px" }}
+            sx={{ color: "#64748b", borderRadius: "6px" }}
           >
             Close
           </Button>

@@ -4,13 +4,19 @@
   margin: 0;
 }
 
+html {
+  /* Keep anchor targets clear of the fixed header (68px) */
+  scroll-padding-top: 84px;
+  scroll-behavior: smooth;
+}
+
 html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
   background-color: #f8fafc;
   color: #0f172a;
-  font-family: var(--font-rubik), "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans), "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

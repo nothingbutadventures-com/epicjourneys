@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 
 export default function AdminToursPage() {
@@ -115,7 +116,7 @@ export default function AdminToursPage() {
               <TableHead>
                 <TableRow>
                   <TableCell>Tour Details</TableCell>
-                  <TableCell>Departure City</TableCell>
+                  <TableCell>Target City</TableCell>
                   <TableCell>State</TableCell>
                   <TableCell>Duration</TableCell>
                   <TableCell>Price (INR)</TableCell>
@@ -146,7 +147,7 @@ export default function AdminToursPage() {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={tour.startingPoint}
+                        label={tour.targetCity || tour.startingPoint}
                         size="small"
                         sx={{
                           borderRadius: "4px",
@@ -190,6 +191,15 @@ export default function AdminToursPage() {
                         sx={{ color: "#64748b", p: 0.5, borderRadius: "4px", mr: 0.5 }}
                       >
                         <VisibilityRoundedIcon fontSize="small" sx={{ fontSize: 16 }} />
+                      </IconButton>
+                      <IconButton
+                        component={Link}
+                        href={`/admin/tours/${tour._id}/edit`}
+                        size="small"
+                        aria-label="Edit tour"
+                        sx={{ color: "#64748b", p: 0.5, borderRadius: "4px", mr: 0.5 }}
+                      >
+                        <EditRoundedIcon fontSize="small" sx={{ fontSize: 16 }} />
                       </IconButton>
                       <IconButton
                         size="small"

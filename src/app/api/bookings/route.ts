@@ -5,6 +5,7 @@ import Tour from "@/models/Tour";
 import Destination from "@/models/Destination";
 import User from "@/models/User";
 import { getAuthFromRequest } from "@/lib/auth";
+import { bookedSeatsByDeparture } from "@/lib/departures";
 
 export async function GET(req: NextRequest) {
   try {
@@ -40,6 +41,9 @@ export async function GET(req: NextRequest) {
       filter.status = status;
     }
 
+    const tourIdParam = searchParams.get("tourId");
+    if (tourIdParam) filter.tourId = tourIdParam;
+
     const bookings = await Booking.find(filter)
       .populate("tourId", "title slug coverImage durationDays startingPoint priceInr")
       .populate("destinationId", "name state")
@@ -68,6 +72,7 @@ export async function POST(req: NextRequest) {
       customerEmail,
       customerPhone,
       travelDate,
+      departureId,
       numberOfTravelers,
       specialRequests,
     } = body;
@@ -77,7 +82,7 @@ export async function POST(req: NextRequest) {
       !customerName ||
       !customerEmail ||
       !customerPhone ||
-      !travelDate
+      (!travelDate && !departureId)
     ) {
       return NextResponse.json(
         {
@@ -88,7 +93,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const tour = await Tour.findById(tourId).populate("destinationId");
+    const tour = await Tour.findById(tourId)
+      .populate("destinationId")
+      .populate("departures.cityId", "name");
     if (!tour) {
       return NextResponse.json({ error: "Tour not found" }, { status: 404 });
     }
@@ -108,7 +115,36 @@ export async function POST(req: NextRequest) {
     }
 
     const travelers = Math.max(1, Number(numberOfTravelers) || 1);
-    const totalAmountInr = travelers * tour.priceInr;
+
+    // Public bookings must pick one of the tour's scheduled departures. Partner/admin
+    // bookings made without a departure keep the legacy free-date behaviour.
+    let departure: any = null;
+    if (departureId) {
+      departure = (tour.departures || []).find((d: any) => String(d._id) === String(departureId));
+      if (!departure) {
+        return NextResponse.json({ error: "Selected date is not available for this tour." }, { status: 400 });
+      }
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (new Date(departure.startDate) < today) {
+        return NextResponse.json({ error: "This departure has already started." }, { status: 400 });
+      }
+      const booked = (await bookedSeatsByDeparture(tour._id))[String(departure._id)] || 0;
+      const left = departure.seats - booked;
+      if (left < travelers) {
+        return NextResponse.json(
+          { error: left <= 0 ? "This date is sold out." : `Only ${left} seat${left === 1 ? "" : "s"} left on this date.` },
+          { status: 409 }
+        );
+      }
+    } else if (!isPartner && !(auth && auth.role === "admin")) {
+      return NextResponse.json({ error: "Please choose one of the available dates." }, { status: 400 });
+    }
+
+    const discount = departure ? departure.discountPercentage || 0 : 0;
+    const basePrice = departure ? departure.price ?? tour.priceInr : tour.priceInr;
+    const pricePerPerson = Math.round(basePrice * (1 - discount / 100));
+    const totalAmountInr = travelers * pricePerPerson;
 
     // Generate readable reference
     const randomSuffix = Math.floor(100000 + Math.random() * 900000);
@@ -122,15 +158,31 @@ export async function POST(req: NextRequest) {
       customerName: customerName.trim(),
       customerEmail: customerEmail.toLowerCase().trim(),
       customerPhone: customerPhone.trim(),
-      travelDate: new Date(travelDate),
+      ...(departure
+        ? {
+            departureId: departure._id,
+            travelEndDate: departure.endDate,
+            departureCity: departure.cityId?.name || "",
+          }
+        : {}),
+      travelDate: departure ? departure.startDate : new Date(travelDate),
       numberOfTravelers: travelers,
-      pricePerPerson: tour.priceInr,
+      pricePerPerson,
       totalAmountInr,
       specialRequests: specialRequests || "",
       status: "confirmed",
       bookedByRole,
       partnerId,
     });
+
+    // Re-check after writing so two simultaneous requests can't oversell a date.
+    if (departure) {
+      const total = (await bookedSeatsByDeparture(tour._id))[String(departure._id)] || 0;
+      if (total > departure.seats) {
+        await Booking.deleteOne({ _id: booking._id });
+        return NextResponse.json({ error: "Sorry, those seats were just taken. Please try again." }, { status: 409 });
+      }
+    }
 
     const populated = await Booking.findById(booking._id)
       .populate("tourId", "title coverImage durationDays startingPoint")

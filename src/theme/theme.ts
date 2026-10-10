@@ -10,10 +10,10 @@ export const theme = createTheme({
       contrastText: "#ffffff",
     },
     secondary: {
-      main: "#2563eb", // Blue 600
-      light: "#3b82f6",
-      dark: "#1d4ed8",
-      contrastText: "#ffffff",
+      main: "#facc15", // Yellow 400
+      light: "#fde047",
+      dark: "#eab308",
+      contrastText: "#0f172a",
     },
     success: {
       main: "#10b981",
@@ -51,12 +51,12 @@ export const theme = createTheme({
     divider: "#e2e8f0",
   },
   shape: {
-    borderRadius: 4, // Strict rounded-sm (4px)
+    borderRadius: 6, // rounded-md (6px)
   },
   typography: {
     fontFamily: [
-      "var(--font-rubik)",
-      "Rubik",
+      "var(--font-sans)",
+      "Plus Jakarta Sans",
       "-apple-system",
       "BlinkMacSystemFont",
       '"Segoe UI"',
@@ -127,7 +127,7 @@ export const theme = createTheme({
       styleOverrides: {
         body: {
           fontFamily:
-            'var(--font-rubik), Rubik, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            'var(--font-sans), Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           backgroundColor: "#f8fafc",
           color: "#0f172a",
           scrollbarColor: "#cbd5e1 transparent",
@@ -136,7 +136,7 @@ export const theme = createTheme({
             height: 6,
           },
           "&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb": {
-            borderRadius: 4,
+            borderRadius: 6,
             backgroundColor: "#cbd5e1",
           },
         },
@@ -151,7 +151,7 @@ export const theme = createTheme({
         root: {
           textTransform: "none",
           fontWeight: 600,
-          borderRadius: 4,
+          borderRadius: 6,
           padding: "6px 14px",
           fontSize: "0.8125rem",
           transition: "all 0.15s ease-in-out",
@@ -176,7 +176,7 @@ export const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 4,
+          borderRadius: 6,
           border: "1px solid #e2e8f0",
           boxShadow: "none",
           backgroundImage: "none",
@@ -190,7 +190,7 @@ export const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: 4,
+          borderRadius: 6,
           border: "1px solid #e2e8f0",
           boxShadow: "none",
           backgroundImage: "none",
@@ -240,7 +240,7 @@ export const theme = createTheme({
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 4,
+          borderRadius: 6,
           fontWeight: 600,
           fontSize: "0.7rem",
           height: 22,
@@ -255,7 +255,7 @@ export const theme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: 4,
+          borderRadius: 6,
           fontSize: "0.8125rem",
           "& fieldset": {
             borderColor: "#e2e8f0",
@@ -273,7 +273,7 @@ export const theme = createTheme({
     MuiDialog: {
       styleOverrides: {
         paper: {
-          borderRadius: 4,
+          borderRadius: 6,
           border: "1px solid #e2e8f0",
           boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.08)",
         },

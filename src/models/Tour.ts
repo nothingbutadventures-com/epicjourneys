@@ -8,6 +8,16 @@ export interface IItineraryDay {
   stay?: string;
 }
 
+export interface IDeparture {
+  _id: mongoose.Types.ObjectId;
+  cityId: mongoose.Types.ObjectId;
+  price: number;
+  startDate: Date;
+  endDate: Date;
+  seats: number;
+  discountPercentage: number;
+}
+
 export interface ITour extends Document {
   title: string;
   slug: string;
@@ -17,6 +27,7 @@ export interface ITour extends Document {
   destinationId: mongoose.Types.ObjectId;
   startingPoint: string;
   endingPoint: string;
+  targetCity?: string;
   durationDays: number;
   durationNights: number;
   priceInr: number;
@@ -29,6 +40,7 @@ export interface ITour extends Document {
   journeyType?: string;
   discountPercentage?: number;
   maxGroupSize: number;
+  departures: IDeparture[];
   coverImage: string;
   images: string[];
   isActive: boolean;
@@ -47,6 +59,16 @@ const ItineraryDaySchema = new Schema<IItineraryDay>(
   { _id: false }
 );
 
+const DepartureSchema = new Schema<IDeparture>({
+  // Start & end city for this date (a Destination)
+  cityId: { type: Schema.Types.ObjectId, ref: "Destination", required: true },
+  price: { type: Number, required: true, min: 0 },
+  startDate: { type: Date, required: true },
+  endDate: { type: Date, required: true },
+  seats: { type: Number, required: true, min: 1 },
+  discountPercentage: { type: Number, default: 0, min: 0, max: 100 },
+});
+
 const TourSchema = new Schema<ITour>(
   {
     title: { type: String, required: true, trim: true },
@@ -61,6 +83,7 @@ const TourSchema = new Schema<ITour>(
     },
     startingPoint: { type: String, required: true, trim: true },
     endingPoint: { type: String, required: true, trim: true },
+    targetCity: { type: String, default: "", trim: true },
     durationDays: { type: Number, required: true, default: 3 },
     durationNights: { type: Number, required: true, default: 2 },
     priceInr: { type: Number, required: true },
@@ -73,6 +96,7 @@ const TourSchema = new Schema<ITour>(
     journeyType: { type: String, default: "Guided Group Tour" },
     discountPercentage: { type: Number, default: 0 },
     maxGroupSize: { type: Number, default: 15 },
+    departures: [DepartureSchema],
     coverImage: {
       type: String,
       default:

@@ -4,6 +4,9 @@ export interface IBooking extends Document {
   bookingRef: string;
   tourId: mongoose.Types.ObjectId;
   tourTitle: string;
+  departureId?: mongoose.Types.ObjectId;
+  departureCity?: string;
+  travelEndDate?: Date;
   destinationId?: mongoose.Types.ObjectId;
   customerName: string;
   customerEmail: string;
@@ -29,6 +32,9 @@ const BookingSchema = new Schema<IBooking>(
       required: true,
     },
     tourTitle: { type: String, required: true },
+    departureId: { type: Schema.Types.ObjectId },
+    departureCity: { type: String, default: "" },
+    travelEndDate: { type: Date },
     destinationId: {
       type: Schema.Types.ObjectId,
       ref: "Destination",
@@ -62,6 +68,7 @@ const BookingSchema = new Schema<IBooking>(
 
 BookingSchema.index({ bookingRef: 1 });
 BookingSchema.index({ tourId: 1 });
+BookingSchema.index({ tourId: 1, departureId: 1 });
 BookingSchema.index({ partnerId: 1 });
 BookingSchema.index({ destinationId: 1 });
 

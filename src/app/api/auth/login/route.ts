@@ -39,6 +39,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (user.emailVerified === false) {
+      return NextResponse.json(
+        { error: "Please verify your email to continue", code: "EMAIL_NOT_VERIFIED", email: user.email },
+        { status: 403 }
+      );
+    }
+
     if (requiredRole && user.role !== requiredRole && user.role !== "admin") {
       return NextResponse.json(
         { error: `Access denied. You do not have ${requiredRole} privileges.` },
