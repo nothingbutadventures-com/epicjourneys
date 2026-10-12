@@ -190,6 +190,7 @@ export async function POST(req: NextRequest) {
       journeyType: body.journeyType || "Guided Group Tour",
       discountPercentage: derived.discountPercentage || 0,
       maxGroupSize: Number(maxGroupSize) || 15,
+      singleRoomPriceInr: Math.max(0, Number(body.singleRoomPriceInr) || 0),
       departures: deps.data,
       coverImage:
         coverImage ||

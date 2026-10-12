@@ -5,7 +5,6 @@ import ThemeRegistry from "@/theme/ThemeRegistry";
 
 const font = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-sans",
   display: "swap",
 });

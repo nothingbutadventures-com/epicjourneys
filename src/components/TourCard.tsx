@@ -11,6 +11,7 @@ import {
   Chip,
   Button,
 } from "@mui/material";
+import { motion } from "framer-motion";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
@@ -270,6 +271,7 @@ export default function TourCard({ tour, fromCityId }: TourCardProps) {
             ) : null}
           </Box>
 
+          <motion.div whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.95 }}>
           <Button
             component={Link}
             href={`/tours/${tour.slug || tour._id}${fromCityId ? `?from=${fromCityId}` : ""}`}
@@ -289,6 +291,7 @@ export default function TourCard({ tour, fromCityId }: TourCardProps) {
           >
             Explore
           </Button>
+          </motion.div>
         </Box>
       </CardContent>
     </Card>

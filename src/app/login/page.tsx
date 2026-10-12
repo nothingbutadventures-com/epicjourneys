@@ -1,15 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Alert, Button, CircularProgress, IconButton, InputAdornment, Stack, TextField } from "@mui/material";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
+import { safeRedirect, withRedirect } from "@/lib/redirect";
 import AuthShell, { fieldSx, submitSx } from "@/components/AuthShell";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const redirect = useSearchParams().get("redirect");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -28,7 +30,7 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        router.push("/");
+        router.push(safeRedirect(redirect));
         router.refresh();
       } else if (data.code === "EMAIL_NOT_VERIFIED") {
         await fetch("/api/auth/resend-otp", {
@@ -36,7 +38,7 @@ export default function LoginPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: data.email }),
         }).catch(() => {});
-        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        router.push(withRedirect(`/verify-email?email=${encodeURIComponent(data.email)}`, redirect));
       } else {
         setError(data.error || "Login failed");
       }
@@ -54,7 +56,7 @@ export default function LoginPage() {
       footer={
         <>
           New to EpicJourneys?{" "}
-          <Link href="/register" style={{ color: "#ca8a04", fontWeight: 700 }}>
+          <Link href={withRedirect("/register", redirect)} style={{ color: "#ca8a04", fontWeight: 700 }}>
             Create an account
           </Link>
         </>
@@ -100,5 +102,13 @@ export default function LoginPage() {
         </Stack>
       </form>
     </AuthShell>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

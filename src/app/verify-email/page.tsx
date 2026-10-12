@@ -4,13 +4,16 @@ import React, { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Alert, Box, Button, CircularProgress, Stack, Typography } from "@mui/material";
+import { safeRedirect, withRedirect } from "@/lib/redirect";
 import AuthShell, { submitSx } from "@/components/AuthShell";
 
 const LEN = 6;
 
 function VerifyForm() {
   const router = useRouter();
-  const email = useSearchParams().get("email") || "";
+  const sp = useSearchParams();
+  const email = sp.get("email") || "";
+  const redirect = sp.get("redirect");
   const [digits, setDigits] = useState<string[]>(Array(LEN).fill(""));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +57,7 @@ function VerifyForm() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        router.push("/");
+        router.push(safeRedirect(redirect));
         router.refresh();
       } else {
         setError(data.error || "Verification failed");
@@ -88,7 +91,7 @@ function VerifyForm() {
   if (!email) {
     return (
       <Alert severity="warning">
-        No email to verify. <Link href="/register">Create an account</Link> first.
+        No email to verify. <Link href={withRedirect("/register", redirect)}>Create an account</Link> first.
       </Alert>
     );
   }
@@ -162,12 +165,14 @@ export default function VerifyEmailPage() {
 }
 
 function VerifyShell() {
-  const email = useSearchParams().get("email") || "your email";
+  const sp = useSearchParams();
+  const email = sp.get("email") || "your email";
+  const redirect = sp.get("redirect");
   return (
     <AuthShell
       title="Verify your email"
       subtitle={`Enter the 6-digit code we sent to ${email}. It expires in 10 minutes.`}
-      footer={<Link href="/register" style={{ color: "#ca8a04", fontWeight: 700 }}>Use a different email</Link>}
+      footer={<Link href={withRedirect("/register", redirect)} style={{ color: "#ca8a04", fontWeight: 700 }}>Use a different email</Link>}
     >
       <VerifyForm />
     </AuthShell>

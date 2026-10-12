@@ -1,15 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Alert, Button, CircularProgress, IconButton, InputAdornment, Stack, TextField, Typography } from "@mui/material";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
+import { withRedirect } from "@/lib/redirect";
 import AuthShell, { fieldSx, submitSx } from "@/components/AuthShell";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const redirect = useSearchParams().get("redirect");
   const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -34,7 +36,7 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        router.push(withRedirect(`/verify-email?email=${encodeURIComponent(data.email)}`, redirect));
       } else {
         setError(data.error || "Registration failed");
       }
@@ -52,7 +54,7 @@ export default function RegisterPage() {
       footer={
         <>
           Already have an account?{" "}
-          <Link href="/login" style={{ color: "#ca8a04", fontWeight: 700 }}>
+          <Link href={withRedirect("/login", redirect)} style={{ color: "#ca8a04", fontWeight: 700 }}>
             Log in
           </Link>
         </>
@@ -109,5 +111,13 @@ export default function RegisterPage() {
         </Stack>
       </form>
     </AuthShell>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterForm />
+    </Suspense>
   );
 }

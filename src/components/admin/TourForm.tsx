@@ -62,6 +62,7 @@ export default function TourForm({ tourId }: { tourId?: string }) {
   const [durationDays, setDurationDays] = useState<number | "">("");
   const [durationNights, setDurationNights] = useState<number | "">("");
   const [maxGroupSize, setMaxGroupSize] = useState<number | "">("");
+  const [singleRoomPrice, setSingleRoomPrice] = useState<number | "">("");
   const [coverImage, setCoverImage] = useState("");
 
   // Highlights
@@ -113,6 +114,7 @@ export default function TourForm({ tourId }: { tourId?: string }) {
         setDurationDays(t.durationDays ?? "");
         setDurationNights(t.durationNights ?? "");
         setMaxGroupSize(t.maxGroupSize ?? "");
+        setSingleRoomPrice(t.singleRoomPriceInr ?? "");
         setCoverImage(t.coverImage || "");
         setHighlights(t.highlights || []);
         setInclusions(t.inclusions || []);
@@ -336,6 +338,7 @@ export default function TourForm({ tourId }: { tourId?: string }) {
           durationDays: Number(durationDays),
           durationNights: Number(durationNights),
           maxGroupSize: Number(maxGroupSize) || 15,
+          singleRoomPriceInr: Number(singleRoomPrice) || 0,
           coverImage,
           highlights,
           itinerary,
@@ -593,6 +596,18 @@ export default function TourForm({ tourId }: { tourId?: string }) {
                 fullWidth
                 value={maxGroupSize}
                 onChange={(e) => setMaxGroupSize(e.target.value === "" ? "" : Number(e.target.value))}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Single Room Price (₹ per person)"
+                type="number"
+                fullWidth
+                value={singleRoomPrice}
+                onChange={(e) => setSingleRoomPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                helperText="Extra amount a traveller pays for a private room. Shared rooms are included in the tour price. Leave 0 if single rooms aren't offered."
+                slotProps={{ htmlInput: { min: 0 } }}
               />
             </Grid>
           </Grid>

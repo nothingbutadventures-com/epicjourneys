@@ -133,8 +133,8 @@ export default function Navbar({
           <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 0.5 }}>
             {[
               { label: "Destinations", href: "/#destinations" },
-              { label: "Tours", href: "/#tour-results" },
-              { label: "Help & Support", href: "/help" },
+              { label: "Tours", href: "/tours" },
+              { label: "Bookings", href: "/user/profile" },
             ].map((l) => (
               <Button
                 key={l.label}
@@ -220,7 +220,7 @@ export default function Navbar({
               </MenuItem>
               <MenuItem
                 component={Link}
-                href="/#tour-results"
+                href="/tours"
                 onClick={() => setMobileAnchor(null)}
                 sx={{ fontSize: "0.88rem", fontWeight: 500 }}
               >
@@ -228,11 +228,11 @@ export default function Navbar({
               </MenuItem>
               <MenuItem
                 component={Link}
-                href="/help"
+                href="/user/profile"
                 onClick={() => setMobileAnchor(null)}
                 sx={{ fontSize: "0.88rem", fontWeight: 500 }}
               >
-                Help & Support
+                Bookings
               </MenuItem>
               {account ? (
                 <MenuItem onClick={logout} sx={{ fontSize: "0.88rem", fontWeight: 700 }}>

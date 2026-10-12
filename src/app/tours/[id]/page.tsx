@@ -33,6 +33,18 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import { motion } from "framer-motion";
+import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
+import HikingRoundedIcon from "@mui/icons-material/HikingRounded";
+import ExploreRoundedIcon from "@mui/icons-material/ExploreRounded";
+import RouteRoundedIcon from "@mui/icons-material/RouteRounded";
+import MapRoundedIcon from "@mui/icons-material/MapRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+import RestaurantRoundedIcon from "@mui/icons-material/RestaurantRounded";
+import HotelRoundedIcon from "@mui/icons-material/HotelRounded";
+import VerifiedRoundedIcon from "@mui/icons-material/VerifiedRounded";
+import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
+import { Reveal, stagger, rise } from "@/components/home/HomeSections";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -46,17 +58,9 @@ export default function TourDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Booking state
-  const [bookingDialogOpen, setBookingDialogOpen] = useState<boolean>(false);
   const [selectedDepartureId, setSelectedDepartureId] = useState<string>("");
   const [selectedCityId, setSelectedCityId] = useState<string>("");
   const [numberOfTravelers, setNumberOfTravelers] = useState<number>(2);
-  const [customerName, setCustomerName] = useState<string>("");
-  const [customerEmail, setCustomerEmail] = useState<string>("");
-  const [customerPhone, setCustomerPhone] = useState<string>("");
-  const [specialRequests, setSpecialRequests] = useState<string>("");
-  const [bookingLoading, setBookingLoading] = useState<boolean>(false);
-  const [bookingError, setBookingError] = useState<string | null>(null);
-  const [confirmedBooking, setConfirmedBooking] = useState<any>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -101,39 +105,16 @@ export default function TourDetailPage() {
     }
   };
 
-  const handleBookingSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBookingLoading(true);
-    setBookingError(null);
-
-    try {
-      const res = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tourId: tour._id,
-          customerName,
-          customerEmail,
-          customerPhone,
-          departureId: selectedDepartureId,
-          numberOfTravelers,
-          specialRequests,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.success && data.data) {
-        setConfirmedBooking(data.data);
-        setBookingDialogOpen(false);
-        fetchTour();
-      } else {
-        setBookingError(data.error || "Failed to complete booking");
-      }
-    } catch (e: any) {
-      setBookingError(e.message || "Network error while submitting booking");
-    } finally {
-      setBookingLoading(false);
-    }
+  const goToCheckout = () => {
+    if (!tour || !selectedDeparture) return;
+    const qs = new URLSearchParams({
+      tour: tour.slug || tour._id,
+      from: selectedCityId,
+      departure: selectedDepartureId,
+      travellers: String(numberOfTravelers),
+      step: "travellers",
+    });
+    router.push(`/checkout?${qs.toString()}`);
   };
 
   if (loading) {
@@ -195,6 +176,21 @@ export default function TourDetailPage() {
     setNumberOfTravelers((n) => Math.min(Math.max(1, n), d.available));
   };
 
+  const SectionTitle = ({ icon, children, color = "#facc15" }: { icon: React.ReactNode; children: React.ReactNode; color?: string }) => (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
+      <Box sx={{ width: 40, height: 40, borderRadius: "6px", bgcolor: color, color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        {icon}
+      </Box>
+      <Typography variant="h5" sx={{ fontWeight: 800, color: "#0f172a", fontSize: "1.35rem", letterSpacing: "-0.015em" }}>
+        {children}
+      </Typography>
+      <Box sx={{ flex: 1, height: 3, borderRadius: 2, bgcolor: "#fef9c3", display: { xs: "none", sm: "block" } }} />
+    </Box>
+  );
+
+  const cardSx = { p: { xs: 2.5, md: 3.5 }, mb: 3, borderRadius: "6px", border: "1px solid #e2e8f0", position: "relative", overflow: "hidden" } as const;
+  const FACT_COLORS = ["#facc15", "#38bdf8", "#34d399", "#fb7185"];
+
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "#f8fafc" }}>
       <Navbar />
@@ -211,237 +207,292 @@ export default function TourDetailPage() {
         </Button>
 
         {/* Hero Banner / Image */}
-        <Paper
-          elevation={0}
-          sx={{
-            borderRadius: "6px",
-            overflow: "hidden",
-            mb: 3,
-            border: "none",
-            position: "relative",
-          }}
-        >
-          <Box
-            component="img"
-            src={
-              tour.coverImage ||
-              "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200&auto=format&fit=crop&q=80"
-            }
-            alt={tour.title}
-            sx={{
-              width: "100%",
-              height: { xs: 300, md: 460 },
-              objectFit: "cover",
-            }}
-          />
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              p: { xs: 2.5, md: 4 },
-              background: "linear-gradient(to top, rgba(8, 13, 26, 0.92) 0%, rgba(8, 13, 26, 0.45) 60%, transparent 100%)",
-              color: "#ffffff",
-            }}
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+          <Paper
+            elevation={0}
+            sx={{ borderRadius: "6px", overflow: "hidden", mb: 3, border: "none", position: "relative" }}
           >
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1 }}>
-              <Chip
-                icon={<LocationOnIcon sx={{ fontSize: "14px !important", color: "#0f172a !important" }} />}
-                label={`${tour.targetCity || tour.startingPoint}, ${tour.state}`}
-                size="small"
-                sx={{ backgroundColor: "#facc15", color: "#0f172a", fontWeight: 700, borderRadius: "6px" }}
+            <motion.div initial={{ scale: 1.12 }} animate={{ scale: 1 }} transition={{ duration: 8, ease: "easeOut" }}>
+              <Box
+                component="img"
+                src={
+                  tour.coverImage ||
+                  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200&auto=format&fit=crop&q=80"
+                }
+                alt={tour.title}
+                sx={{ width: "100%", height: { xs: 320, md: 480 }, objectFit: "cover", display: "block" }}
               />
-              <Chip
-                icon={<AccessTimeIcon sx={{ fontSize: "14px !important", color: "#ffffff !important" }} />}
-                label={`${tour.durationDays} Days / ${tour.durationNights} Nights`}
-                size="small"
-                sx={{ backgroundColor: "rgba(0,0,0,0.6)", color: "#ffffff", borderRadius: "6px" }}
-              />
-              <Chip
-                icon={<PeopleIcon sx={{ fontSize: "14px !important", color: "#ffffff !important" }} />}
-                label={`Max ${tour.maxGroupSize || 15} travelers`}
-                size="small"
-                sx={{ backgroundColor: "rgba(0,0,0,0.6)", color: "#ffffff", borderRadius: "6px" }}
-              />
+            </motion.div>
+
+            {/* Floating badges */}
+            <Box sx={{ position: "absolute", top: 16, right: 16, display: "flex", flexDirection: "column", gap: 1, alignItems: "flex-end" }}>
+              {tour.discountPercentage ? (
+                <motion.div animate={{ rotate: [-3, 3, -3] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
+                  <Chip
+                    icon={<LocalOfferRoundedIcon sx={{ fontSize: "16px !important", color: "#fff !important" }} />}
+                    label={`${tour.discountPercentage}% OFF`}
+                    sx={{ bgcolor: "#ef4444", color: "#fff", fontWeight: 800, borderRadius: "6px" }}
+                  />
+                </motion.div>
+              ) : null}
+              {tour.journeyType && (
+                <Chip label={tour.journeyType} size="small" sx={{ bgcolor: "#fff", color: "#0f172a", fontWeight: 700, borderRadius: "6px" }} />
+              )}
+              {tour.physicalRating && (
+                <Chip icon={<HikingRoundedIcon sx={{ fontSize: "15px !important" }} />} label={tour.physicalRating} size="small" sx={{ bgcolor: "#fff", color: "#0f172a", fontWeight: 700, borderRadius: "6px" }} />
+              )}
             </Box>
-            <Typography variant="h1" sx={{ fontSize: { xs: "1.7rem", md: "2.6rem" }, fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1.15 }}>
-              {tour.title}
-            </Typography>
+
+            <Box
+              sx={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                p: { xs: 2.5, md: 4 },
+                background: "linear-gradient(to top, rgba(8, 13, 26, 0.92) 0%, rgba(8, 13, 26, 0.45) 60%, transparent 100%)",
+                color: "#ffffff",
+              }}
+            >
+              <motion.div variants={stagger} initial="hidden" animate="show">
+                <motion.div variants={rise}>
+                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1.25 }}>
+                    <Chip
+                      icon={<LocationOnIcon sx={{ fontSize: "14px !important", color: "#0f172a !important" }} />}
+                      label={`${tour.targetCity || tour.startingPoint}, ${tour.state}`}
+                      size="small"
+                      sx={{ backgroundColor: "#facc15", color: "#0f172a", fontWeight: 700, borderRadius: "6px" }}
+                    />
+                    <Chip
+                      icon={<AccessTimeIcon sx={{ fontSize: "14px !important", color: "#ffffff !important" }} />}
+                      label={`${tour.durationDays} Days / ${tour.durationNights} Nights`}
+                      size="small"
+                      sx={{ backgroundColor: "rgba(255,255,255,0.18)", backdropFilter: "blur(6px)", color: "#ffffff", borderRadius: "6px" }}
+                    />
+                    <Chip
+                      icon={<PeopleIcon sx={{ fontSize: "14px !important", color: "#ffffff !important" }} />}
+                      label={`Max ${tour.maxGroupSize || 15} travelers`}
+                      size="small"
+                      sx={{ backgroundColor: "rgba(255,255,255,0.18)", backdropFilter: "blur(6px)", color: "#ffffff", borderRadius: "6px" }}
+                    />
+                  </Box>
+                </motion.div>
+                <motion.div variants={rise}>
+                  <Typography variant="h1" sx={{ fontSize: { xs: "1.7rem", md: "2.6rem" }, fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1.15 }}>
+                    {tour.title}
+                  </Typography>
+                </motion.div>
+                {tour.shortDescription && (
+                  <motion.div variants={rise}>
+                    <Typography sx={{ mt: 1, opacity: 0.85, maxWidth: 720, fontSize: "0.98rem" }}>{tour.shortDescription}</Typography>
+                  </motion.div>
+                )}
+              </motion.div>
+            </Box>
+          </Paper>
+        </motion.div>
+
+        {/* Travel style tags */}
+        {tour.travelStyles && tour.travelStyles.length > 0 && (
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 3 }}>
+            {tour.travelStyles.map((s: string) => (
+              <Chip key={s} icon={<ExploreRoundedIcon sx={{ fontSize: "15px !important", color: "#ca8a04 !important" }} />} label={s} size="small" sx={{ bgcolor: "#fef9c3", color: "#854d0e", fontWeight: 700, border: "1px solid #fde68a", borderRadius: "6px" }} />
+            ))}
           </Box>
-        </Paper>
+        )}
 
         {/* Quick facts */}
-        <Grid container spacing={2} sx={{ mb: 4 }}>
-          {[
-            { icon: <AccessTimeIcon />, label: "Duration", value: `${tour.durationDays} Days / ${tour.durationNights} Nights` },
-            { icon: <PeopleIcon />, label: "Group Size", value: `Up to ${tour.maxGroupSize || 15} travelers` },
-            { icon: <LocationOnIcon />, label: "Based In", value: tour.targetCity || tour.startingPoint },
-            { icon: <LocationOnIcon />, label: "Starts & Ends At", value: selectedCity ? selectedCity.name : "Select a city" },
-          ].map((f) => (
-            <Grid size={{ xs: 6, md: 3 }} key={f.label}>
-              <Paper elevation={0} sx={{ p: 2, borderRadius: "6px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: 1.5, height: "100%" }}>
-                <Box sx={{ width: 42, height: 42, borderRadius: "6px", bgcolor: "#fefce8", color: "#ca8a04", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {f.icon}
-                </Box>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography sx={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                    {f.label}
-                  </Typography>
-                  <Typography sx={{ fontSize: "0.92rem", color: "#0f172a", fontWeight: 700 }} noWrap>
-                    {f.value}
-                  </Typography>
-                </Box>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
+        <motion.div variants={stagger} initial="hidden" animate="show">
+          <Grid container spacing={2} sx={{ mb: 4 }}>
+            {[
+              { icon: <AccessTimeIcon />, label: "Duration", value: `${tour.durationDays} Days / ${tour.durationNights} Nights` },
+              { icon: <PeopleIcon />, label: "Group Size", value: `Up to ${tour.maxGroupSize || 15} travelers` },
+              { icon: <LocationOnIcon />, label: "Based In", value: tour.targetCity || tour.startingPoint },
+              { icon: <RouteRoundedIcon />, label: "Starts & Ends At", value: selectedCity ? selectedCity.name : "Select a city" },
+            ].map((f, i) => (
+              <Grid size={{ xs: 6, md: 3 }} key={f.label}>
+                <motion.div variants={rise} whileHover={{ y: -4 }} style={{ height: "100%" }}>
+                  <Paper elevation={0} sx={{ position: "relative", overflow: "hidden", p: 2, borderRadius: "6px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: 1.5, height: "100%" }}>
+                    <Box sx={{ position: "absolute", right: -18, top: -18, width: 70, height: 70, borderRadius: "50%", bgcolor: FACT_COLORS[i], opacity: 0.18 }} />
+                    <Box sx={{ width: 44, height: 44, borderRadius: "6px", bgcolor: FACT_COLORS[i], color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative" }}>
+                      {f.icon}
+                    </Box>
+                    <Box sx={{ minWidth: 0, position: "relative" }}>
+                      <Typography sx={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                        {f.label}
+                      </Typography>
+                      <Typography sx={{ fontSize: "0.92rem", color: "#0f172a", fontWeight: 800 }} noWrap>
+                        {f.value}
+                      </Typography>
+                    </Box>
+                  </Paper>
+                </motion.div>
+              </Grid>
+            ))}
+          </Grid>
+        </motion.div>
 
         <Grid container spacing={4}>
           {/* Left Column: Tour Details */}
           <Grid size={{ xs: 12, md: 8 }}>
             {/* Overview */}
-            <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3.5 }, mb: 3, borderRadius: "6px", border: "1px solid #e2e8f0" }}>
-              <Typography variant="h5" sx={{ fontWeight: 800, color: "#0f172a", mb: 2.5, fontSize: "1.35rem", letterSpacing: "-0.015em" }}>
-                Tour Overview
-              </Typography>
-              <Typography variant="body1" sx={{ color: "#334155", lineHeight: 1.8, mb: 3, fontSize: "0.98rem" }}>
-                {tour.description}
-              </Typography>
-
-              {/* Destination Point Notice */}
-              <Box
-                sx={{
-                  p: 2,
-                  borderRadius: "6px",
-                  backgroundColor: "#fefce8",
-                  border: "1px solid #fef08a",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1.5,
-                }}
-              >
-                <LocationOnIcon sx={{ color: "#ca8a04" }} />
-                <Typography variant="body2" sx={{ color: "#1e293b", fontWeight: 500 }}>
-                  <strong>Origin & Destination:</strong> This journey is based in <strong>{tour.targetCity || tour.startingPoint}</strong> ({tour.state}). Choose your start & end city when booking{selectedCity ? <> — currently <strong>{selectedCity.name}</strong></> : null}.
+            <Reveal>
+              <Paper elevation={0} sx={{ ...cardSx, borderTop: "4px solid #facc15" }}>
+                <SectionTitle icon={<MapRoundedIcon />}>Tour Overview</SectionTitle>
+                <Typography variant="body1" sx={{ color: "#334155", lineHeight: 1.8, mb: 3, fontSize: "0.98rem" }}>
+                  {tour.description}
                 </Typography>
-              </Box>
-            </Paper>
+
+                {/* Destination Point Notice */}
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRadius: "6px",
+                    backgroundColor: "#fefce8",
+                    border: "1px solid #fef08a",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.5,
+                  }}
+                >
+                  <motion.div animate={{ rotate: [0, 12, -8, 0] }} transition={{ duration: 5, repeat: Infinity }} style={{ display: "flex" }}>
+                    <ExploreRoundedIcon sx={{ color: "#ca8a04", fontSize: 30 }} />
+                  </motion.div>
+                  <Typography variant="body2" sx={{ color: "#1e293b", fontWeight: 500 }}>
+                    <strong>Origin & Destination:</strong> This journey is based in <strong>{tour.targetCity || tour.startingPoint}</strong> ({tour.state}). Choose your start & end city when booking{selectedCity ? <> — currently <strong>{selectedCity.name}</strong></> : null}.
+                  </Typography>
+                </Box>
+              </Paper>
+            </Reveal>
 
             {/* Highlights */}
             {tour.highlights && tour.highlights.length > 0 && (
-              <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3.5 }, mb: 3, borderRadius: "6px", border: "1px solid #e2e8f0" }}>
-                <Typography variant="h5" sx={{ fontWeight: 800, color: "#0f172a", mb: 2.5, fontSize: "1.35rem", letterSpacing: "-0.015em" }}>
-                  Key Highlights
-                </Typography>
-                <Grid container spacing={1.5}>
-                  {tour.highlights.map((highlight: string, index: number) => (
-                    <Grid size={{ xs: 12, sm: 6 }} key={index}>
-                      <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-                        <CheckCircleIcon sx={{ color: "#10b981", fontSize: 20, mt: 0.2 }} />
-                        <Typography variant="body2" sx={{ color: "#334155", fontWeight: 500, fontSize: "0.92rem" }}>
-                          {highlight}
-                        </Typography>
-                      </Box>
+              <Reveal>
+                <Paper elevation={0} sx={cardSx}>
+                  <SectionTitle icon={<AutoAwesomeRoundedIcon />} color="#fde047">Key Highlights</SectionTitle>
+                  <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
+                    <Grid container spacing={1.5}>
+                      {tour.highlights.map((highlight: string, index: number) => (
+                        <Grid size={{ xs: 12, sm: 6 }} key={index}>
+                          <motion.div variants={rise} whileHover={{ x: 4 }} style={{ height: "100%" }}>
+                            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.25, p: 1.5, height: "100%", borderRadius: "6px", bgcolor: "#f0fdf4", border: "1px solid #bbf7d0" }}>
+                              <CheckCircleIcon sx={{ color: "#10b981", fontSize: 20, mt: 0.2 }} />
+                              <Typography variant="body2" sx={{ color: "#334155", fontWeight: 600, fontSize: "0.92rem" }}>
+                                {highlight}
+                              </Typography>
+                            </Box>
+                          </motion.div>
+                        </Grid>
+                      ))}
                     </Grid>
-                  ))}
-                </Grid>
-              </Paper>
+                  </motion.div>
+                </Paper>
+              </Reveal>
             )}
 
             {/* Day-by-Day Itinerary */}
             {tour.itinerary && tour.itinerary.length > 0 && (
-              <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3.5 }, mb: 3, borderRadius: "6px", border: "1px solid #e2e8f0" }}>
-                <Typography variant="h5" sx={{ fontWeight: 800, color: "#0f172a", mb: 2.5, fontSize: "1.35rem", letterSpacing: "-0.015em" }}>
-                  Day-by-Day Itinerary
-                </Typography>
+              <Reveal>
+                <Paper elevation={0} sx={cardSx}>
+                  <SectionTitle icon={<RouteRoundedIcon />} color="#38bdf8">Day-by-Day Itinerary</SectionTitle>
 
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-                  {tour.itinerary.map((day: any) => (
-                    <Accordion
-                      key={day.day}
-                      defaultExpanded={day.day === 1}
-                      sx={{
-                        border: "1px solid #e2e8f0",
-                        borderRadius: "6px !important",
-                        "&:before": { display: "none" },
-                        boxShadow: "none",
-                      }}
-                    >
-                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                          <Chip
-                            label={`Day ${day.day}`}
-                            size="small"
-                            sx={{ backgroundColor: "#facc15", color: "#0f172a", fontWeight: 700, height: 24, borderRadius: "6px" }}
-                          />
-                          <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.98rem" }}>
-                            {day.title}
-                          </Typography>
+                  <Box sx={{ position: "relative", display: "flex", flexDirection: "column", gap: 1.5 }}>
+                    <Box sx={{ position: "absolute", left: 19, top: 20, bottom: 20, width: 2, bgcolor: "#fde68a", display: { xs: "none", sm: "block" } }} />
+                    {tour.itinerary.map((day: any) => (
+                      <Box key={day.day} sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
+                        <Box sx={{ width: 40, height: 40, borderRadius: "50%", bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, fontSize: "0.85rem", display: { xs: "none", sm: "flex" }, alignItems: "center", justifyContent: "center", flexShrink: 0, border: "4px solid #fff", boxShadow: "0 0 0 1px #fde68a", position: "relative", zIndex: 1 }}>
+                          {day.day}
                         </Box>
-                      </AccordionSummary>
-                      <AccordionDetails sx={{ pt: 0, pb: 2 }}>
-                        <Typography variant="body2" sx={{ color: "#475569", lineHeight: 1.7, mb: 2, fontSize: "0.92rem" }}>
-                          {day.description}
-                        </Typography>
-                        {(day.meals || day.stay) && (
-                          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", pt: 1, borderTop: "1px dashed #e2e8f0" }}>
-                            {day.meals && (
-                              <Typography variant="caption" sx={{ color: "#64748b" }}>
-                                <strong>Meals:</strong> {day.meals}
+                        <Accordion
+                          defaultExpanded={day.day === 1}
+                          sx={{
+                            flex: 1,
+                            minWidth: 0,
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "6px !important",
+                            "&:before": { display: "none" },
+                            boxShadow: "none",
+                            "&.Mui-expanded": { borderColor: "#fde047", bgcolor: "#fffef5" },
+                          }}
+                        >
+                          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                              <Chip
+                                label={`Day ${day.day}`}
+                                size="small"
+                                sx={{ backgroundColor: "#facc15", color: "#0f172a", fontWeight: 700, height: 24, borderRadius: "6px" }}
+                              />
+                              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.98rem" }}>
+                                {day.title}
                               </Typography>
+                            </Box>
+                          </AccordionSummary>
+                          <AccordionDetails sx={{ pt: 0, pb: 2 }}>
+                            <Typography variant="body2" sx={{ color: "#475569", lineHeight: 1.7, mb: 2, fontSize: "0.92rem" }}>
+                              {day.description}
+                            </Typography>
+                            {(day.meals || day.stay) && (
+                              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", pt: 1.5, borderTop: "1px dashed #e2e8f0" }}>
+                                {day.meals && (
+                                  <Chip icon={<RestaurantRoundedIcon sx={{ fontSize: "15px !important" }} />} label={day.meals} size="small" sx={{ bgcolor: "#ffedd5", color: "#9a3412", fontWeight: 600, borderRadius: "6px" }} />
+                                )}
+                                {day.stay && (
+                                  <Chip icon={<HotelRoundedIcon sx={{ fontSize: "15px !important" }} />} label={day.stay} size="small" sx={{ bgcolor: "#e0f2fe", color: "#075985", fontWeight: 600, borderRadius: "6px" }} />
+                                )}
+                              </Box>
                             )}
-                            {day.stay && (
-                              <Typography variant="caption" sx={{ color: "#64748b" }}>
-                                <strong>Stay:</strong> {day.stay}
-                              </Typography>
-                            )}
-                          </Box>
-                        )}
-                      </AccordionDetails>
-                    </Accordion>
-                  ))}
-                </Box>
-              </Paper>
+                          </AccordionDetails>
+                        </Accordion>
+                      </Box>
+                    ))}
+                  </Box>
+                </Paper>
+              </Reveal>
             )}
 
             {/* Inclusions and Exclusions */}
             <Grid container spacing={3} sx={{ mb: 3 }}>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <Paper elevation={0} sx={{ p: 3, height: "100%", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#10b981", mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
-                    <CheckCircleIcon /> What&apos;s Included
-                  </Typography>
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                    {tour.inclusions?.map((inc: string, i: number) => (
-                      <Typography key={i} variant="body2" sx={{ color: "#475569", fontSize: "0.9rem", lineHeight: 1.6 }}>
-                        • {inc}
-                      </Typography>
-                    ))}
-                  </Box>
-                </Paper>
+                <Reveal>
+                  <Paper elevation={0} sx={{ p: 3, height: "100%", borderRadius: "6px", border: "1px solid #bbf7d0", bgcolor: "#f0fdf4" }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: "#059669", mb: 2, display: "flex", alignItems: "center", gap: 1, fontSize: "1.05rem" }}>
+                      <CheckCircleIcon /> What&apos;s Included
+                    </Typography>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                      {tour.inclusions?.map((inc: string, i: number) => (
+                        <Box key={i} sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                          <CheckCircleIcon sx={{ fontSize: 17, color: "#10b981", mt: 0.3 }} />
+                          <Typography variant="body2" sx={{ color: "#334155", fontSize: "0.9rem", lineHeight: 1.6 }}>{inc}</Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Paper>
+                </Reveal>
               </Grid>
 
               <Grid size={{ xs: 12, sm: 6 }}>
-                <Paper elevation={0} sx={{ p: 3, height: "100%", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#ef4444", mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
-                    <CancelIcon /> What&apos;s Not Included
-                  </Typography>
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                    {tour.exclusions?.map((exc: string, i: number) => (
-                      <Typography key={i} variant="body2" sx={{ color: "#475569", fontSize: "0.9rem", lineHeight: 1.6 }}>
-                        • {exc}
-                      </Typography>
-                    ))}
-                  </Box>
-                </Paper>
+                <Reveal delay={0.1}>
+                  <Paper elevation={0} sx={{ p: 3, height: "100%", borderRadius: "6px", border: "1px solid #fecaca", bgcolor: "#fef2f2" }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: "#dc2626", mb: 2, display: "flex", alignItems: "center", gap: 1, fontSize: "1.05rem" }}>
+                      <CancelIcon /> What&apos;s Not Included
+                    </Typography>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                      {tour.exclusions?.map((exc: string, i: number) => (
+                        <Box key={i} sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                          <CancelIcon sx={{ fontSize: 17, color: "#ef4444", mt: 0.3 }} />
+                          <Typography variant="body2" sx={{ color: "#334155", fontSize: "0.9rem", lineHeight: 1.6 }}>{exc}</Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Paper>
+                </Reveal>
               </Grid>
             </Grid>
           </Grid>
 
           {/* Right Column: Sticky Booking Widget */}
           <Grid size={{ xs: 12, md: 4 }}>
-            <Box sx={{ position: "sticky", top: 92 }}>
+            <Box component={motion.div} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.3 }} sx={{ position: "sticky", top: 92 }}>
               <Paper
                 elevation={0}
                 sx={{
@@ -449,9 +500,12 @@ export default function TourDetailPage() {
                   borderRadius: "6px",
                   border: "1px solid #e2e8f0",
                   backgroundColor: "#ffffff",
-                  boxShadow: "0 18px 40px -22px rgba(15, 23, 42, 0.25)",
+                  borderTop: "4px solid #facc15",
+                  position: "relative",
+                  overflow: "hidden",
                 }}
               >
+                <Box sx={{ position: "absolute", right: -30, top: -30, width: 110, height: 110, borderRadius: "50%", bgcolor: "#facc15", opacity: 0.18 }} />
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="caption" sx={{ color: "#94a3b8", textTransform: "uppercase", fontWeight: 700 }}>
                     {selectedDeparture ? "Price Per Traveler" : "Starting From"}
@@ -609,7 +663,7 @@ export default function TourDetailPage() {
                   variant="contained"
                   size="large"
                   disabled={!canBook}
-                  onClick={() => setBookingDialogOpen(true)}
+                  onClick={goToCheckout}
                   sx={{
                     py: 1.5,
                     backgroundColor: "#facc15",
@@ -624,147 +678,15 @@ export default function TourDetailPage() {
                   {selectedDeparture ? "Book This Journey" : "Select a date to book"}
                 </Button>
 
-                <Typography variant="caption" sx={{ color: "#94a3b8", display: "block", textAlign: "center", mt: 1.5 }}>
-                  Instant confirmation • Verified local partner
-                </Typography>
+                <Box sx={{ display: "flex", justifyContent: "center", gap: 1, flexWrap: "wrap", mt: 1.75 }}>
+                  <Chip icon={<BoltRoundedIcon sx={{ fontSize: "15px !important", color: "#ca8a04 !important" }} />} label="Instant confirmation" size="small" sx={{ bgcolor: "#fef9c3", color: "#854d0e", fontWeight: 700, borderRadius: "6px" }} />
+                  <Chip icon={<VerifiedRoundedIcon sx={{ fontSize: "15px !important", color: "#059669 !important" }} />} label="Verified local partner" size="small" sx={{ bgcolor: "#dcfce7", color: "#166534", fontWeight: 700, borderRadius: "6px" }} />
+                </Box>
               </Paper>
             </Box>
           </Grid>
         </Grid>
       </Container>
-
-      {/* Booking Dialog */}
-      <Dialog
-        open={bookingDialogOpen}
-        onClose={() => setBookingDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-        slotProps={{ paper: { sx: { borderRadius: "6px" } } }}
-      >
-        <form onSubmit={handleBookingSubmit}>
-          <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
-            Complete Your Booking
-          </DialogTitle>
-          <DialogContent sx={{ pt: 1 }}>
-            <Typography variant="body2" sx={{ color: "#64748b", mb: 2.5 }}>
-              Enter your details to confirm your slot for <strong>{tour.title}</strong>.
-            </Typography>
-
-            {bookingError && (
-              <Alert severity="error" sx={{ mb: 2, borderRadius: "6px" }}>
-                {bookingError}
-              </Alert>
-            )}
-
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <TextField
-                label="Full Name"
-                required
-                fullWidth
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "6px" } }}
-              />
-
-              <TextField
-                label="Email Address"
-                type="email"
-                required
-                fullWidth
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "6px" } }}
-              />
-
-              <TextField
-                label="Phone Number (WhatsApp preferred)"
-                required
-                fullWidth
-                placeholder="+91 98765 43210"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "6px" } }}
-              />
-
-              <TextField
-                label="Special Requests / Dietary Needs (Optional)"
-                multiline
-                rows={2}
-                fullWidth
-                value={specialRequests}
-                onChange={(e) => setSpecialRequests(e.target.value)}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "6px" } }}
-              />
-
-              <Box sx={{ p: 2, borderRadius: "6px", backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                <Typography variant="caption" sx={{ color: "#64748b", display: "block" }}>
-                  Start & end city: <strong>{selectedCity?.name}</strong> • Dates: <strong>{selectedDeparture ? `${formatDate(selectedDeparture.startDate)} – ${formatDate(selectedDeparture.endDate)}` : ""}</strong> • Travelers: <strong>{numberOfTravelers}</strong>
-                </Typography>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#0f172a" }}>
-                  Grand Total: ₹{totalPrice.toLocaleString("en-IN")}
-                </Typography>
-              </Box>
-            </Box>
-          </DialogContent>
-          <DialogActions sx={{ p: 2.5, pt: 1 }}>
-            <Button onClick={() => setBookingDialogOpen(false)} sx={{ color: "#64748b", borderRadius: "6px" }}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={bookingLoading}
-              sx={{ backgroundColor: "#facc15", color: "#0f172a", fontWeight: 700, borderRadius: "6px", "&:hover": { backgroundColor: "#eab308" } }}
-            >
-              {bookingLoading ? "Confirming..." : "Confirm Booking"}
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
-
-      {/* Booking Confirmation Dialog */}
-      <Dialog
-        open={Boolean(confirmedBooking)}
-        onClose={() => setConfirmedBooking(null)}
-        maxWidth="xs"
-        fullWidth
-        slotProps={{ paper: { sx: { borderRadius: "6px", p: 2 } } }}
-      >
-        <Box sx={{ textAlign: "center", pt: 2, pb: 1 }}>
-          <CheckCircleIcon sx={{ fontSize: 60, color: "#10b981", mb: 1 }} />
-          <Typography variant="h5" sx={{ fontWeight: 800, color: "#0f172a", mb: 1 }}>
-            Booking Confirmed!
-          </Typography>
-          <Typography variant="body2" sx={{ color: "#64748b", mb: 2 }}>
-            Your adventure has been reserved. Our local destination partner will contact you shortly.
-          </Typography>
-
-          <Paper elevation={0} sx={{ p: 2, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", mb: 3, borderRadius: "6px" }}>
-            <Typography variant="caption" sx={{ color: "#94a3b8", display: "block", textTransform: "uppercase" }}>
-              Booking Reference Number
-            </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: "#ca8a04", letterSpacing: "0.05em" }}>
-              {confirmedBooking?.bookingRef}
-            </Typography>
-            <Divider sx={{ my: 1 }} />
-            <Typography variant="body2" sx={{ color: "#334155" }}>
-              Total Paid: <strong>₹{confirmedBooking?.totalAmountInr?.toLocaleString("en-IN")}</strong>
-            </Typography>
-          </Paper>
-
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={() => {
-              setConfirmedBooking(null);
-              router.push("/");
-            }}
-            sx={{ backgroundColor: "#facc15", color: "#0f172a", fontWeight: 700, borderRadius: "6px", "&:hover": { backgroundColor: "#eab308" } }}
-          >
-            Explore More Journeys
-          </Button>
-        </Box>
-      </Dialog>
 
       <Footer />
     </Box>

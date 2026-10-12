@@ -83,6 +83,13 @@ export async function bookedSeatsByDeparture(tourId: string | mongoose.Types.Obj
         tourId: new mongoose.Types.ObjectId(String(tourId)),
         departureId: { $exists: true, $ne: null },
         status: { $ne: "cancelled" },
+        // Unpaid checkouts only hold seats until their hold expires.
+        $or: [
+          { status: { $ne: "pending" } },
+          { holdExpiresAt: { $exists: false } },
+          { holdExpiresAt: null },
+          { holdExpiresAt: { $gt: new Date() } },
+        ],
       },
     },
     { $group: { _id: "$departureId", booked: { $sum: "$numberOfTravelers" } } },

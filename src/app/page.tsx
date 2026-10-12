@@ -20,13 +20,20 @@ import {
   DialogActions,
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import LandscapeRoundedIcon from "@mui/icons-material/LandscapeRounded";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import HandshakeRoundedIcon from "@mui/icons-material/HandshakeRounded";
-import CurrencyRupeeRoundedIcon from "@mui/icons-material/CurrencyRupeeRounded";
-import SyncAltRoundedIcon from "@mui/icons-material/SyncAltRounded";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import {
+  CtaBanner,
+  ExperienceRail,
+  HowItWorks,
+  SectionHeading,
+  StatsStrip,
+  WhyUs,
+} from "@/components/home/HomeSections";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HeroSlider from "@/components/HeroSlider";
@@ -50,6 +57,7 @@ interface UserLocation {
 }
 
 export default function HomePage() {
+  const router = useRouter();
   const [tours, setTours] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -238,19 +246,46 @@ export default function HomePage() {
     return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
   }, [allTours]);
 
+  // Start & end cities (departure cities) with the number of tours departing from each.
   const nearbyDestinations = useMemo(() => {
-    const entries = dbDestinations
-      .filter((d) => d.tourCount > 0)
-      .map((d) => ({
-        id: d._id as string,
-        name: d.name as string,
-        state: d.state as string,
-        tourCount: d.tourCount as number,
-        distance: userLocation ? calculateDistanceKm(userLocation.lat, userLocation.lng, d.coordinates?.lat, d.coordinates?.lng) : null,
-      }));
+    const map = new Map<string, { id: string; name: string; state: string; tourCount: number; lat?: number; lng?: number }>();
+    for (const t of allTours) {
+      const seen = new Set<string>();
+      for (const d of t.departures || []) {
+        const c = d.cityId;
+        if (!c?._id || seen.has(c._id)) continue;
+        seen.add(c._id);
+        const e = map.get(c._id) || { id: c._id, name: c.name, state: c.state, tourCount: 0, lat: c.coordinates?.lat, lng: c.coordinates?.lng };
+        e.tourCount += 1;
+        map.set(c._id, e);
+      }
+    }
+    const entries = [...map.values()].map((c) => ({
+      id: c.id,
+      name: c.name,
+      state: c.state,
+      tourCount: c.tourCount,
+      distance:
+        userLocation && c.lat !== undefined && c.lng !== undefined
+          ? calculateDistanceKm(userLocation.lat, userLocation.lng, c.lat, c.lng)
+          : null,
+    }));
     if (userLocation) entries.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
+    else entries.sort((a, b) => b.tourCount - a.tourCount);
     return entries.slice(0, 8);
-  }, [dbDestinations, userLocation]);
+  }, [allTours, userLocation]);
+
+  const statsData = useMemo(() => {
+    const withTours = dbDestinations.filter((d) => d.tourCount > 0);
+    return {
+      tours: allTours.length,
+      destinations: withTours.length,
+      states: new Set(withTours.map((d) => d.state)).size,
+      cities: fromOptions.length,
+    };
+  }, [allTours, dbDestinations, fromOptions]);
+
+  const scrollToResults = () => document.getElementById("tour-results")?.scrollIntoView({ behavior: "smooth" });
 
   const selectFromCity = (c: CityOption | null) => {
     setFromCity(c);
@@ -286,7 +321,8 @@ export default function HomePage() {
       <HeroSlider onBook={() => document.getElementById("journey-search")?.scrollIntoView({ behavior: "smooth" })} />
 
       {/* Search Your Journey */}
-      <Container maxWidth="lg" id="journey-search" sx={{ pt: 2.5 }}>
+      <Container maxWidth="lg" id="journey-search" sx={{ pt: 2.5, position: "relative", zIndex: 4, mt: { md: -4 } }}>
+        <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}>
         <Paper
           elevation={0}
           sx={{
@@ -358,27 +394,31 @@ export default function HomePage() {
             Search
           </Button>
         </Paper>
+        </motion.div>
       </Container>
 
       {/* Nearby Destinations */}
       <Container maxWidth="lg" id="destinations" sx={{ pt: 8 }}>
-        <Box sx={{ textAlign: "center", mb: 4 }}>
-          <Typography sx={{ fontSize: { xs: "1.5rem", md: "1.9rem" }, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.02em" }}>
-            {userLocation ? "Destinations Near " : "Popular Destinations"}
-            {userLocation && (
-              <Box component="span" sx={{ color: "#ca8a04" }}>{userLocation.name.split(",")[0]}</Box>
-            )}
-          </Typography>
-          <Typography sx={{ color: "#64748b", fontSize: "0.95rem", mt: 0.75 }}>
-            Sorted by distance from your location, nearest first.
-          </Typography>
-        </Box>
+        <SectionHeading
+          eyebrow="Near you"
+          title={userLocation ? "Tours starts near" : "Popular"}
+          accent={userLocation ? userLocation.name.split(",")[0] : "Destinations"}
+          subtitle="Sorted by distance from your location, nearest first."
+        />
         <Grid container spacing={2.5}>
-          {nearbyDestinations.map(({ id, name, state, distance, tourCount }) => {
+          {nearbyDestinations.map(({ id, name, state, distance, tourCount }, idx) => {
             const count = tourCount;
-            const active = toCity?.id === id;
+            const active = fromCity?.id === id;
             return (
               <Grid size={{ xs: 12, sm: 6, md: 3 }} key={id}>
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ duration: 0.5, delay: (idx % 4) * 0.08 }}
+                  whileHover={{ y: -6 }}
+                  style={{ height: "100%" }}
+                >
                 <Paper
                   elevation={0}
                   sx={{
@@ -387,11 +427,15 @@ export default function HomePage() {
                     border: active ? "1px solid #94a3b8" : "1px solid #e2e8f0",
                     bgcolor: "#fff",
                     height: "100%",
+                    position: "relative",
+                    overflow: "hidden",
+                    borderTop: "4px solid #facc15",
                     transition: "box-shadow .2s, transform .2s",
                     "&:hover": { boxShadow: "0 14px 30px -14px rgba(15,23,42,0.25)", transform: "translateY(-2px)" },
                   }}
                 >
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
+                  <LandscapeRoundedIcon sx={{ position: "absolute", right: -10, bottom: -14, fontSize: 96, color: "#f1f5f9" }} />
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5, position: "relative" }}>
                     <Typography sx={{ color: "#64748b", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                       {state}
                     </Typography>
@@ -406,7 +450,7 @@ export default function HomePage() {
                   <Typography sx={{ fontWeight: 800, color: "#0f172a", fontSize: "1.3rem", lineHeight: 1.3, mb: 2 }}>
                     {name}
                   </Typography>
-                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative" }}>
                     <Typography sx={{ color: "#475569", fontSize: "0.85rem", fontWeight: 500 }}>
                       {count} {count === 1 ? "Tour" : "Tours"}
                     </Typography>
@@ -414,8 +458,10 @@ export default function HomePage() {
                       size="small"
                       variant="outlined"
                       onClick={() => {
-                        setToCity(toOptions.find((o) => o.id === id) || { id, name, state });
-                        document.getElementById("tour-results")?.scrollIntoView({ behavior: "smooth" });
+                        const qs = new URLSearchParams({ from: id });
+                        if (selectedState !== "All") qs.set("state", selectedState);
+                        if (selectedRadius !== "all") qs.set("radius", selectedRadius);
+                        router.push(`/tours?${qs.toString()}`);
                       }}
                       sx={{ color: "#0f172a", borderColor: "#cbd5e1", fontWeight: 600, borderRadius: "6px", "&:hover": { borderColor: "#0f172a", bgcolor: "#f8fafc" } }}
                     >
@@ -423,11 +469,16 @@ export default function HomePage() {
                     </Button>
                   </Box>
                 </Paper>
+                </motion.div>
               </Grid>
             );
           })}
         </Grid>
       </Container>
+
+
+      <StatsStrip {...statsData} />
+      <ExperienceRail onPick={scrollToResults} />
 
       {/* Main Catalog Area */}
       <Container maxWidth="lg" id="tour-results" sx={{ py: 4.5, flexGrow: 1 }}>
@@ -583,9 +634,17 @@ export default function HomePage() {
         {/* Tours Grid */}
         {!loading && tours.length > 0 && (
           <Grid container spacing={2.5}>
-            {tours.map((tour) => (
+            {tours.map((tour, i) => (
               <Grid size={{ xs: 12, sm: 6, md: 4 }} key={tour._id}>
-                <TourCard tour={tour} fromCityId={fromCity?.id} />
+                <motion.div
+                  initial={{ opacity: 0, y: 36, scale: 0.97 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ duration: 0.5, delay: (i % 3) * 0.08 }}
+                  style={{ height: "100%" }}
+                >
+                  <TourCard tour={tour} fromCityId={fromCity?.id} />
+                </motion.div>
               </Grid>
             ))}
           </Grid>
@@ -632,6 +691,9 @@ export default function HomePage() {
           </Paper>
         )}
       </Container>
+
+      <WhyUs />
+      <CtaBanner onExplore={scrollToResults} />
 
       {/* Location Change Dialog */}
       <Dialog

@@ -40,6 +40,7 @@ export interface ITour extends Document {
   journeyType?: string;
   discountPercentage?: number;
   maxGroupSize: number;
+  singleRoomPriceInr?: number;
   departures: IDeparture[];
   coverImage: string;
   images: string[];
@@ -96,6 +97,8 @@ const TourSchema = new Schema<ITour>(
     journeyType: { type: String, default: "Guided Group Tour" },
     discountPercentage: { type: Number, default: 0 },
     maxGroupSize: { type: Number, default: 15 },
+    // Extra per-person charge for a private (single) room; shared rooms are included in the base price.
+    singleRoomPriceInr: { type: Number, default: 0, min: 0 },
     departures: [DepartureSchema],
     coverImage: {
       type: String,
