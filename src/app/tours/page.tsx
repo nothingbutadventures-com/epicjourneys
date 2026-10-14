@@ -145,7 +145,6 @@ function ToursExplorer() {
   const [error, setError] = useState<string | null>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number; name: string } | null>(null);
   const [styleOptions, setStyleOptions] = useState<string[]>([]);
-  const [journeyOptions, setJourneyOptions] = useState<string[]>([]);
   const [ratingOptions, setRatingOptions] = useState<string[]>([]);
 
   // Filters
@@ -154,7 +153,6 @@ function ToursExplorer() {
   const [toId, setToId] = useState<string | null>(params.get("to"));
   const [state, setState] = useState(params.get("state") || "All");
   const [styles, setStyles] = useState<string[]>([]);
-  const [journeys, setJourneys] = useState<string[]>([]);
   const [ratings, setRatings] = useState<string[]>([]);
   const [radius, setRadius] = useState(params.get("radius") || "all");
   const [onlyDiscounted, setOnlyDiscounted] = useState(false);
@@ -176,7 +174,6 @@ function ToursExplorer() {
         .then((d) => d.success && set((d.data || []).map((x: any) => x.name)))
         .catch(() => {});
     get("/api/travel-styles", setStyleOptions);
-    get("/api/journey-types", setJourneyOptions);
     get("/api/physical-ratings", setRatingOptions);
   }, []);
 
@@ -233,7 +230,7 @@ function ToursExplorer() {
     const q = query.trim().toLowerCase();
     const list = tours.filter((t) => {
       if (q) {
-        const hay = [t.title, t.shortDescription, t.startingPoint, t.targetCity, t.state, t.journeyType, ...(t.travelStyles || [])]
+        const hay = [t.title, t.shortDescription, t.startingPoint, t.targetCity, t.state, ...(t.travelStyles || [])]
           .filter(Boolean)
           .join(" ")
           .toLowerCase();
@@ -243,7 +240,6 @@ function ToursExplorer() {
       if (fromId && !(t.departures || []).some((d: any) => d.cityId?._id === fromId)) return false;
       if (state !== "All" && t.state !== state) return false;
       if (styles.length && !styles.some((s) => (t.travelStyles || []).includes(s))) return false;
-      if (journeys.length && !journeys.includes(t.journeyType)) return false;
       if (ratings.length && !ratings.includes(t.physicalRating)) return false;
       if (onlyDiscounted && !t.discountPercentage) return false;
       if (priceActive && (t.priceInr < price[0] || t.priceInr > price[1])) return false;
@@ -264,7 +260,7 @@ function ToursExplorer() {
       default: sorted.sort((a, b) => nearest(a) - nearest(b));
     }
     return sorted;
-  }, [tours, query, toId, fromId, state, styles, journeys, ratings, onlyDiscounted, priceActive, price, durationActive, duration, radius, location, sort]);
+  }, [tours, query, toId, fromId, state, styles, ratings, onlyDiscounted, priceActive, price, durationActive, duration, radius, location, sort]);
 
   const toggle = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (v: string) =>
     setter((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
@@ -278,7 +274,6 @@ function ToursExplorer() {
   if (toCity) activeChips.push({ key: "to", label: `To ${toCity.name}`, clear: () => setToId(null) });
   if (state !== "All") activeChips.push({ key: "state", label: state, clear: () => setState("All") });
   styles.forEach((s) => activeChips.push({ key: `s-${s}`, label: s, clear: () => setStyles((p) => p.filter((x) => x !== s)) }));
-  journeys.forEach((s) => activeChips.push({ key: `j-${s}`, label: s, clear: () => setJourneys((p) => p.filter((x) => x !== s)) }));
   ratings.forEach((s) => activeChips.push({ key: `r-${s}`, label: s, clear: () => setRatings((p) => p.filter((x) => x !== s)) }));
   if (radius !== "all") activeChips.push({ key: "rad", label: `Within ${radius} km`, clear: () => setRadius("all") });
   if (onlyDiscounted) activeChips.push({ key: "disc", label: "Discounted", clear: () => setOnlyDiscounted(false) });
@@ -286,7 +281,7 @@ function ToursExplorer() {
   if (durationActive) activeChips.push({ key: "dur", label: `${duration[0]}–${duration[1]} days`, clear: () => setDurationRange(null) });
 
   const clearAll = () => {
-    setQuery(""); setFromId(null); setToId(null); setState("All"); setStyles([]); setJourneys([]); setRatings([]);
+    setQuery(""); setFromId(null); setToId(null); setState("All"); setStyles([]); setRatings([]);
     setRadius("all"); setOnlyDiscounted(false); setPriceRange(null); setDurationRange(null);
   };
 
@@ -301,9 +296,6 @@ function ToursExplorer() {
       </Box>
       <FilterDropdown label="Travel style" summary={multiSummary(styles)} active={styles.length > 0} width={360}>
         <ToggleChips options={styleOptions} selected={styles} onToggle={toggle(setStyles)} />
-      </FilterDropdown>
-      <FilterDropdown label="Journey type" summary={multiSummary(journeys)} active={journeys.length > 0} width={360}>
-        <ToggleChips options={journeyOptions} selected={journeys} onToggle={toggle(setJourneys)} />
       </FilterDropdown>
       <FilterDropdown label="Physical rating" summary={multiSummary(ratings)} active={ratings.length > 0} width={360}>
         <ToggleChips options={ratingOptions} selected={ratings} onToggle={toggle(setRatings)} />
@@ -388,7 +380,8 @@ function ToursExplorer() {
       <Navbar userLocationName={location?.name} />
 
       {/* Search bar */}
-      <Container maxWidth="lg" sx={{ position: "relative", zIndex: 4, pt: 3 }}>
+      <Box sx={{ position: "sticky", top: 68, zIndex: 900, bgcolor: "#f8fafc", pb: 1.5 }}>
+      <Container maxWidth="lg" sx={{ position: "relative", pt: 3 }}>
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
           <Paper
             elevation={0}
@@ -457,6 +450,7 @@ function ToursExplorer() {
           </Paper>
         </motion.div>
       </Container>
+      </Box>
 
       {/* Filter options */}
       <Container maxWidth="lg" sx={{ mt: 2 }}>

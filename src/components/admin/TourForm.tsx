@@ -63,6 +63,8 @@ export default function TourForm({ tourId }: { tourId?: string }) {
   const [durationNights, setDurationNights] = useState<number | "">("");
   const [maxGroupSize, setMaxGroupSize] = useState<number | "">("");
   const [singleRoomPrice, setSingleRoomPrice] = useState<number | "">("");
+  const [depositType, setDepositType] = useState<"amount" | "percentage">("percentage");
+  const [depositValue, setDepositValue] = useState<number | "">(30);
   const [coverImage, setCoverImage] = useState("");
 
   // Highlights
@@ -74,8 +76,6 @@ export default function TourForm({ tourId }: { tourId?: string }) {
   const [selectedTravelStyles, setSelectedTravelStyles] = useState<string[]>([]);
   const [physicalRatingsList, setPhysicalRatingsList] = useState<any[]>([]);
   const [selectedPhysicalRating, setSelectedPhysicalRating] = useState<string>("");
-  const [journeyTypesList, setJourneyTypesList] = useState<any[]>([]);
-  const [selectedJourneyType, setSelectedJourneyType] = useState<string>("");
   const [discountsList, setDiscountsList] = useState<any[]>([]);
 
   // Available dates (departures)
@@ -115,6 +115,8 @@ export default function TourForm({ tourId }: { tourId?: string }) {
         setDurationNights(t.durationNights ?? "");
         setMaxGroupSize(t.maxGroupSize ?? "");
         setSingleRoomPrice(t.singleRoomPriceInr ?? "");
+        setDepositType(t.depositType === "amount" ? "amount" : "percentage");
+        setDepositValue(t.depositValue ?? 30);
         setCoverImage(t.coverImage || "");
         setHighlights(t.highlights || []);
         setInclusions(t.inclusions || []);
@@ -122,7 +124,6 @@ export default function TourForm({ tourId }: { tourId?: string }) {
         setItinerary(t.itinerary || []);
         setSelectedTravelStyles(t.travelStyles || []);
         setSelectedPhysicalRating(t.physicalRating || "");
-        setSelectedJourneyType(t.journeyType || "");
         setDepartures(
           (t.departures || []).map((d: any) => ({
             _id: d._id,
@@ -145,10 +146,9 @@ export default function TourForm({ tourId }: { tourId?: string }) {
 
   const fetchClassifications = async () => {
     try {
-      const [resStyles, resRatings, resTypes, resDiscounts] = await Promise.all([
+      const [resStyles, resRatings, resDiscounts] = await Promise.all([
         fetch("/api/travel-styles").then((r) => r.json()),
         fetch("/api/physical-ratings").then((r) => r.json()),
-        fetch("/api/journey-types").then((r) => r.json()),
         fetch("/api/discounts").then((r) => r.json()),
       ]);
       if (resStyles.success && resStyles.data) {
@@ -156,9 +156,6 @@ export default function TourForm({ tourId }: { tourId?: string }) {
       }
       if (resRatings.success && resRatings.data) {
         setPhysicalRatingsList(resRatings.data);
-      }
-      if (resTypes.success && resTypes.data) {
-        setJourneyTypesList(resTypes.data);
       }
       if (resDiscounts.success && resDiscounts.data) {
         setDiscountsList(resDiscounts.data);
@@ -339,6 +336,8 @@ export default function TourForm({ tourId }: { tourId?: string }) {
           durationNights: Number(durationNights),
           maxGroupSize: Number(maxGroupSize) || 15,
           singleRoomPriceInr: Number(singleRoomPrice) || 0,
+          depositType,
+          depositValue: Number(depositValue) || 0,
           coverImage,
           highlights,
           itinerary,
@@ -346,7 +345,6 @@ export default function TourForm({ tourId }: { tourId?: string }) {
           exclusions,
           travelStyles: selectedTravelStyles,
           physicalRating: selectedPhysicalRating,
-          journeyType: selectedJourneyType,
           departures: departures.map(({ booked, ...d }) => ({ ...d, seats: Number(d.seats), price: Number(d.price) })),
         }),
       });
@@ -518,25 +516,6 @@ export default function TourForm({ tourId }: { tourId?: string }) {
               </FormControl>
             </Grid>
 
-            {/* Journey Type */}
-            <Grid size={{ xs: 12, sm: 4 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Journey Type</InputLabel>
-                <Select
-                  value={selectedJourneyType}
-                  label="Journey Type"
-                  onChange={(e) => setSelectedJourneyType(e.target.value)}
-                  sx={{ borderRadius: "4px" }}
-                >
-                  {journeyTypesList.map((j) => (
-                    <MenuItem key={j._id} value={j.name}>
-                      {j.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
           </Grid>
         </Paper>
 
@@ -608,6 +587,33 @@ export default function TourForm({ tourId }: { tourId?: string }) {
                 onChange={(e) => setSingleRoomPrice(e.target.value === "" ? "" : Number(e.target.value))}
                 helperText="Extra amount a traveller pays for a private room. Shared rooms are included in the tour price. Leave 0 if single rooms aren't offered."
                 slotProps={{ htmlInput: { min: 0 } }}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Deposit Type</InputLabel>
+                <Select
+                  value={depositType}
+                  label="Deposit Type"
+                  onChange={(e) => setDepositType(e.target.value as "amount" | "percentage")}
+                  sx={{ borderRadius: "4px" }}
+                >
+                  <MenuItem value="percentage">Percentage of total</MenuItem>
+                  <MenuItem value="amount">Fixed amount per person</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label={depositType === "percentage" ? "Deposit Percentage (%)" : "Deposit Amount (₹ per person)"}
+                type="number"
+                fullWidth
+                value={depositValue}
+                onChange={(e) => setDepositValue(e.target.value === "" ? "" : Number(e.target.value))}
+                helperText="Minimum travellers pay now to reserve seats; the remaining balance is due 30 days before the tour starts. Set 0 to turn the deposit option off."
+                slotProps={{ htmlInput: { min: 0, max: depositType === "percentage" ? 100 : undefined } }}
               />
             </Grid>
           </Grid>

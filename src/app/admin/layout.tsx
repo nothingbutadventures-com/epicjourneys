@@ -78,11 +78,6 @@ const NAV_ITEMS = [
     icon: <FitnessCenterRoundedIcon sx={{ fontSize: 18 }} />,
   },
   {
-    text: "Journey Type",
-    href: "/admin/journey-types",
-    icon: <ExploreRoundedIcon sx={{ fontSize: 18 }} />,
-  },
-  {
     text: "Discounts",
     href: "/admin/discounts",
     icon: <PercentRoundedIcon sx={{ fontSize: 18 }} />,

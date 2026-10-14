@@ -142,6 +142,12 @@ export const theme = createTheme({
         },
       },
     },
+    MuiContainer: {
+      styleOverrides: {
+        // Site-wide content width (default "lg" is 1200px).
+        maxWidthLg: { "&.MuiContainer-maxWidthLg": { maxWidth: "1320px" } },
+      },
+    },
     MuiButton: {
       defaultProps: {
         disableElevation: true,

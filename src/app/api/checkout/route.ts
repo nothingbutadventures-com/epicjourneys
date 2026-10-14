@@ -7,7 +7,7 @@ import Booking from "@/models/Booking";
 import User from "@/models/User";
 import { bookedSeatsByDeparture } from "@/lib/departures";
 import { computeQuote, type RoomType } from "@/lib/pricing";
-import { availableEmiMonths, buildSchedule } from "@/lib/emi";
+import { buildSchedule, depositOption } from "@/lib/deposit";
 import { HOLD_MINUTES, requireAuth, startInstallmentPayment } from "@/lib/checkout-server";
 
 const clean = (v: unknown) => String(v ?? "").trim();
@@ -22,9 +22,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const { tour: tourKey, departureId, strategy } = body;
-    const emiMonths = Number(body.emiMonths) || 0;
     if (!tourKey || !departureId) return NextResponse.json({ error: "Tour and date are required." }, { status: 400 });
-    if (strategy !== "full" && strategy !== "emi") return NextResponse.json({ error: "Choose a payment option." }, { status: 400 });
+    if (strategy !== "full" && strategy !== "deposit") return NextResponse.json({ error: "Choose a payment option." }, { status: 400 });
 
     const tour = await Tour.findOne(
       mongoose.isValidObjectId(tourKey) ? { _id: tourKey } : { slug: tourKey }
@@ -85,10 +84,16 @@ export async function POST(req: NextRequest) {
       rooms: travellers.map((t) => t.roomType),
     });
 
-    if (strategy === "emi" && !availableEmiMonths(departure.startDate).includes(emiMonths)) {
-      return NextResponse.json({ error: "That EMI plan isn't available for this date. Pick another plan or pay in full." }, { status: 400 });
+    const option = depositOption({
+      total: quote.total,
+      travellers: travellers.length,
+      startDate: departure.startDate,
+      cfg: { type: tour.depositType, value: tour.depositValue },
+    });
+    if (strategy === "deposit" && !option.available) {
+      return NextResponse.json({ error: option.reason || "A deposit isn't available for this date. Please pay in full." }, { status: 400 });
     }
-    const schedule = buildSchedule(quote.total, strategy, strategy === "emi" ? emiMonths : 0);
+    const schedule = buildSchedule({ total: quote.total, strategy, deposit: option.deposit, startDate: departure.startDate });
 
     const primary = travellers[0];
     const bookingRef = `EJ-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -112,7 +117,6 @@ export async function POST(req: NextRequest) {
       roomSupplementInr: quote.roomSupplement,
       travellers,
       paymentStrategy: strategy,
-      emiMonths: strategy === "emi" ? emiMonths : 0,
       installments: schedule.map((s) => ({ index: s.index, label: s.label, amountInr: s.amountInr, dueDate: s.dueDate, status: "pending" })),
       paymentStatus: "pending",
       amountPaidInr: 0,

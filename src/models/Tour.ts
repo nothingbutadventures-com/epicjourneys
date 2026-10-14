@@ -37,10 +37,11 @@ export interface ITour extends Document {
   exclusions: string[];
   travelStyles?: string[];
   physicalRating?: string;
-  journeyType?: string;
   discountPercentage?: number;
   maxGroupSize: number;
   singleRoomPriceInr?: number;
+  depositType?: "amount" | "percentage";
+  depositValue?: number;
   departures: IDeparture[];
   coverImage: string;
   images: string[];
@@ -94,11 +95,13 @@ const TourSchema = new Schema<ITour>(
     exclusions: [{ type: String }],
     travelStyles: [{ type: String }],
     physicalRating: { type: String, default: "Easy / Relaxed" },
-    journeyType: { type: String, default: "Guided Group Tour" },
     discountPercentage: { type: Number, default: 0 },
     maxGroupSize: { type: Number, default: 15 },
     // Extra per-person charge for a private (single) room; shared rooms are included in the base price.
     singleRoomPriceInr: { type: Number, default: 0, min: 0 },
+    // Minimum deposit to reserve a seat: ₹ per person (amount) or % of the total (percentage). 0 disables it.
+    depositType: { type: String, enum: ["amount", "percentage"], default: "percentage" },
+    depositValue: { type: Number, default: 30, min: 0 },
     departures: [DepartureSchema],
     coverImage: {
       type: String,

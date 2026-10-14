@@ -54,7 +54,7 @@ function statusOf(b: any) {
 function BookingCard({ b }: { b: any }) {
   const st = statusOf(b);
   const remaining = b.totalAmountInr - b.amountPaidInr;
-  const paidCount = (b.installments || []).filter((i: any) => i.status === "paid").length;
+  const nextDue = (b.installments || []).find((i: any) => i.status !== "paid");
   const t = b.tourId || {};
   return (
     <motion.div variants={rise} whileHover={{ y: -4 }}>
@@ -77,7 +77,7 @@ function BookingCard({ b }: { b: any }) {
             <Box>
               <Typography sx={{ fontWeight: 800, fontSize: "1.1rem", lineHeight: 1 }}>{inr(b.totalAmountInr)}</Typography>
               <Typography sx={{ fontSize: "0.75rem", color: remaining > 0 && b.status !== "cancelled" ? "#b45309" : "#059669", fontWeight: 700, mt: 0.5 }}>
-                {b.status === "cancelled" ? "Cancelled" : remaining > 0 ? `${inr(remaining)} left · ${b.paymentStrategy === "emi" ? `${paidCount}/${b.installments.length} paid` : "unpaid"}` : "Fully paid"}
+                {b.status === "cancelled" ? "Cancelled" : remaining > 0 ? `${inr(remaining)} ${nextDue ? `due by ${fmt(nextDue.dueDate)}` : "left"}` : "Fully paid"}
               </Typography>
             </Box>
             <Button component={Link} href={`/booking/${b.bookingRef}`} variant="contained" size="small" endIcon={<ArrowForwardRoundedIcon sx={{ fontSize: 16 }} />}
@@ -328,8 +328,8 @@ function ProfileInner() {
 
         {tab === "payments" && (
           <Paper elevation={0} sx={{ p: { xs: 2, md: 3 } }}>
-            <Typography sx={{ fontWeight: 800, fontSize: "1.2rem", mb: 0.5 }}>Payments & EMIs</Typography>
-            <Typography sx={{ color: "#64748b", fontSize: "0.88rem", mb: 2.5 }}>Every instalment across your bookings, in due-date order.</Typography>
+            <Typography sx={{ fontWeight: 800, fontSize: "1.2rem", mb: 0.5 }}>Payments</Typography>
+            <Typography sx={{ color: "#64748b", fontSize: "0.88rem", mb: 2.5 }}>Every payment across your bookings, in due-date order.</Typography>
             {instalments.length === 0 ? (
               <Typography sx={{ color: "#94a3b8", py: 3, textAlign: "center" }}>No payments yet.</Typography>
             ) : (

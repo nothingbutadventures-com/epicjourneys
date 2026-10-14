@@ -48,6 +48,126 @@ import { Reveal, stagger, rise } from "@/components/home/HomeSections";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
+
+const dkey = (iso: string) => String(iso).slice(0, 10);
+const utc = (iso: string, o: Intl.DateTimeFormatOptions) => new Date(iso).toLocaleDateString("en-IN", { ...o, timeZone: "UTC" });
+
+/** All departure dates for every city, grouped by month, with a city filter. */
+function DepartureDates({
+  departures,
+  selectedId,
+  onPick,
+}: {
+  departures: any[];
+  selectedId: string;
+  onPick: (d: any) => void;
+}) {
+  const [filter, setFilter] = useState<string>("all");
+  const cities: { id: string; name: string }[] = [];
+  for (const d of departures) if (d.cityId && !cities.some((c) => c.id === d.cityId)) cities.push({ id: d.cityId, name: d.cityName });
+
+  const list = departures.filter((d) => filter === "all" || d.cityId === filter);
+  const months: { key: string; label: string; items: any[] }[] = [];
+  for (const d of list) {
+    const k = dkey(d.startDate).slice(0, 7);
+    let m = months.find((x) => x.key === k);
+    if (!m) months.push((m = { key: k, label: utc(d.startDate, { month: "short", year: "numeric" }), items: [] }));
+    m.items.push(d);
+  }
+
+  return (
+    <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3.5 }, mb: 3, borderRadius: "6px", border: "1px solid #e2e8f0", position: "relative", overflow: "hidden" }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
+        <Box sx={{ width: 40, height: 40, borderRadius: "6px", bgcolor: "#34d399", color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <CalendarMonthIcon />
+        </Box>
+        <Typography variant="h5" sx={{ fontWeight: 800, color: "#0f172a", fontSize: "1.35rem", letterSpacing: "-0.015em" }}>
+          All departure dates ({departures.length})
+        </Typography>
+        <Box sx={{ flex: 1, height: 3, borderRadius: 2, bgcolor: "#fef9c3", display: { xs: "none", sm: "block" } }} />
+      </Box>
+      <Typography sx={{ color: "#64748b", fontSize: "0.88rem", mb: 2 }}>As seats fill, prices can change — pick your city and date, then book.</Typography>
+
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 3 }}>
+        {[{ id: "all", name: "All departures" }, ...cities].map((c) => {
+          const on = filter === c.id;
+          return (
+            <Chip
+              key={c.id}
+              icon={on ? <CheckCircleIcon sx={{ fontSize: "18px !important", color: "#facc15 !important" }} /> : undefined}
+              label={c.name}
+              onClick={() => setFilter(c.id)}
+              sx={{ fontWeight: 700, borderRadius: "6px", bgcolor: on ? "#0f172a" : "#f1f5f9", color: on ? "#facc15" : "#475569", border: "1px solid", borderColor: on ? "#0f172a" : "#e2e8f0", "&:hover": { bgcolor: on ? "#1e293b" : "#e2e8f0" } }}
+            />
+          );
+        })}
+      </Box>
+
+      {months.length === 0 && <Typography sx={{ color: "#94a3b8" }}>No upcoming departures.</Typography>}
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.25, rowGap: 2, alignItems: "stretch" }}>
+        {months.map((m) => (
+          <React.Fragment key={m.key}>
+            <Box sx={{ width: 64, minHeight: 86, mt: 1.25, borderRadius: "6px", bgcolor: "#0f172a", color: "#facc15", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.85rem", lineHeight: 1.3, textAlign: "center" }}>
+              {m.label.split(" ").map((w) => (
+                <span key={w}>{w}</span>
+              ))}
+            </Box>
+            {m.items.map((d) => {
+              const soldOut = d.available <= 0;
+              const low = !soldOut && d.available <= 5;
+              const sel = d._id === selectedId;
+              const price = Math.round(d.price * (1 - (d.discountPercentage || 0) / 100));
+              return (
+                <Box key={d._id} sx={{ position: "relative", pt: 1.25 }}>
+                  {low && (
+                    <Box sx={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", zIndex: 1, px: 1, py: 0.1, borderRadius: "4px", bgcolor: "#dc2626", color: "#fff", fontSize: "0.68rem", fontWeight: 800, whiteSpace: "nowrap" }}>
+                      {d.available} seat{d.available === 1 ? "" : "s"}
+                    </Box>
+                  )}
+                  <motion.div whileHover={soldOut ? undefined : { y: -3 }} whileTap={soldOut ? undefined : { scale: 0.97 }}>
+                    <Box
+                      role="button"
+                      tabIndex={soldOut ? -1 : 0}
+                      aria-pressed={sel}
+                      onClick={() => !soldOut && onPick(d)}
+                      onKeyDown={(e) => !soldOut && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onPick(d))}
+                      sx={{
+                        width: 112,
+                        borderRadius: "6px",
+                        border: "2px solid",
+                        borderColor: sel ? "#0f172a" : low ? "#fca5a5" : "#e2e8f0",
+                        bgcolor: sel ? "#fefce8" : soldOut ? "#f8fafc" : "#fff",
+                        opacity: soldOut ? 0.55 : 1,
+                        cursor: soldOut ? "not-allowed" : "pointer",
+                        textAlign: "center",
+                        overflow: "hidden",
+                        outline: "none",
+                        transition: "border-color .2s, background-color .2s",
+                        "&:hover": soldOut ? {} : { borderColor: sel ? "#0f172a" : "#facc15" },
+                      }}
+                    >
+                      <Box sx={{ py: 0.4, bgcolor: sel ? "#facc15" : "#f1f5f9", fontSize: "0.72rem", fontWeight: 800, color: "#475569", textTransform: "uppercase" }}>
+                        {utc(d.startDate, { weekday: "short" })}
+                      </Box>
+                      <Typography sx={{ fontSize: "1.35rem", fontWeight: 800, lineHeight: 1.2, mt: 0.5, textDecoration: soldOut ? "line-through" : "none" }}>
+                        {utc(d.startDate, { day: "2-digit" })}
+                      </Typography>
+                      <Typography sx={{ fontSize: "0.78rem", fontWeight: 700, color: "#334155" }}>₹{price.toLocaleString("en-IN")}</Typography>
+                      <Typography sx={{ fontSize: "0.66rem", color: soldOut ? "#dc2626" : "#64748b", fontWeight: 600, pb: 0.75, px: 0.5 }} noWrap>
+                        {soldOut ? "Sold out" : filter === "all" ? d.cityName : d.discountPercentage > 0 ? `${d.discountPercentage}% off` : "\u00a0"}
+                      </Typography>
+                    </Box>
+                  </motion.div>
+                </Box>
+              );
+            })}
+          </React.Fragment>
+        ))}
+      </Box>
+    </Paper>
+  );
+}
+
 export default function TourDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -235,9 +355,6 @@ export default function TourDetailPage() {
                   />
                 </motion.div>
               ) : null}
-              {tour.journeyType && (
-                <Chip label={tour.journeyType} size="small" sx={{ bgcolor: "#fff", color: "#0f172a", fontWeight: 700, borderRadius: "6px" }} />
-              )}
               {tour.physicalRating && (
                 <Chip icon={<HikingRoundedIcon sx={{ fontSize: "15px !important" }} />} label={tour.physicalRating} size="small" sx={{ bgcolor: "#fff", color: "#0f172a", fontWeight: 700, borderRadius: "6px" }} />
               )}
@@ -447,6 +564,20 @@ export default function TourDetailPage() {
                     ))}
                   </Box>
                 </Paper>
+              </Reveal>
+            )}
+
+            {/* All departure dates (every city) */}
+            {allDepartures.length > 0 && (
+              <Reveal>
+                <DepartureDates
+                  departures={allDepartures}
+                  selectedId={selectedDepartureId}
+                  onPick={(d) => {
+                    handleCityChange(d.cityId);
+                    selectDeparture(d);
+                  }}
+                />
               </Reveal>
             )}
 

@@ -146,7 +146,7 @@ function BookingInner() {
               <Typography sx={{ color: "#475569", mt: 0.5 }}>
                 {confirmed
                   ? remaining > 0
-                    ? `Seats confirmed. ${inr(remaining)} still to pay across your remaining EMIs.`
+                    ? `Seats confirmed. ${inr(remaining)} balance is due by ${nextDue ? fmt(nextDue.dueDate) : "the due date"} (30 days before the tour starts).`
                     : "Your payment is complete. Our local partner will contact you shortly."
                   : cancelled
                   ? "This booking is no longer active."
@@ -221,7 +221,7 @@ function BookingInner() {
           <motion.div variants={rise}>
             <Paper elevation={0} sx={{ p: 2.5 }}>
               <Typography sx={{ fontWeight: 800, fontSize: "1.1rem", mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
-                <PaymentsRoundedIcon sx={{ color: "#ca8a04" }} /> {b.paymentStrategy === "emi" ? "EMI schedule" : "Payment"}
+                <PaymentsRoundedIcon sx={{ color: "#ca8a04" }} /> {b.paymentStrategy === "full" ? "Payment" : "Payment schedule"}
               </Typography>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
                 {b.installments.map((inst: any) => {

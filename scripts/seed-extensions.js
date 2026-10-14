@@ -132,47 +132,6 @@ async function run() {
     console.log("Seeded 5 Physical Ratings");
   }
 
-  // 3. Journey Types
-  const journeyTypesColl = db.collection("journeytypes");
-  const existingJourneyTypes = await journeyTypesColl.countDocuments();
-  if (existingJourneyTypes === 0) {
-    await journeyTypesColl.insertMany([
-      {
-        name: "Guided Group Tour",
-        slug: "guided-group-tour",
-        description: "Small intimate groups of travelers with a dedicated local tour director.",
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        name: "Private Customized Journey",
-        slug: "private-journey",
-        description: "Exclusive travel for couples, families or private groups at your own rhythm.",
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        name: "Weekend Road Getaway",
-        slug: "weekend-getaway",
-        description: "Short 2 to 3-day escapes tailored for working professionals and weekenders.",
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        name: "Wilderness Expedition",
-        slug: "wilderness-expedition",
-        description: "Deep exploration of offbeat Himalayan passes and untouched landscapes.",
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ]);
-    console.log("Seeded 4 Journey Types");
-  }
-
   // 4. Discounts
   const discountsColl = db.collection("discounts");
   const existingDiscounts = await discountsColl.countDocuments();

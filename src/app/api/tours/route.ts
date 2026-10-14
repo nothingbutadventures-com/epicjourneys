@@ -187,10 +187,11 @@ export async function POST(req: NextRequest) {
       exclusions: Array.isArray(exclusions) ? exclusions : [],
       travelStyles: Array.isArray(body.travelStyles) ? body.travelStyles : [],
       physicalRating: body.physicalRating || "Easy / Relaxed",
-      journeyType: body.journeyType || "Guided Group Tour",
       discountPercentage: derived.discountPercentage || 0,
       maxGroupSize: Number(maxGroupSize) || 15,
       singleRoomPriceInr: Math.max(0, Number(body.singleRoomPriceInr) || 0),
+      depositType: body.depositType === "amount" ? "amount" : "percentage",
+      depositValue: Math.max(0, Math.min(body.depositType === "amount" ? Infinity : 100, Number(body.depositValue) || 0)),
       departures: deps.data,
       coverImage:
         coverImage ||

@@ -26,8 +26,6 @@ import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
-import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
-import RocketLaunchRoundedIcon from "@mui/icons-material/RocketLaunchRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import VerifiedRoundedIcon from "@mui/icons-material/VerifiedRounded";
 import EventRoundedIcon from "@mui/icons-material/EventRounded";
@@ -37,12 +35,12 @@ import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import DepartureCalendar from "@/components/checkout/DepartureCalendar";
+import InlineAuth from "@/components/checkout/InlineAuth";
 import PaymentGateway, { type PaymentDescriptor } from "@/components/checkout/PaymentGateway";
-import { CompassRose, MountainScene } from "@/components/home/Illustrations";
 import { rise, stagger } from "@/components/home/HomeSections";
 import { computeQuote, inr, type RoomType } from "@/lib/pricing";
-import { availableEmiMonths, buildSchedule, EMI_DOWN_PCT } from "@/lib/emi";
-import { withRedirect } from "@/lib/redirect";
+import { balanceDueDate, BALANCE_DUE_DAYS_BEFORE, buildSchedule, depositOption } from "@/lib/deposit";
 
 type Step = "travellers" | "rooms" | "payment";
 const STEPS: { key: Step; label: string; hint: string; icon: React.ReactNode }[] = [
@@ -79,8 +77,7 @@ function CheckoutInner() {
   const n = Math.min(20, Math.max(1, parseInt(sp.get("travellers") || "1", 10) || 1));
   const stepParam = sp.get("step");
   const step: Step = stepParam === "rooms" || stepParam === "payment" ? stepParam : "travellers";
-  const pay: "full" | "emi" = sp.get("pay") === "emi" ? "emi" : "full";
-  const emiParam = parseInt(sp.get("emi") || "0", 10) || 0;
+  const pay: "full" | "deposit" = sp.get("pay") === "deposit" ? "deposit" : "full";
   const roomsParam = sp.get("rooms");
 
   const updateParams = useCallback(
@@ -93,17 +90,21 @@ function CheckoutInner() {
     [router]
   );
 
+  const refreshUser = useCallback(() => {
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setUser(d?.authenticated ? d.user : null))
+      .catch(() => setUser(null));
+  }, []);
+
   // ---- Remote data ----
   const [user, setUser] = useState<{ name: string; email: string; phone?: string } | null | undefined>(undefined);
   const [tour, setTour] = useState<any>(null);
   const [tourError, setTourError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setUser(d?.authenticated ? d.user : null))
-      .catch(() => setUser(null));
-  }, []);
+    refreshUser();
+  }, [refreshUser]);
 
   useEffect(() => {
     if (!tourKey) return;
@@ -114,11 +115,15 @@ function CheckoutInner() {
   }, [tourKey]);
 
   const departure = useMemo(() => (tour?.departures || []).find((d: any) => d._id === departureId) || null, [tour, departureId]);
+  const sameCityDepartures = useMemo(
+    () => (tour?.departures || []).filter((d: any) => departure && d.cityId === departure.cityId),
+    [tour, departure]
+  );
   const maxTravellers = departure ? Math.min(20, departure.available) : 20;
   const singleOffered = (tour?.singleRoomPriceInr || 0) > 0;
 
   // ---- Traveller details (kept in sessionStorage so they survive login/register redirects) ----
-  const storeKey = `ej_checkout_${tourKey}_${departureId}`;
+  const storeKey = `ej_checkout_${tourKey}`;
   const [people, setPeople] = useState<Person[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
@@ -169,7 +174,7 @@ function CheckoutInner() {
   }, [roomsParam, n, singleOffered]);
   const setRooms = (next: RoomType[]) => updateParams({ rooms: next.join(",") });
 
-  // ---- Pricing & EMI ----
+  // ---- Pricing & deposit ----
   const quote = useMemo(
     () =>
       departure
@@ -182,11 +187,20 @@ function CheckoutInner() {
         : null,
     [departure, tour, rooms]
   );
-  const emiMonthsOptions = useMemo(() => (departure ? availableEmiMonths(departure.startDate) : []), [departure]);
-  const emiMonths = emiMonthsOptions.includes(emiParam) ? emiParam : emiMonthsOptions[0] || 0;
+  const depositInfo = useMemo(
+    () =>
+      quote && departure
+        ? depositOption({ total: quote.total, travellers: n, startDate: departure.startDate, cfg: { type: tour?.depositType, value: tour?.depositValue } })
+        : { available: false, deposit: 0, reason: "" },
+    [quote, departure, tour, n]
+  );
+  const effectivePay: "full" | "deposit" = pay === "deposit" && depositInfo.available ? "deposit" : "full";
   const schedule = useMemo(
-    () => (quote ? buildSchedule(quote.total, pay === "emi" && emiMonths ? "emi" : "full", emiMonths) : []),
-    [quote, pay, emiMonths]
+    () =>
+      quote && departure
+        ? buildSchedule({ total: quote.total, strategy: effectivePay, deposit: depositInfo.deposit, startDate: departure.startDate })
+        : [],
+    [quote, departure, effectivePay, depositInfo.deposit]
   );
   const payableNow = schedule[0]?.amountInr || 0;
 
@@ -212,8 +226,7 @@ function CheckoutInner() {
         body: JSON.stringify({
           tour: tour.slug || tour._id,
           departureId: departure._id,
-          strategy: pay === "emi" && emiMonths ? "emi" : "full",
-          emiMonths,
+          strategy: effectivePay,
           travellers: people.map((p, i) => ({ ...p, phone: cleanPhone(p.phone), roomType: rooms[i] })),
         }),
       });
@@ -243,12 +256,11 @@ function CheckoutInner() {
   );
 
   // ---- Render helpers ----
-  const currentUrl = typeof window !== "undefined" ? window.location.pathname + window.location.search : "/checkout";
   const stepIndex = STEPS.findIndex((s) => s.key === step);
 
   const shell = (children: React.ReactNode) => (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: "#f8fafc" }}>
-      <Navbar />
+      <Navbar key={user ? "in" : "out"} />
       {children}
       <Footer />
     </Box>
@@ -279,44 +291,6 @@ function CheckoutInner() {
       <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center", justifyContent: "center", py: 10 }}>
         <CircularProgress sx={{ color: "#0f172a" }} />
       </Box>
-    );
-  }
-
-  // ---- Login / register gate ----
-  if (user === null) {
-    return shell(
-      <Container maxWidth="md" sx={{ py: { xs: 4, md: 8 }, flexGrow: 1 }}>
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <Paper elevation={0} sx={{ position: "relative", overflow: "hidden", borderTop: "4px solid #facc15", textAlign: "center", pt: { xs: 4, md: 6 }, px: { xs: 2.5, md: 6 } }}>
-            <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} style={{ display: "inline-block" }}>
-              <CompassRose size={88} />
-            </motion.div>
-            <Typography sx={{ mt: 2, fontSize: { xs: "1.6rem", md: "2.1rem" }, fontWeight: 800, letterSpacing: "-0.02em" }}>
-              Log in to book <Box component="span" sx={{ color: "#ca8a04" }}>{tour.title}</Box>
-            </Typography>
-            <Typography sx={{ color: "#64748b", mt: 1, maxWidth: 480, mx: "auto" }}>
-              Your date, city and {n} traveller{n > 1 ? "s" : ""} are saved — you&apos;ll land right back here after you sign in.
-            </Typography>
-            <Box sx={{ display: "flex", gap: 1.5, justifyContent: "center", flexWrap: "wrap", mt: 3, mb: 4 }}>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
-                <Button component={Link} href={withRedirect("/login", currentUrl)} variant="contained" startIcon={<LoginRoundedIcon />}
-                  sx={{ px: 4, py: 1.2, bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#eab308" } }}>
-                  Login
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
-                <Button component={Link} href={withRedirect("/register", currentUrl)} variant="outlined" startIcon={<RocketLaunchRoundedIcon />}
-                  sx={{ px: 4, py: 1.2, fontWeight: 800, color: "#0f172a", borderColor: "#0f172a" }}>
-                  Register
-                </Button>
-              </motion.div>
-            </Box>
-            <Box sx={{ mx: { xs: -2.5, md: -6 }, lineHeight: 0 }}>
-              <MountainScene height={150} />
-            </Box>
-          </Paper>
-        </motion.div>
-      </Container>
     );
   }
 
@@ -424,7 +398,7 @@ function CheckoutInner() {
                   {i === 0 && (
                     <TextField
                       label="Email (from your account)"
-                      value={user.email}
+                      value={user?.email ?? ""}
                       disabled
                       sx={{ ...fieldSx, gridColumn: { sm: "1 / -1" } }}
                       slotProps={{ input: { endAdornment: <VerifiedRoundedIcon sx={{ color: "#10b981" }} /> } }}
@@ -461,6 +435,13 @@ function CheckoutInner() {
 
   const roomsStep = (
     <>
+      <DepartureCalendar
+        departures={sameCityDepartures}
+        selectedId={departureId}
+        travellers={n}
+        cityName={cityName}
+        onSelect={(d) => d._id !== departureId && updateParams({ departure: d._id })}
+      />
       {stepTitle(<KingBedRoundedIcon />, "Choose rooms", "Shared rooms are included in your tour price.")}
       {!singleOffered && (
         <Alert severity="info" sx={{ mb: 2.5 }}>Single rooms aren&apos;t offered on this tour — everyone stays in shared rooms (included in the price).</Alert>
@@ -538,7 +519,7 @@ function CheckoutInner() {
   );
 
   const payOption = (
-    key: "full" | "emi",
+    key: "full" | "deposit",
     title: string,
     badge: string,
     desc: string,
@@ -553,8 +534,8 @@ function CheckoutInner() {
           role="radio"
           aria-checked={selected}
           tabIndex={disabled ? -1 : 0}
-          onClick={() => !disabled && updateParams({ pay: key, emi: key === "emi" ? String(emiMonths) : null })}
-          onKeyDown={(e) => !disabled && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), updateParams({ pay: key, emi: key === "emi" ? String(emiMonths) : null }))}
+          onClick={() => !disabled && updateParams({ pay: key })}
+          onKeyDown={(e) => !disabled && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), updateParams({ pay: key }))}
           sx={{
             position: "relative", overflow: "hidden", p: 2.5, borderRadius: "6px", border: "2px solid", outline: "none", height: "100%",
             borderColor: selected ? "#0f172a" : "#e2e8f0", bgcolor: selected ? "#fefce8" : disabled ? "#f8fafc" : "#fff",
@@ -582,31 +563,15 @@ function CheckoutInner() {
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2, mb: 3 }}>
         {payOption("full", "Complete payment", "Pay once", `Pay the full ${inr(quote!.total)} now and your seats are confirmed instantly.`, <BoltRoundedIcon />)}
         {payOption(
-          "emi",
-          "Pay in EMI",
-          "No-cost EMI",
-          `Pay ${EMI_DOWN_PCT}% now to confirm, then equal monthly instalments — no extra charges.`,
+          "deposit",
+          "Pay minimum deposit",
+          "Reserve for less",
+          `Pay just ${inr(depositInfo.deposit)} now to confirm your seats. The remaining ${inr(quote!.total - depositInfo.deposit)} is due by ${fmtDate(balanceDueDate(departure.startDate).toISOString())} (${BALANCE_DUE_DAYS_BEFORE} days before the tour starts).`,
           <AccountBalanceWalletRoundedIcon />,
-          emiMonthsOptions.length === 0,
-          "EMI isn't available for this date — the journey starts too soon to finish instalments at least 14 days before departure."
+          !depositInfo.available,
+          depositInfo.reason
         )}
       </Box>
-
-      {pay === "emi" && emiMonthsOptions.length > 0 && (
-        <Box sx={{ mb: 3, p: 2.5, borderRadius: "6px", border: "1px solid #bae6fd", bgcolor: "#f0f9ff" }}>
-          <Typography sx={{ fontWeight: 800, mb: 1.25 }}>Pick your plan</Typography>
-          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
-            {emiMonthsOptions.map((m) => (
-              <Chip
-                key={m}
-                label={`${m} monthly EMIs`}
-                onClick={() => updateParams({ emi: String(m) })}
-                sx={{ fontWeight: 700, bgcolor: emiMonths === m ? "#0f172a" : "#fff", color: emiMonths === m ? "#facc15" : "#334155", border: "1px solid", borderColor: emiMonths === m ? "#0f172a" : "#cbd5e1", cursor: "pointer" }}
-              />
-            ))}
-          </Box>
-        </Box>
-      )}
 
       <Box sx={{ mb: 3, borderRadius: "6px", border: "1px solid #e2e8f0", overflow: "hidden", bgcolor: "#fff" }}>
         <Box sx={{ px: 2, py: 1.25, bgcolor: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: 1 }}>
@@ -689,9 +654,9 @@ function CheckoutInner() {
             {inr(quote!.total)}
           </motion.span>
         </Box>
-        {step === "payment" && pay === "emi" && emiMonths > 0 && (
+        {step === "payment" && effectivePay === "deposit" && (
           <Typography sx={{ mt: 1, fontSize: "0.78rem", color: "#64748b", textAlign: "center" }}>
-            Pay {inr(payableNow)} today, rest in {emiMonths} monthly instalments.
+            Pay {inr(payableNow)} today, balance by {fmtDate(balanceDueDate(departure.startDate).toISOString())}.
           </Typography>
         )}
         <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", mt: 2, justifyContent: "center" }}>
@@ -713,8 +678,8 @@ function CheckoutInner() {
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(0,1fr) 340px" }, gap: 3, alignItems: "start" }}>
         <Paper elevation={0} sx={{ p: { xs: 2, md: 3.5 }, overflow: "hidden" }}>
           <AnimatePresence mode="wait">
-            <motion.div key={step} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.3 }}>
-              {step === "travellers" ? travellersStep : step === "rooms" ? roomsStep : paymentStep}
+            <motion.div key={user === null ? "auth" : step} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.3 }}>
+              {user === null ? <InlineAuth onAuthed={refreshUser} tourTitle={tour.title} /> : step === "travellers" ? travellersStep : step === "rooms" ? roomsStep : paymentStep}
             </motion.div>
           </AnimatePresence>
         </Paper>

@@ -34,7 +34,6 @@ interface TourCardProps {
     distanceKm?: number | null;
     travelStyles?: string[];
     physicalRating?: string;
-    journeyType?: string;
     discountPercentage?: number;
   };
 }
@@ -150,20 +149,6 @@ export default function TourCard({ tour, fromCityId }: TourCardProps) {
             </Typography>
           </Box>
 
-          {tour.journeyType && (
-            <Chip
-              label={tour.journeyType}
-              size="small"
-              sx={{
-                bgcolor: "#f1f5f9",
-                color: "#475569",
-                fontSize: "0.68rem",
-                fontWeight: 600,
-                borderRadius: "6px",
-                height: 20,
-              }}
-            />
-          )}
         </Box>
 
         {/* Tour Title */}

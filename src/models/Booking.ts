@@ -43,8 +43,7 @@ export interface IBooking extends Document {
   userId?: mongoose.Types.ObjectId;
   travellers: IBookingTraveller[];
   roomSupplementInr: number;
-  paymentStrategy: "full" | "emi";
-  emiMonths: number;
+  paymentStrategy: "full" | "deposit" | "emi";
   installments: IInstallment[];
   paymentStatus: "pending" | "partial" | "paid";
   amountPaidInr: number;
@@ -122,8 +121,8 @@ const BookingSchema = new Schema<IBooking>(
     userId: { type: Schema.Types.ObjectId, ref: "User" },
     travellers: { type: [TravellerSchema], default: [] },
     roomSupplementInr: { type: Number, default: 0 },
-    paymentStrategy: { type: String, enum: ["full", "emi"], default: "full" },
-    emiMonths: { type: Number, default: 0 },
+    // "emi" is legacy (early test bookings); new bookings use "full" or "deposit".
+    paymentStrategy: { type: String, enum: ["full", "deposit", "emi"], default: "full" },
     installments: { type: [InstallmentSchema], default: [] },
     paymentStatus: { type: String, enum: ["pending", "partial", "paid"], default: "paid" },
     amountPaidInr: { type: Number, default: 0 },

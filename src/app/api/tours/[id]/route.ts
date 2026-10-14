@@ -141,6 +141,11 @@ export async function PUT(
       Object.assign(body, deriveFromDepartures(deps.data, deps.cities!));
     }
 
+    if (body.depositType !== undefined) body.depositType = body.depositType === "amount" ? "amount" : "percentage";
+    if (body.depositValue !== undefined) {
+      body.depositValue = Math.max(0, Math.min(body.depositType === "amount" ? Infinity : 100, Number(body.depositValue) || 0));
+    }
+
     const updated = await Tour.findByIdAndUpdate(id, body, { new: true }).populate(
       "destinationId",
       "name state coordinates coverImage"
