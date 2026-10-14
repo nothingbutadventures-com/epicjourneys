@@ -5,6 +5,7 @@ import Destination from "@/models/Destination";
 export interface DepartureInput {
   _id?: string;
   cityId: string;
+  addressId?: string | null;
   startDate: string;
   endDate: string;
   seats: number;
@@ -50,9 +51,18 @@ export async function sanitizeDepartures(
     );
     if (dup) return { error: `Date ${n}: duplicate of an earlier date for the same city` };
 
+    let addressId: string | null = null;
+    if (d.addressId) {
+      const city = cities.get(String(d.cityId));
+      const ok = (city?.addresses || []).some((a: any) => String(a._id) === String(d.addressId));
+      if (!ok) return { error: `Date ${n}: the selected starting address doesn't belong to that city` };
+      addressId = String(d.addressId);
+    }
+
     out.push({
       ...(d._id ? { _id: d._id } : {}),
       cityId: d.cityId,
+      addressId,
       startDate: start,
       endDate: end,
       seats,

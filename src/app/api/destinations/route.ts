@@ -4,6 +4,7 @@ import Destination from "@/models/Destination";
 import User from "@/models/User";
 import Tour from "@/models/Tour";
 import { getAuthFromRequest } from "@/lib/auth";
+import { sanitizeAddresses } from "@/lib/address";
 
 export async function GET(req: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
     if (state && state !== "All") filter.state = state;
 
     const destinations = await Destination.find(filter)
-      .populate("partnerId", "name email phone")
+      .populate("partnerId", "name email phone secondaryPhone")
       .sort({ name: 1 })
       .lean();
 
@@ -33,10 +34,16 @@ export async function GET(req: NextRequest) {
     const countMap = new Map();
     tourCounts.forEach((tc) => countMap.set(tc._id.toString(), tc.count));
 
-    const destinationsWithCounts = destinations.map((dest) => ({
-      ...dest,
-      tourCount: countMap.get(dest._id.toString()) || 0,
-    }));
+    // Addresses and partner contact details are for admins only.
+    const isAdmin = getAuthFromRequest(req)?.role === "admin";
+    const destinationsWithCounts = destinations.map((dest: any) => {
+      const { addresses, partnerId, ...rest } = dest;
+      return {
+        ...rest,
+        ...(isAdmin ? { addresses, partnerId } : {}),
+        tourCount: countMap.get(dest._id.toString()) || 0,
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -69,6 +76,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const addrs = sanitizeAddresses(body.addresses);
+    if (addrs.error) return NextResponse.json({ error: addrs.error }, { status: 400 });
+
     const newDestination = await Destination.create({
       name: name.trim(),
       state: state.trim(),
@@ -81,6 +91,7 @@ export async function POST(req: NextRequest) {
         coverImage ||
         "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop&q=60",
       partnerId: partnerId || null,
+      addresses: addrs.data,
       isActive: true,
     });
 

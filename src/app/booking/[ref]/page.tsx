@@ -187,6 +187,47 @@ function BookingInner() {
             </Paper>
           </motion.div>
 
+          {/* Starting address */}
+          {b.startAddress && (
+            <motion.div variants={rise}>
+              <Paper elevation={0} sx={{ p: 2.5 }}>
+                <Typography sx={{ fontWeight: 800, fontSize: "1.1rem", mb: 0.5, display: "flex", alignItems: "center", gap: 1 }}>
+                  <LocationOnIcon sx={{ color: "#ca8a04" }} /> Where to report
+                </Typography>
+                <Typography sx={{ color: "#64748b", fontSize: "0.85rem", mb: 2 }}>
+                  Starting point in {b.startAddress.city} for {fmt(b.travelDate)}.
+                </Typography>
+                <Typography sx={{ fontWeight: 800 }}>{b.startAddress.label}</Typography>
+                <Typography sx={{ color: "#334155", fontSize: "0.92rem", mt: 0.5, whiteSpace: "pre-line" }}>
+                  {b.startAddress.address}
+                  {b.startAddress.pincode ? ` — ${b.startAddress.pincode}` : ""}
+                </Typography>
+                {b.startAddress.landmark && (
+                  <Typography sx={{ color: "#64748b", fontSize: "0.85rem", mt: 0.5 }}>Landmark: {b.startAddress.landmark}</Typography>
+                )}
+                {(b.startAddress.mobile || b.startAddress.secondaryMobile) && (
+                  <Box sx={{ display: "flex", gap: 2.5, flexWrap: "wrap", mt: 1.5, fontSize: "0.9rem", fontWeight: 600 }}>
+                    {b.startAddress.mobile && (
+                      <Box component="a" href={`tel:+91${b.startAddress.mobile}`} sx={{ color: "#0f172a" }}>
+                        Call: +91 {b.startAddress.mobile}
+                      </Box>
+                    )}
+                    {b.startAddress.secondaryMobile && (
+                      <Box component="a" href={`tel:+91${b.startAddress.secondaryMobile}`} sx={{ color: "#0f172a" }}>
+                        Alternate: +91 {b.startAddress.secondaryMobile}
+                      </Box>
+                    )}
+                  </Box>
+                )}
+                {b.startAddress.mapUrl && (
+                  <Button component="a" href={b.startAddress.mapUrl} target="_blank" rel="noopener noreferrer" size="small" variant="outlined" sx={{ mt: 2, color: "#0f172a", borderColor: "#0f172a" }}>
+                    Open in Google Maps
+                  </Button>
+                )}
+              </Paper>
+            </motion.div>
+          )}
+
           {/* Travellers */}
           {b.travellers?.length > 0 && (
             <motion.div variants={rise}>

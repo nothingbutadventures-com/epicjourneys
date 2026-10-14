@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Alert, Box, Button, CircularProgress, Dialog, Typography } from "@mui/material";
-import { motion } from "framer-motion";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import ScienceRoundedIcon from "@mui/icons-material/ScienceRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
@@ -171,30 +170,27 @@ export default function PaymentGateway({
       onClose={busy || done ? undefined : onClose}
       maxWidth="xs"
       fullWidth
-      slotProps={{ paper: { sx: { borderRadius: "10px", overflow: "hidden" } } }}
+      slotProps={{ paper: { sx: { borderRadius: "6px", overflow: "hidden" } } }}
     >
       {payment && (
         <Box>
-          <Box sx={{ position: "relative", p: 2.5, bgcolor: "#0f172a", color: "#fff", overflow: "hidden" }}>
-            <Box sx={{ position: "absolute", right: -30, top: -30, width: 120, height: 120, borderRadius: "50%", bgcolor: "#facc15", opacity: 0.18 }} />
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative" }}>
-              <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, px: 1.25, py: 0.4, borderRadius: "6px", bgcolor: "rgba(250,204,21,0.18)", border: "1px solid rgba(250,204,21,0.5)", fontSize: "0.7rem", fontWeight: 800, letterSpacing: "0.1em" }}>
-                <ScienceRoundedIcon sx={{ fontSize: 14, color: "#facc15" }} /> TEST MODE
+          <Box sx={{ p: 2.5, bgcolor: "#fffbeb", borderBottom: "1px solid #fde68a" }}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, px: 1.25, py: 0.4, borderRadius: "6px", bgcolor: "#facc15", color: "#0f172a", fontSize: "0.7rem", fontWeight: 800, letterSpacing: "0.08em" }}>
+                <ScienceRoundedIcon sx={{ fontSize: 14 }} /> TEST MODE
               </Box>
               {!busy && !done && (
-                <CloseRoundedIcon onClick={onClose} sx={{ cursor: "pointer", color: "#94a3b8" }} />
+                <CloseRoundedIcon onClick={onClose} sx={{ cursor: "pointer", color: "#6b7280" }} />
               )}
             </Box>
-            <Typography sx={{ mt: 1.5, fontSize: "0.8rem", color: "#94a3b8", position: "relative" }}>{payment.label} · {payment.tourTitle}</Typography>
-            <Typography sx={{ fontSize: "2.1rem", fontWeight: 800, position: "relative", color: "#facc15" }}>{inr(payment.amountInr)}</Typography>
+            <Typography sx={{ mt: 1.5, fontSize: "0.82rem", color: "#64748b" }}>{payment.label} · {payment.tourTitle}</Typography>
+            <Typography sx={{ fontSize: "2rem", fontWeight: 800, color: "#0f172a" }}>{inr(payment.amountInr)}</Typography>
           </Box>
 
           <Box sx={{ p: 3 }}>
             {done ? (
               <Box sx={{ textAlign: "center", py: 2 }}>
-                <motion.div initial={{ scale: 0 }} animate={{ scale: [0, 1.25, 1] }} transition={{ duration: 0.5 }}>
-                  <CheckCircleRoundedIcon sx={{ fontSize: 72, color: "#10b981" }} />
-                </motion.div>
+                <CheckCircleRoundedIcon sx={{ fontSize: 64, color: "#16a34a" }} />
                 <Typography sx={{ fontWeight: 800, fontSize: "1.15rem", mt: 1 }}>Payment successful</Typography>
                 <Typography sx={{ color: "#64748b", fontSize: "0.88rem" }}>Taking you to your booking…</Typography>
               </Box>

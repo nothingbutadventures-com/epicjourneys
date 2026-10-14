@@ -6,6 +6,10 @@ export interface IUser extends Document {
   password?: string;
   role: "admin" | "partner" | "user";
   phone?: string;
+  secondaryPhone?: string;
+  companyName?: string;
+  address?: string;
+  notes?: string;
   emailVerified?: boolean;
   otpHash?: string;
   otpExpires?: Date;
@@ -27,6 +31,11 @@ const UserSchema = new Schema<IUser>(
       default: "user",
     },
     phone: { type: String, default: "" },
+    // Extra partner details (managed by admins)
+    secondaryPhone: { type: String, default: "" },
+    companyName: { type: String, default: "" },
+    address: { type: String, default: "" },
+    notes: { type: String, default: "" },
     // Accounts created before email verification existed have no value and are treated as verified.
     emailVerified: { type: Boolean },
     otpHash: { type: String, select: false },

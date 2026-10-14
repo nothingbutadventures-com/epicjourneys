@@ -10,29 +10,27 @@ import {
   Chip,
   CircularProgress,
   Container,
+  Divider,
+  Drawer,
   Grid,
   InputAdornment,
   MenuItem,
-  Popover,
   Paper,
   Slider,
   TextField,
   Typography,
 } from "@mui/material";
-import { AnimatePresence, motion } from "framer-motion";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import RestartAltRoundedIcon from "@mui/icons-material/RestartAltRounded";
-import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import SortRoundedIcon from "@mui/icons-material/SortRounded";
 import TravelExploreRoundedIcon from "@mui/icons-material/TravelExploreRounded";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TourCard from "@/components/TourCard";
-import { stagger, rise } from "@/components/home/HomeSections";
 
 interface CityOption {
   id: string;
@@ -57,55 +55,14 @@ const SORTS = [
   { value: "discount", label: "Biggest discount" },
 ];
 
-function FilterDropdown({
-  label,
-  summary,
-  active,
-  width = 320,
-  children,
-}: {
-  label: string;
-  summary?: string;
-  active: boolean;
-  width?: number;
-  children: React.ReactNode;
-}) {
-  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <>
-      <Button
-        onClick={(e) => setAnchor(e.currentTarget)}
-        endIcon={<KeyboardArrowDownRoundedIcon sx={{ transition: "transform .2s", transform: anchor ? "rotate(180deg)" : "none" }} />}
-        sx={{
-          flexShrink: 0,
-          px: 1.75,
-          py: 0.9,
-          borderRadius: "6px",
-          fontSize: "0.82rem",
-          fontWeight: 700,
-          whiteSpace: "nowrap",
-          bgcolor: active ? "#0f172a" : "#ffffff",
-          color: active ? "#facc15" : "#334155",
-          border: active ? "1px solid #0f172a" : "1px solid #e2e8f0",
-          "&:hover": { bgcolor: active ? "#1e293b" : "#f8fafc", borderColor: active ? "#1e293b" : "#cbd5e1" },
-        }}
-      >
-        {label}
-        {summary ? `: ${summary}` : ""}
-      </Button>
-      <Popover
-        open={Boolean(anchor)}
-        anchorEl={anchor}
-        onClose={() => setAnchor(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        slotProps={{ paper: { sx: { mt: 1, p: 2, width, maxWidth: "calc(100vw - 32px)", borderRadius: "6px", border: "1px solid #e2e8f0", boxShadow: "0 8px 20px -10px rgba(15,23,42,0.2)" } } }}
-      >
-        <Typography sx={{ fontSize: "0.72rem", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em", mb: 1.25 }}>
-          {label}
-        </Typography>
-        {children}
-      </Popover>
-    </>
+    <Box sx={{ py: 2 }}>
+      <Typography sx={{ fontSize: "0.78rem", fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.06em", mb: 1.25 }}>
+        {title}
+      </Typography>
+      {children}
+    </Box>
   );
 }
 
@@ -125,10 +82,11 @@ function ToggleChips({ options, selected, onToggle }: { options: string[]; selec
               fontWeight: on ? 700 : 500,
               fontSize: "0.75rem",
               cursor: "pointer",
-              bgcolor: on ? "#0f172a" : "#f1f5f9",
-              color: on ? "#facc15" : "#475569",
-              border: on ? "1px solid #0f172a" : "1px solid #e2e8f0",
-              "&:hover": { bgcolor: on ? "#1e293b" : "#e2e8f0" },
+              bgcolor: on ? "#facc15" : "#fff",
+              color: "#0f172a",
+              border: "1px solid",
+              borderColor: on ? "#facc15" : "#e5e7eb",
+              "&:hover": { bgcolor: on ? "#eab308" : "#f9fafb" },
             }}
           />
         );
@@ -159,6 +117,7 @@ function ToursExplorer() {
   const [priceRange, setPriceRange] = useState<number[] | null>(null);
   const [durationRange, setDurationRange] = useState<number[] | null>(null);
   const [sort, setSort] = useState("nearest");
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -287,34 +246,28 @@ function ToursExplorer() {
 
   const noPrice = !bounds.price[1] || bounds.price[0] === bounds.price[1];
   const noDuration = !bounds.duration[1] || bounds.duration[0] === bounds.duration[1];
-  const multiSummary = (v: string[]) => (v.length === 1 ? v[0] : v.length > 1 ? `${v.length} selected` : undefined);
-
-  const filterBar = (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1, overflowX: "auto", py: 0.5, "&::-webkit-scrollbar": { display: "none" } }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, pr: 0.5, flexShrink: 0, fontWeight: 800, fontSize: "0.85rem", color: "#0f172a" }}>
-        <TuneRoundedIcon sx={{ color: "#ca8a04", fontSize: 20 }} /> Filters
-      </Box>
-      <FilterDropdown label="Travel style" summary={multiSummary(styles)} active={styles.length > 0} width={360}>
+  const filtersPanel = (
+    <Box>
+      <FilterGroup title="Travel style">
         <ToggleChips options={styleOptions} selected={styles} onToggle={toggle(setStyles)} />
-      </FilterDropdown>
-      <FilterDropdown label="Physical rating" summary={multiSummary(ratings)} active={ratings.length > 0} width={360}>
+      </FilterGroup>
+      <Divider />
+      <FilterGroup title="Physical rating">
         <ToggleChips options={ratingOptions} selected={ratings} onToggle={toggle(setRatings)} />
-      </FilterDropdown>
-      <FilterDropdown label="State" summary={state !== "All" ? state : undefined} active={state !== "All"}>
+      </FilterGroup>
+      <Divider />
+      <FilterGroup title="State">
         <TextField select fullWidth value={state} onChange={(e) => setState(e.target.value)}>
           <MenuItem value="All">All Indian states</MenuItem>
-          {states.map((s) => (
-            <MenuItem key={s} value={s}>{s}</MenuItem>
+          {states.map((st) => (
+            <MenuItem key={st} value={st}>{st}</MenuItem>
           ))}
         </TextField>
-      </FilterDropdown>
-      <FilterDropdown
-        label="Price"
-        summary={priceActive ? `₹${price[0].toLocaleString("en-IN")}–₹${price[1].toLocaleString("en-IN")}` : undefined}
-        active={priceActive}
-      >
-        <Typography sx={{ fontWeight: 700, fontSize: "0.9rem", mb: 1 }}>
-          {noPrice ? "No price range available" : `₹${price[0].toLocaleString("en-IN")} – ₹${price[1].toLocaleString("en-IN")} per person`}
+      </FilterGroup>
+      <Divider />
+      <FilterGroup title="Price per person">
+        <Typography sx={{ fontWeight: 700, fontSize: "0.88rem", mb: 0.5 }}>
+          {noPrice ? "No range available" : `₹${price[0].toLocaleString("en-IN")} – ₹${price[1].toLocaleString("en-IN")}`}
         </Typography>
         <Slider
           disabled={noPrice}
@@ -325,10 +278,11 @@ function ToursExplorer() {
           onChange={(_, v) => setPriceRange(v as number[])}
           sx={{ color: "#facc15", mx: 0.5, width: "calc(100% - 8px)" }}
         />
-      </FilterDropdown>
-      <FilterDropdown label="Duration" summary={durationActive ? `${duration[0]}–${duration[1]} days` : undefined} active={durationActive}>
-        <Typography sx={{ fontWeight: 700, fontSize: "0.9rem", mb: 1 }}>
-          {noDuration ? "No duration range available" : `${duration[0]} – ${duration[1]} days`}
+      </FilterGroup>
+      <Divider />
+      <FilterGroup title="Duration">
+        <Typography sx={{ fontWeight: 700, fontSize: "0.88rem", mb: 0.5 }}>
+          {noDuration ? "No range available" : `${duration[0]} – ${duration[1]} days`}
         </Typography>
         <Slider
           disabled={noDuration}
@@ -340,8 +294,9 @@ function ToursExplorer() {
           onChange={(_, v) => setDurationRange(v as number[])}
           sx={{ color: "#facc15", mx: 0.5, width: "calc(100% - 8px)" }}
         />
-      </FilterDropdown>
-      <FilterDropdown label="Distance" summary={radius !== "all" ? `${radius} km` : undefined} active={radius !== "all"}>
+      </FilterGroup>
+      <Divider />
+      <FilterGroup title="Distance from you">
         <TextField
           select
           fullWidth
@@ -354,19 +309,11 @@ function ToursExplorer() {
             <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
           ))}
         </TextField>
-      </FilterDropdown>
-      <FilterDropdown label="Deals" summary={onlyDiscounted ? "Discounted" : undefined} active={onlyDiscounted} width={260}>
+      </FilterGroup>
+      <Divider />
+      <FilterGroup title="Deals">
         <ToggleChips options={["Discounted tours only"]} selected={onlyDiscounted ? ["Discounted tours only"] : []} onToggle={() => setOnlyDiscounted((v) => !v)} />
-      </FilterDropdown>
-      <Button
-        size="small"
-        startIcon={<RestartAltRoundedIcon sx={{ fontSize: 16 }} />}
-        onClick={clearAll}
-        disabled={!activeChips.length}
-        sx={{ flexShrink: 0, color: "#64748b", whiteSpace: "nowrap" }}
-      >
-        Reset
-      </Button>
+      </FilterGroup>
     </Box>
   );
 
@@ -376,26 +323,25 @@ function ToursExplorer() {
   ];
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: "#f8fafc" }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: "#ffffff" }}>
       <Navbar userLocationName={location?.name} />
 
-      {/* Search bar */}
-      <Box sx={{ position: "sticky", top: 68, zIndex: 900, bgcolor: "#f8fafc", pb: 1.5 }}>
-      <Container maxWidth="lg" sx={{ position: "relative", pt: 3 }}>
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
+      {/* Search bar — stays pinned under the header */}
+      <Box sx={{ position: "sticky", top: 68, zIndex: 900, bgcolor: "#fff8dc", borderBottom: "1px solid #fde68a", py: 1.75 }}>
+        <Container maxWidth="lg">
           <Paper
             elevation={0}
             sx={{
-              p: { xs: 1.5, md: 1 },
+              p: { xs: 1.5, md: 0.75 },
               borderRadius: "6px",
-              border: "1px solid #e2e8f0",
+              border: "1px solid #e5e7eb",
               display: "flex",
               flexDirection: { xs: "column", md: "row" },
               alignItems: "stretch",
-              gap: { xs: 2, md: 0 },
+              gap: { xs: 1.5, md: 0 },
             }}
           >
-            <Box sx={{ flex: 1.3, display: "flex", alignItems: "center", gap: 1.5, px: { md: 2.5 } }}>
+            <Box sx={{ flex: 1.3, display: "flex", alignItems: "center", gap: 1.5, px: { md: 2 } }}>
               <SearchRoundedIcon sx={{ color: "#64748b" }} />
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>Search</Typography>
@@ -415,7 +361,7 @@ function ToursExplorer() {
               </Box>
             </Box>
             {searchFields.map((f) => (
-              <Box key={f.label} sx={{ flex: 1, display: "flex", alignItems: "center", gap: 1.5, px: { md: 2.5 }, borderLeft: { md: "1px solid #e2e8f0" } }}>
+              <Box key={f.label} sx={{ flex: 1, display: "flex", alignItems: "center", gap: 1.5, px: { md: 2 }, borderLeft: { md: "1px solid #e5e7eb" }, minWidth: 0 }}>
                 {f.icon}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>{f.label}</Typography>
@@ -443,40 +389,42 @@ function ToursExplorer() {
               variant="contained"
               startIcon={<SearchRoundedIcon />}
               onClick={() => document.getElementById("tour-results")?.scrollIntoView({ behavior: "smooth" })}
-              sx={{ minWidth: { md: 160 }, py: 1.1, bgcolor: "#facc15", color: "#0f172a", fontSize: "0.95rem", fontWeight: 700, borderRadius: "6px", boxShadow: "none", "&:hover": { bgcolor: "#eab308" } }}
+              sx={{ minWidth: { md: 140 }, py: 1.1, bgcolor: "#facc15", color: "#0f172a", fontSize: "0.95rem", fontWeight: 700, borderRadius: "6px", boxShadow: "none", "&:hover": { bgcolor: "#eab308" } }}
             >
               Search
             </Button>
           </Paper>
-        </motion.div>
-      </Container>
+        </Container>
       </Box>
 
-      {/* Filter options */}
-      <Container maxWidth="lg" sx={{ mt: 2 }}>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.35 }}>
-          <Paper elevation={0} sx={{ px: 2, py: 1, borderRadius: "6px" }}>
-            {filterBar}
-          </Paper>
-        </motion.div>
-      </Container>
+      {/* Filters (left) + results (right) */}
+      <Container maxWidth="lg" id="tour-results" sx={{ py: { xs: 3, md: 4 }, flexGrow: 1 }}>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "280px minmax(0, 1fr)" }, gap: { xs: 2, md: 4 }, alignItems: "start" }}>
+          <Box sx={{ display: { xs: "none", md: "block" }, position: "sticky", top: 160, maxHeight: "calc(100vh - 176px)", overflowY: "auto", pr: 0.5 }}>
+            <Box sx={{ border: "1px solid #e5e7eb", borderRadius: "6px", px: 2, bgcolor: "#fff" }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pt: 1.5 }}>
+                <Typography sx={{ fontWeight: 800, fontSize: "1.05rem" }}>Filters</Typography>
+                <Button size="small" onClick={clearAll} disabled={!activeChips.length} sx={{ color: "#64748b" }}>Reset</Button>
+              </Box>
+              {filtersPanel}
+            </Box>
+          </Box>
 
-      {/* Results */}
-      <Container maxWidth="lg" id="tour-results" sx={{ py: 4, flexGrow: 1 }}>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12 }}>
-            {/* Toolbar */}
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap", mb: 2 }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 2, flexWrap: "wrap", mb: 2 }}>
               <Box>
-                <Typography sx={{ fontWeight: 800, color: "#0f172a", fontSize: "1.2rem" }}>
-                  {loading ? "Loading tours…" : `${filtered.length} ${filtered.length === 1 ? "tour" : "tours"} found`}
+                <Typography component="h1" sx={{ fontWeight: 800, color: "#0f172a", fontSize: { xs: "1.4rem", md: "1.7rem" }, letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+                  {loading ? "Loading tours…" : `${filtered.length} ${filtered.length === 1 ? "tour" : "tours"}`}
                 </Typography>
-                <Typography variant="caption" sx={{ color: "#64748b" }}>
+                <Typography sx={{ color: "#64748b", fontSize: "0.88rem", mt: 0.25 }}>
                   {toCity ? `Tours to ${toCity.name}` : "All verified tours across India"}
                   {location ? ` · distances from ${location.name}` : ""}
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                <Button variant="outlined" startIcon={<TuneRoundedIcon />} onClick={() => setDrawerOpen(true)} sx={{ display: { md: "none" }, color: "#0f172a", borderColor: "#d1d5db" }}>
+                  Filters{activeChips.length ? ` (${activeChips.length})` : ""}
+                </Button>
                 <TextField
                   select
                   value={sort}
@@ -484,24 +432,19 @@ function ToursExplorer() {
                   slotProps={{ input: { startAdornment: <SortRoundedIcon sx={{ fontSize: 18, mr: 0.75, color: "#64748b" }} /> } }}
                   sx={{ minWidth: 200, bgcolor: "#fff" }}
                 >
-                  {SORTS.map((s) => (
-                    <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>
+                  {SORTS.map((o) => (
+                    <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
                   ))}
                 </TextField>
               </Box>
             </Box>
 
-            {/* Active filters */}
             {activeChips.length > 0 && (
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 2.5, alignItems: "center" }}>
-                <AnimatePresence>
-                  {activeChips.map((c) => (
-                    <motion.div key={c.key} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} layout>
-                      <Chip label={c.label} size="small" onDelete={c.clear} sx={{ bgcolor: "#fef9c3", color: "#854d0e", fontWeight: 700, border: "1px solid #fde68a", "& .MuiChip-deleteIcon": { color: "#a16207" } }} />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-                <Button size="small" onClick={clearAll} sx={{ color: "#64748b", fontSize: "0.75rem" }}>Clear all</Button>
+                {activeChips.map((c) => (
+                  <Chip key={c.key} label={c.label} size="small" onDelete={c.clear} sx={{ bgcolor: "#fef9c3", color: "#854d0e", fontWeight: 700, border: "1px solid #fde68a", "& .MuiChip-deleteIcon": { color: "#a16207" } }} />
+                ))}
+                <Button size="small" onClick={clearAll} sx={{ color: "#64748b", fontSize: "0.78rem" }}>Clear all</Button>
               </Box>
             )}
 
@@ -513,36 +456,42 @@ function ToursExplorer() {
             {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
             {!loading && filtered.length > 0 && (
-              <motion.div key={filtered.map((t) => t._id).join("")} variants={stagger} initial="hidden" animate="show">
-                <Grid container spacing={2.5}>
-                  {filtered.map((tour) => (
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={tour._id}>
-                      <motion.div variants={rise} style={{ height: "100%" }}>
-                        <TourCard tour={tour} fromCityId={fromId || undefined} />
-                      </motion.div>
-                    </Grid>
-                  ))}
-                </Grid>
-              </motion.div>
+              <Grid container spacing={2.5}>
+                {filtered.map((tour) => (
+                  <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={tour._id}>
+                    <TourCard tour={tour} fromCityId={fromId || undefined} hideDescription />
+                  </Grid>
+                ))}
+              </Grid>
             )}
 
             {!loading && !error && filtered.length === 0 && (
-              <Paper elevation={0} sx={{ p: 6, textAlign: "center", border: "1px dashed #cbd5e1", my: 2 }}>
-                <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 2.5, repeat: Infinity }}>
-                  <TravelExploreRoundedIcon sx={{ fontSize: 56, color: "#94a3b8", mb: 1 }} />
-                </motion.div>
+              <Paper elevation={0} sx={{ p: 6, textAlign: "center", border: "1px dashed #d1d5db" }}>
+                <TravelExploreRoundedIcon sx={{ fontSize: 48, color: "#9ca3af", mb: 1 }} />
                 <Typography sx={{ fontWeight: 800, fontSize: "1.1rem", mb: 0.75 }}>No tours match these filters</Typography>
                 <Typography sx={{ color: "#64748b", fontSize: "0.88rem", maxWidth: 420, mx: "auto", mb: 2.5 }}>
                   Try removing a few filters or widening the price, duration or distance range.
                 </Typography>
-                <Button variant="contained" onClick={clearAll} startIcon={<RestartAltRoundedIcon />} sx={{ borderRadius: "6px" }}>
+                <Button variant="contained" onClick={clearAll} startIcon={<RestartAltRoundedIcon />} sx={{ bgcolor: "#facc15", color: "#0f172a", "&:hover": { bgcolor: "#eab308" } }}>
                   Reset all filters
                 </Button>
               </Paper>
             )}
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Container>
+
+      {/* Mobile filters */}
+      <Drawer anchor="bottom" open={drawerOpen} onClose={() => setDrawerOpen(false)} slotProps={{ paper: { sx: { borderRadius: "12px 12px 0 0", maxHeight: "88vh", p: 2.5 } } }}>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Typography sx={{ fontWeight: 800, fontSize: "1.1rem" }}>Filters</Typography>
+          <Button size="small" onClick={clearAll} sx={{ color: "#64748b" }}>Reset</Button>
+        </Box>
+        {filtersPanel}
+        <Button fullWidth variant="contained" onClick={() => setDrawerOpen(false)} sx={{ mt: 1, py: 1.1, bgcolor: "#facc15", color: "#0f172a", fontWeight: 700, "&:hover": { bgcolor: "#eab308" } }}>
+          Show {filtered.length} {filtered.length === 1 ? "tour" : "tours"}
+        </Button>
+      </Drawer>
 
       <Footer />
     </Box>

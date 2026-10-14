@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import Tour from "@/models/Tour";
 import Destination from "@/models/Destination";
+import User from "@/models/User";
 import { getAuthFromRequest } from "@/lib/auth";
 import { calculateDistanceKm } from "@/lib/geo";
 import { sanitizeDepartures, deriveFromDepartures } from "@/lib/departures";
@@ -9,7 +10,7 @@ import { sanitizeDepartures, deriveFromDepartures } from "@/lib/departures";
 export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
-    if (!Destination) {}
+    if (!Destination || !User) {}
 
     const { searchParams } = new URL(req.url);
     const destinationId = searchParams.get("destinationId");
@@ -37,9 +38,14 @@ export async function GET(req: NextRequest) {
       ];
     }
 
+    const isAdmin = getAuthFromRequest(req)?.role === "admin";
     const tours = await Tour.find(filter)
       .populate("destinationId", "name state coordinates coverImage")
-      .populate("departures.cityId", "name state coordinates")
+      .populate(
+        isAdmin
+          ? { path: "departures.cityId", select: "name state coordinates addresses partnerId", populate: { path: "partnerId", select: "phone secondaryPhone" } }
+          : { path: "departures.cityId", select: "name state coordinates" }
+      )
       .sort({ createdAt: -1 })
       .lean();
 

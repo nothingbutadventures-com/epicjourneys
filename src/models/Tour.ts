@@ -11,6 +11,7 @@ export interface IItineraryDay {
 export interface IDeparture {
   _id: mongoose.Types.ObjectId;
   cityId: mongoose.Types.ObjectId;
+  addressId?: mongoose.Types.ObjectId;
   price: number;
   startDate: Date;
   endDate: Date;
@@ -64,6 +65,8 @@ const ItineraryDaySchema = new Schema<IItineraryDay>(
 const DepartureSchema = new Schema<IDeparture>({
   // Start & end city for this date (a Destination)
   cityId: { type: Schema.Types.ObjectId, ref: "Destination", required: true },
+  // One of the city's addresses (Destination.addresses) where this date starts.
+  addressId: { type: Schema.Types.ObjectId, default: null },
   price: { type: Number, required: true, min: 0 },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },

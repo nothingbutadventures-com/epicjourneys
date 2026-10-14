@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import Destination from "@/models/Destination";
 import User from "@/models/User";
+import Tour from "@/models/Tour";
 import { getAuthFromRequest } from "@/lib/auth";
+import { sanitizeAddresses } from "@/lib/address";
 
 export async function GET(
   req: NextRequest,
@@ -15,7 +17,7 @@ export async function GET(
 
     const destination = await Destination.findById(id).populate(
       "partnerId",
-      "name email phone"
+      "name email phone secondaryPhone"
     );
 
     if (!destination) {
@@ -23,6 +25,11 @@ export async function GET(
         { error: "Destination not found" },
         { status: 404 }
       );
+    }
+
+    if (getAuthFromRequest(req)?.role !== "admin") {
+      const { addresses, partnerId, ...publicData } = destination.toObject();
+      return NextResponse.json({ success: true, data: publicData });
     }
 
     return NextResponse.json({ success: true, data: destination });
@@ -69,6 +76,25 @@ export async function PUT(
       }
     }
 
+    let addresses: any[] | undefined;
+    if (body.addresses !== undefined) {
+      const addrs = sanitizeAddresses(body.addresses);
+      if (addrs.error) return NextResponse.json({ error: addrs.error }, { status: 400 });
+      addresses = addrs.data;
+      // An address that tour dates point at can't be removed.
+      const keep = new Set((addresses || []).filter((a) => a._id).map((a) => String(a._id)));
+      for (const old of existingDest.addresses || []) {
+        if (keep.has(String(old._id))) continue;
+        const used = await Tour.countDocuments({ departures: { $elemMatch: { cityId: id, addressId: old._id } } });
+        if (used > 0) {
+          return NextResponse.json(
+            { error: `"${old.label}" is used as the starting address of ${used} tour${used === 1 ? "" : "s"}. Change those dates first.` },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     const updated = await Destination.findByIdAndUpdate(
       id,
       {
@@ -83,10 +109,11 @@ export async function PUT(
         ...(body.description !== undefined && { description: body.description }),
         ...(body.coverImage !== undefined && { coverImage: body.coverImage }),
         ...(body.partnerId !== undefined && { partnerId: body.partnerId || null }),
+        ...(addresses !== undefined && { addresses }),
         ...(body.isActive !== undefined && { isActive: body.isActive }),
       },
       { new: true }
-    ).populate("partnerId", "name email phone");
+    ).populate("partnerId", "name email phone secondaryPhone");
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {

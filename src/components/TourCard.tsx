@@ -18,6 +18,7 @@ import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 
 interface TourCardProps {
   fromCityId?: string;
+  hideDescription?: boolean;
   tour: {
     _id: string;
     title: string;
@@ -38,7 +39,7 @@ interface TourCardProps {
   };
 }
 
-export default function TourCard({ tour, fromCityId }: TourCardProps) {
+export default function TourCard({ tour, fromCityId, hideDescription }: TourCardProps) {
   return (
     <Card
       elevation={0}
@@ -169,8 +170,9 @@ export default function TourCard({ tour, fromCityId }: TourCardProps) {
           {tour.title}
         </Typography>
 
+
         {/* Short Description */}
-        {tour.shortDescription && (
+        {!hideDescription && tour.shortDescription && (
           <Typography
             variant="body2"
             sx={{

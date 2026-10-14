@@ -2,10 +2,8 @@
 
 import React, { useMemo, useState } from "react";
 import { Box, Chip, IconButton, Typography } from "@mui/material";
-import { motion } from "framer-motion";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
-import EventAvailableRoundedIcon from "@mui/icons-material/EventAvailableRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import { discountedUnitPrice, inr } from "@/lib/pricing";
@@ -68,11 +66,7 @@ function Month({
           return (
             <Box key={k} sx={{ position: "relative", display: "flex", justifyContent: "center" }}>
               {inRange && !isSelected && <Box sx={{ position: "absolute", inset: "4px 0", bgcolor: "#fef9c3", zIndex: 0 }} />}
-              <motion.div
-                whileHover={isTourDate && !soldOut ? { scale: 1.12 } : undefined}
-                whileTap={isTourDate && !soldOut ? { scale: 0.94 } : undefined}
-                style={{ position: "relative", zIndex: 1 }}
-              >
+              <Box sx={{ position: "relative", zIndex: 1 }}>
                 <Box
                   role={isTourDate ? "button" : undefined}
                   aria-label={isTourDate ? `${fmt(k)}${soldOut ? " (not enough seats)" : ""}` : undefined}
@@ -96,13 +90,13 @@ function Month({
                     bgcolor: isSelected ? "#0f172a" : isTourDate && !soldOut ? "#facc15" : "transparent",
                     textDecoration: soldOut ? "line-through" : "none",
                     border: isTourDate && !isSelected && !soldOut ? "1px solid #eab308" : "1px solid transparent",
-                    boxShadow: isSelected ? "0 8px 16px -6px rgba(15,23,42,0.5)" : "none",
+                    boxShadow: "none",
                     "&:focus-visible": { boxShadow: "0 0 0 3px rgba(15,23,42,0.25)" },
                   }}
                 >
                   {d}
                 </Box>
-              </motion.div>
+              </Box>
             </Box>
           );
         })}
@@ -147,17 +141,12 @@ export default function DepartureCalendar({
 
   return (
     <Box sx={{ mb: 4 }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-        <Box sx={{ width: 44, height: 44, borderRadius: "8px", bgcolor: "#38bdf8", color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <EventAvailableRoundedIcon />
-        </Box>
-        <Box>
-          <Typography sx={{ fontWeight: 800, fontSize: "1.35rem", letterSpacing: "-0.015em", lineHeight: 1.15 }}>Your travel date</Typography>
-          <Typography sx={{ color: "#64748b", fontSize: "0.88rem" }}>Tour dates from {cityName} are highlighted — tap one to switch.</Typography>
-        </Box>
+      <Box sx={{ mb: 2 }}>
+        <Typography component="h2" sx={{ fontWeight: 800, fontSize: "1.4rem", letterSpacing: "-0.015em", lineHeight: 1.2 }}>Your travel date</Typography>
+        <Typography sx={{ color: "#64748b", fontSize: "0.9rem", mt: 0.5 }}>Tour dates from {cityName} are highlighted — tap one to switch.</Typography>
       </Box>
 
-      <Box sx={{ p: { xs: 1.5, md: 2.5 }, borderRadius: "6px", border: "1px solid #e2e8f0", bgcolor: "#fff" }}>
+      <Box sx={{ p: { xs: 1.5, md: 2.5 }, borderRadius: "6px", border: "1px solid #e5e7eb", bgcolor: "#fff" }}>
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.5 }}>
           <IconButton aria-label="Previous month" onClick={() => shift(-1)} size="small" sx={{ border: "1px solid #e2e8f0" }}><ChevronLeftRoundedIcon /></IconButton>
           <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", justifyContent: "center", fontSize: "0.72rem", fontWeight: 700, color: "#475569" }}>
@@ -179,7 +168,7 @@ export default function DepartureCalendar({
           const isSel = d._id === selectedId;
           const notEnough = d.available < travellers;
           return (
-            <motion.div key={d._id} whileHover={notEnough ? undefined : { y: -3 }} whileTap={notEnough ? undefined : { scale: 0.98 }}>
+            <Box key={d._id}>
               <Box
                 role="radio"
                 aria-checked={isSel}
@@ -192,15 +181,15 @@ export default function DepartureCalendar({
                   borderRadius: "6px",
                   border: "2px solid",
                   outline: "none",
-                  borderColor: isSel ? "#0f172a" : "#e2e8f0",
-                  bgcolor: isSel ? "#fefce8" : notEnough ? "#f8fafc" : "#fff",
+                  borderColor: isSel ? "#facc15" : "#e5e7eb",
+                  bgcolor: isSel ? "#fffbeb" : notEnough ? "#f8fafc" : "#fff",
                   opacity: notEnough ? 0.6 : 1,
                   cursor: notEnough ? "not-allowed" : "pointer",
                   transition: "all .2s",
                 }}
               >
                 {isSel && (
-                  <Box sx={{ position: "absolute", top: -9, right: -9, width: 20, height: 20, borderRadius: "50%", bgcolor: "#10b981", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Box sx={{ position: "absolute", top: -9, right: -9, width: 20, height: 20, borderRadius: "50%", bgcolor: "#16a34a", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <CheckRoundedIcon sx={{ fontSize: 14 }} />
                   </Box>
                 )}
@@ -220,7 +209,7 @@ export default function DepartureCalendar({
                   </Typography>
                 </Box>
               </Box>
-            </motion.div>
+            </Box>
           );
         })}
       </Box>

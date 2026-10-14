@@ -52,7 +52,17 @@ export async function PUT(
     const updateData: any = {};
     if (body.name) updateData.name = body.name.trim();
     if (body.phone !== undefined) updateData.phone = body.phone.trim();
-    if (body.email) updateData.email = body.email.toLowerCase().trim();
+    if (body.email) {
+      const email = body.email.toLowerCase().trim();
+      if (email !== partner.email) {
+        const taken = await User.findOne({ email, _id: { $ne: partner._id } });
+        if (taken) return NextResponse.json({ error: "Another account already uses this email." }, { status: 409 });
+      }
+      updateData.email = email;
+    }
+    for (const k of ["secondaryPhone", "companyName", "address", "notes"] as const) {
+      if (body[k] !== undefined) updateData[k] = String(body[k]).trim();
+    }
     if (body.password) {
       updateData.password = await hashPassword(body.password);
     }

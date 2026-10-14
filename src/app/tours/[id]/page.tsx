@@ -15,10 +15,6 @@ import {
   CircularProgress,
   Alert,
   TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   LinearProgress,
   MenuItem,
   Accordion,
@@ -32,19 +28,9 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import { motion } from "framer-motion";
-import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import HikingRoundedIcon from "@mui/icons-material/HikingRounded";
-import ExploreRoundedIcon from "@mui/icons-material/ExploreRounded";
-import RouteRoundedIcon from "@mui/icons-material/RouteRounded";
-import MapRoundedIcon from "@mui/icons-material/MapRounded";
-import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
-import RestaurantRoundedIcon from "@mui/icons-material/RestaurantRounded";
-import HotelRoundedIcon from "@mui/icons-material/HotelRounded";
 import VerifiedRoundedIcon from "@mui/icons-material/VerifiedRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
-import { Reveal, stagger, rise } from "@/components/home/HomeSections";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -76,17 +62,11 @@ function DepartureDates({
   }
 
   return (
-    <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3.5 }, mb: 3, borderRadius: "6px", border: "1px solid #e2e8f0", position: "relative", overflow: "hidden" }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
-        <Box sx={{ width: 40, height: 40, borderRadius: "6px", bgcolor: "#34d399", color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <CalendarMonthIcon />
-        </Box>
-        <Typography variant="h5" sx={{ fontWeight: 800, color: "#0f172a", fontSize: "1.35rem", letterSpacing: "-0.015em" }}>
-          All departure dates ({departures.length})
-        </Typography>
-        <Box sx={{ flex: 1, height: 3, borderRadius: 2, bgcolor: "#fef9c3", display: { xs: "none", sm: "block" } }} />
-      </Box>
-      <Typography sx={{ color: "#64748b", fontSize: "0.88rem", mb: 2 }}>As seats fill, prices can change — pick your city and date, then book.</Typography>
+    <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3.5 }, mb: 3, borderRadius: "6px", border: "1px solid #e5e7eb" }}>
+      <Typography component="h2" sx={{ fontWeight: 800, color: "#0f172a", fontSize: "1.4rem", letterSpacing: "-0.015em", mb: 0.5 }}>
+        All departure dates ({departures.length})
+      </Typography>
+      <Typography sx={{ color: "#64748b", fontSize: "0.9rem", mb: 2.5 }}>As seats fill, prices can change — pick your city and date, then book.</Typography>
 
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 3 }}>
         {[{ id: "all", name: "All departures" }, ...cities].map((c) => {
@@ -124,7 +104,7 @@ function DepartureDates({
                       {d.available} seat{d.available === 1 ? "" : "s"}
                     </Box>
                   )}
-                  <motion.div whileHover={soldOut ? undefined : { y: -3 }} whileTap={soldOut ? undefined : { scale: 0.97 }}>
+                  <Box>
                     <Box
                       role="button"
                       tabIndex={soldOut ? -1 : 0}
@@ -157,7 +137,7 @@ function DepartureDates({
                         {soldOut ? "Sold out" : filter === "all" ? d.cityName : d.discountPercentage > 0 ? `${d.discountPercentage}% off` : "\u00a0"}
                       </Typography>
                     </Box>
-                  </motion.div>
+                  </Box>
                 </Box>
               );
             })}
@@ -296,347 +276,229 @@ export default function TourDetailPage() {
     setNumberOfTravelers((n) => Math.min(Math.max(1, n), d.available));
   };
 
-  const SectionTitle = ({ icon, children, color = "#facc15" }: { icon: React.ReactNode; children: React.ReactNode; color?: string }) => (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
-      <Box sx={{ width: 40, height: 40, borderRadius: "6px", bgcolor: color, color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        {icon}
-      </Box>
-      <Typography variant="h5" sx={{ fontWeight: 800, color: "#0f172a", fontSize: "1.35rem", letterSpacing: "-0.015em" }}>
-        {children}
-      </Typography>
-      <Box sx={{ flex: 1, height: 3, borderRadius: 2, bgcolor: "#fef9c3", display: { xs: "none", sm: "block" } }} />
-    </Box>
+  const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+    <Typography component="h2" sx={{ fontWeight: 800, color: "#0f172a", fontSize: "1.4rem", letterSpacing: "-0.015em", mb: 2.5 }}>
+      {children}
+    </Typography>
   );
 
-  const cardSx = { p: { xs: 2.5, md: 3.5 }, mb: 3, borderRadius: "6px", border: "1px solid #e2e8f0", position: "relative", overflow: "hidden" } as const;
-  const FACT_COLORS = ["#facc15", "#38bdf8", "#34d399", "#fb7185"];
+  const cardSx = { p: { xs: 2.5, md: 3.5 }, mb: 3, borderRadius: "6px", border: "1px solid #e5e7eb", bgcolor: "#fff" } as const;
+  const gallery: string[] = [...new Set<string>([tour.coverImage, ...(tour.images || [])].filter(Boolean))].slice(0, 5);
+  if (gallery.length === 0) gallery.push("https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200&auto=format&fit=crop&q=80");
+
+  const facts = [
+    { icon: <AccessTimeIcon />, label: "Duration", value: `${tour.durationDays} days / ${tour.durationNights} nights` },
+    { icon: <PeopleIcon />, label: "Group size", value: `Up to ${tour.maxGroupSize || 15} travellers` },
+    { icon: <LocationOnIcon />, label: "Starts & ends", value: selectedCity ? selectedCity.name : "Select a city" },
+    ...(tour.physicalRating ? [{ icon: <HikingRoundedIcon />, label: "Physical rating", value: tour.physicalRating }] : []),
+  ];
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "#f8fafc" }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "#ffffff" }}>
       <Navbar />
 
       <Container maxWidth="lg" sx={{ pt: 3, pb: 8, flexGrow: 1 }}>
-        {/* Back Link */}
-        <Button
-          component={Link}
-          href="/"
-          startIcon={<ArrowBackIcon />}
-          sx={{ mb: 2, color: "#475569", fontWeight: 600, fontSize: "0.9rem", "&:hover": { bgcolor: "transparent", color: "#0f172a" } }}
-        >
-          Back to Explorations
-        </Button>
+        {/* Breadcrumb */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 2, fontSize: "0.85rem", color: "#64748b", flexWrap: "wrap" }}>
+          <Link href="/" style={{ color: "#64748b" }}>Home</Link>
+          <span>/</span>
+          <Link href="/tours" style={{ color: "#64748b" }}>Tours</Link>
+          <span>/</span>
+          <Box component="span" sx={{ color: "#0f172a", fontWeight: 600 }}>{tour.title}</Box>
+        </Box>
 
-        {/* Hero Banner / Image */}
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <Paper
-            elevation={0}
-            sx={{ borderRadius: "6px", overflow: "hidden", mb: 3, border: "none", position: "relative" }}
-          >
-            <motion.div initial={{ scale: 1.12 }} animate={{ scale: 1 }} transition={{ duration: 8, ease: "easeOut" }}>
-              <Box
-                component="img"
-                src={
-                  tour.coverImage ||
-                  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200&auto=format&fit=crop&q=80"
-                }
-                alt={tour.title}
-                sx={{ width: "100%", height: { xs: 320, md: 480 }, objectFit: "cover", display: "block" }}
-              />
-            </motion.div>
-
-            {/* Floating badges */}
-            <Box sx={{ position: "absolute", top: 16, right: 16, display: "flex", flexDirection: "column", gap: 1, alignItems: "flex-end" }}>
-              {tour.discountPercentage ? (
-                <motion.div animate={{ rotate: [-3, 3, -3] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-                  <Chip
-                    icon={<LocalOfferRoundedIcon sx={{ fontSize: "16px !important", color: "#fff !important" }} />}
-                    label={`${tour.discountPercentage}% OFF`}
-                    sx={{ bgcolor: "#ef4444", color: "#fff", fontWeight: 800, borderRadius: "6px" }}
-                  />
-                </motion.div>
-              ) : null}
-              {tour.physicalRating && (
-                <Chip icon={<HikingRoundedIcon sx={{ fontSize: "15px !important" }} />} label={tour.physicalRating} size="small" sx={{ bgcolor: "#fff", color: "#0f172a", fontWeight: 700, borderRadius: "6px" }} />
-              )}
-            </Box>
-
-            <Box
-              sx={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                p: { xs: 2.5, md: 4 },
-                background: "linear-gradient(to top, rgba(8, 13, 26, 0.92) 0%, rgba(8, 13, 26, 0.45) 60%, transparent 100%)",
-                color: "#ffffff",
-              }}
-            >
-              <motion.div variants={stagger} initial="hidden" animate="show">
-                <motion.div variants={rise}>
-                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1.25 }}>
-                    <Chip
-                      icon={<LocationOnIcon sx={{ fontSize: "14px !important", color: "#0f172a !important" }} />}
-                      label={`${tour.targetCity || tour.startingPoint}, ${tour.state}`}
-                      size="small"
-                      sx={{ backgroundColor: "#facc15", color: "#0f172a", fontWeight: 700, borderRadius: "6px" }}
-                    />
-                    <Chip
-                      icon={<AccessTimeIcon sx={{ fontSize: "14px !important", color: "#ffffff !important" }} />}
-                      label={`${tour.durationDays} Days / ${tour.durationNights} Nights`}
-                      size="small"
-                      sx={{ backgroundColor: "rgba(255,255,255,0.18)", backdropFilter: "blur(6px)", color: "#ffffff", borderRadius: "6px" }}
-                    />
-                    <Chip
-                      icon={<PeopleIcon sx={{ fontSize: "14px !important", color: "#ffffff !important" }} />}
-                      label={`Max ${tour.maxGroupSize || 15} travelers`}
-                      size="small"
-                      sx={{ backgroundColor: "rgba(255,255,255,0.18)", backdropFilter: "blur(6px)", color: "#ffffff", borderRadius: "6px" }}
-                    />
-                  </Box>
-                </motion.div>
-                <motion.div variants={rise}>
-                  <Typography variant="h1" sx={{ fontSize: { xs: "1.7rem", md: "2.6rem" }, fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1.15 }}>
-                    {tour.title}
-                  </Typography>
-                </motion.div>
-                {tour.shortDescription && (
-                  <motion.div variants={rise}>
-                    <Typography sx={{ mt: 1, opacity: 0.85, maxWidth: 720, fontSize: "0.98rem" }}>{tour.shortDescription}</Typography>
-                  </motion.div>
-                )}
-              </motion.div>
-            </Box>
-          </Paper>
-        </motion.div>
-
-        {/* Travel style tags */}
-        {tour.travelStyles && tour.travelStyles.length > 0 && (
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 3 }}>
-            {tour.travelStyles.map((s: string) => (
-              <Chip key={s} icon={<ExploreRoundedIcon sx={{ fontSize: "15px !important", color: "#ca8a04 !important" }} />} label={s} size="small" sx={{ bgcolor: "#fef9c3", color: "#854d0e", fontWeight: 700, border: "1px solid #fde68a", borderRadius: "6px" }} />
-            ))}
+        {/* Title */}
+        <Typography component="h1" sx={{ fontSize: { xs: "1.7rem", md: "2.4rem" }, fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1.15, color: "#0f172a" }}>
+          {tour.title}
+        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2.5, flexWrap: "wrap", mt: 1.5, mb: 2.5, color: "#475569", fontSize: "0.92rem", fontWeight: 600 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <LocationOnIcon sx={{ fontSize: 18, color: "#ca8a04" }} />
+            {tour.targetCity || tour.startingPoint}, {tour.state}
           </Box>
-        )}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <AccessTimeIcon sx={{ fontSize: 18, color: "#ca8a04" }} />
+            {tour.durationDays} days / {tour.durationNights} nights
+          </Box>
+          {tour.discountPercentage ? (
+            <Chip label={`${tour.discountPercentage}% off`} size="small" sx={{ bgcolor: "#ef4444", color: "#fff", fontWeight: 700 }} />
+          ) : null}
+        </Box>
+
+        {/* Gallery */}
+        <Box
+          sx={{
+            display: "grid",
+            gap: 1,
+            mb: 3,
+            borderRadius: "6px",
+            overflow: "hidden",
+            gridTemplateColumns: { xs: "1fr", md: gallery.length >= 3 ? "2fr 1fr 1fr" : gallery.length === 2 ? "2fr 1fr" : "1fr" },
+            gridTemplateRows: { md: gallery.length >= 3 ? "210px 210px" : "420px" },
+          }}
+        >
+          {gallery.map((src, i) => (
+            <Box
+              key={src}
+              component="img"
+              src={src}
+              alt={i === 0 ? tour.title : ""}
+              sx={{
+                width: "100%",
+                height: { xs: i === 0 ? 260 : 0, md: "100%" },
+                display: { xs: i === 0 ? "block" : "none", md: "block" },
+                objectFit: "cover",
+                gridRow: { md: i === 0 && gallery.length >= 3 ? "1 / span 2" : "auto" },
+              }}
+            />
+          ))}
+        </Box>
 
         {/* Quick facts */}
-        <motion.div variants={stagger} initial="hidden" animate="show">
-          <Grid container spacing={2} sx={{ mb: 4 }}>
-            {[
-              { icon: <AccessTimeIcon />, label: "Duration", value: `${tour.durationDays} Days / ${tour.durationNights} Nights` },
-              { icon: <PeopleIcon />, label: "Group Size", value: `Up to ${tour.maxGroupSize || 15} travelers` },
-              { icon: <LocationOnIcon />, label: "Based In", value: tour.targetCity || tour.startingPoint },
-              { icon: <RouteRoundedIcon />, label: "Starts & Ends At", value: selectedCity ? selectedCity.name : "Select a city" },
-            ].map((f, i) => (
-              <Grid size={{ xs: 6, md: 3 }} key={f.label}>
-                <motion.div variants={rise} whileHover={{ y: -4 }} style={{ height: "100%" }}>
-                  <Paper elevation={0} sx={{ position: "relative", overflow: "hidden", p: 2, borderRadius: "6px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: 1.5, height: "100%" }}>
-                    <Box sx={{ position: "absolute", right: -18, top: -18, width: 70, height: 70, borderRadius: "50%", bgcolor: FACT_COLORS[i], opacity: 0.18 }} />
-                    <Box sx={{ width: 44, height: 44, borderRadius: "6px", bgcolor: FACT_COLORS[i], color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative" }}>
-                      {f.icon}
-                    </Box>
-                    <Box sx={{ minWidth: 0, position: "relative" }}>
-                      <Typography sx={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                        {f.label}
-                      </Typography>
-                      <Typography sx={{ fontSize: "0.92rem", color: "#0f172a", fontWeight: 800 }} noWrap>
-                        {f.value}
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
-        </motion.div>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", md: `repeat(${facts.length}, 1fr)` }, border: "1px solid #e5e7eb", borderRadius: "6px", mb: 4, bgcolor: "#fffbeb" }}>
+          {facts.map((f, i) => (
+            <Box key={f.label} sx={{ p: 2, display: "flex", alignItems: "center", gap: 1.5, borderLeft: { md: i ? "1px solid #fde68a" : "none" }, borderTop: { xs: i > 1 ? "1px solid #fde68a" : "none", md: "none" }, minWidth: 0 }}>
+              <Box sx={{ color: "#a16207", display: "flex" }}>{f.icon}</Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>{f.label}</Typography>
+                <Typography sx={{ fontSize: "0.92rem", color: "#0f172a", fontWeight: 700 }} noWrap>{f.value}</Typography>
+              </Box>
+            </Box>
+          ))}
+        </Box>
 
         <Grid container spacing={4}>
           {/* Left Column: Tour Details */}
           <Grid size={{ xs: 12, md: 8 }}>
             {/* Overview */}
-            <Reveal>
-              <Paper elevation={0} sx={{ ...cardSx, borderTop: "4px solid #facc15" }}>
-                <SectionTitle icon={<MapRoundedIcon />}>Tour Overview</SectionTitle>
-                <Typography variant="body1" sx={{ color: "#334155", lineHeight: 1.8, mb: 3, fontSize: "0.98rem" }}>
-                  {tour.description}
-                </Typography>
-
-                {/* Destination Point Notice */}
-                <Box
-                  sx={{
-                    p: 2,
-                    borderRadius: "6px",
-                    backgroundColor: "#fefce8",
-                    border: "1px solid #fef08a",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.5,
-                  }}
-                >
-                  <motion.div animate={{ rotate: [0, 12, -8, 0] }} transition={{ duration: 5, repeat: Infinity }} style={{ display: "flex" }}>
-                    <ExploreRoundedIcon sx={{ color: "#ca8a04", fontSize: 30 }} />
-                  </motion.div>
-                  <Typography variant="body2" sx={{ color: "#1e293b", fontWeight: 500 }}>
-                    <strong>Origin & Destination:</strong> This journey is based in <strong>{tour.targetCity || tour.startingPoint}</strong> ({tour.state}). Choose your start & end city when booking{selectedCity ? <> — currently <strong>{selectedCity.name}</strong></> : null}.
-                  </Typography>
+            <Paper elevation={0} sx={cardSx}>
+              <SectionTitle>Tour overview</SectionTitle>
+              {tour.shortDescription && (
+                <Typography sx={{ color: "#0f172a", fontWeight: 600, lineHeight: 1.7, mb: 1.5, fontSize: "1.02rem" }}>{tour.shortDescription}</Typography>
+              )}
+              <Typography variant="body1" sx={{ color: "#334155", lineHeight: 1.8, fontSize: "0.98rem", whiteSpace: "pre-line" }}>
+                {tour.description}
+              </Typography>
+              {tour.travelStyles && tour.travelStyles.length > 0 && (
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mt: 2.5 }}>
+                  {tour.travelStyles.map((st: string) => (
+                    <Chip key={st} label={st} size="small" sx={{ bgcolor: "#fef9c3", color: "#854d0e", fontWeight: 700, border: "1px solid #fde68a" }} />
+                  ))}
                 </Box>
-              </Paper>
-            </Reveal>
+              )}
+              <Box sx={{ mt: 2.5, p: 2, borderRadius: "6px", bgcolor: "#fffbeb", border: "1px solid #fde68a", display: "flex", gap: 1.25, alignItems: "flex-start" }}>
+                <LocationOnIcon sx={{ color: "#a16207", fontSize: 20, mt: 0.15 }} />
+                <Typography variant="body2" sx={{ color: "#1e293b" }}>
+                  Based in <strong>{tour.targetCity || tour.startingPoint}</strong> ({tour.state}). Choose your start &amp; end city when booking{selectedCity ? <> — currently <strong>{selectedCity.name}</strong></> : null}.
+                </Typography>
+              </Box>
+            </Paper>
 
             {/* Highlights */}
             {tour.highlights && tour.highlights.length > 0 && (
-              <Reveal>
-                <Paper elevation={0} sx={cardSx}>
-                  <SectionTitle icon={<AutoAwesomeRoundedIcon />} color="#fde047">Key Highlights</SectionTitle>
-                  <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
-                    <Grid container spacing={1.5}>
-                      {tour.highlights.map((highlight: string, index: number) => (
-                        <Grid size={{ xs: 12, sm: 6 }} key={index}>
-                          <motion.div variants={rise} whileHover={{ x: 4 }} style={{ height: "100%" }}>
-                            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.25, p: 1.5, height: "100%", borderRadius: "6px", bgcolor: "#f0fdf4", border: "1px solid #bbf7d0" }}>
-                              <CheckCircleIcon sx={{ color: "#10b981", fontSize: 20, mt: 0.2 }} />
-                              <Typography variant="body2" sx={{ color: "#334155", fontWeight: 600, fontSize: "0.92rem" }}>
-                                {highlight}
-                              </Typography>
-                            </Box>
-                          </motion.div>
-                        </Grid>
-                      ))}
+              <Paper elevation={0} sx={cardSx}>
+                <SectionTitle>Key highlights</SectionTitle>
+                <Grid container spacing={1.75}>
+                  {tour.highlights.map((highlight: string, index: number) => (
+                    <Grid size={{ xs: 12, sm: 6 }} key={index}>
+                      <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+                        <CheckCircleIcon sx={{ color: "#16a34a", fontSize: 20, mt: 0.2 }} />
+                        <Typography variant="body2" sx={{ color: "#334155", fontWeight: 500, fontSize: "0.94rem" }}>{highlight}</Typography>
+                      </Box>
                     </Grid>
-                  </motion.div>
-                </Paper>
-              </Reveal>
+                  ))}
+                </Grid>
+              </Paper>
             )}
 
             {/* Day-by-Day Itinerary */}
             {tour.itinerary && tour.itinerary.length > 0 && (
-              <Reveal>
-                <Paper elevation={0} sx={cardSx}>
-                  <SectionTitle icon={<RouteRoundedIcon />} color="#38bdf8">Day-by-Day Itinerary</SectionTitle>
-
-                  <Box sx={{ position: "relative", display: "flex", flexDirection: "column", gap: 1.5 }}>
-                    <Box sx={{ position: "absolute", left: 19, top: 20, bottom: 20, width: 2, bgcolor: "#fde68a", display: { xs: "none", sm: "block" } }} />
-                    {tour.itinerary.map((day: any) => (
-                      <Box key={day.day} sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
-                        <Box sx={{ width: 40, height: 40, borderRadius: "50%", bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, fontSize: "0.85rem", display: { xs: "none", sm: "flex" }, alignItems: "center", justifyContent: "center", flexShrink: 0, border: "4px solid #fff", boxShadow: "0 0 0 1px #fde68a", position: "relative", zIndex: 1 }}>
-                          {day.day}
+              <Paper elevation={0} sx={cardSx}>
+                <SectionTitle>Day-by-day itinerary</SectionTitle>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
+                  {tour.itinerary.map((day: any) => (
+                    <Accordion
+                      key={day.day}
+                      defaultExpanded={day.day === 1}
+                      disableGutters
+                      sx={{ border: "1px solid #e5e7eb", borderRadius: "6px !important", "&:before": { display: "none" }, boxShadow: "none", "&.Mui-expanded": { borderColor: "#fde047" } }}
+                    >
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                          <Chip label={`Day ${day.day}`} size="small" sx={{ backgroundColor: "#facc15", color: "#0f172a", fontWeight: 700, height: 24 }} />
+                          <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.98rem" }}>{day.title}</Typography>
                         </Box>
-                        <Accordion
-                          defaultExpanded={day.day === 1}
-                          sx={{
-                            flex: 1,
-                            minWidth: 0,
-                            border: "1px solid #e2e8f0",
-                            borderRadius: "6px !important",
-                            "&:before": { display: "none" },
-                            boxShadow: "none",
-                            "&.Mui-expanded": { borderColor: "#fde047", bgcolor: "#fffef5" },
-                          }}
-                        >
-                          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                              <Chip
-                                label={`Day ${day.day}`}
-                                size="small"
-                                sx={{ backgroundColor: "#facc15", color: "#0f172a", fontWeight: 700, height: 24, borderRadius: "6px" }}
-                              />
-                              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.98rem" }}>
-                                {day.title}
-                              </Typography>
-                            </Box>
-                          </AccordionSummary>
-                          <AccordionDetails sx={{ pt: 0, pb: 2 }}>
-                            <Typography variant="body2" sx={{ color: "#475569", lineHeight: 1.7, mb: 2, fontSize: "0.92rem" }}>
-                              {day.description}
-                            </Typography>
-                            {(day.meals || day.stay) && (
-                              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", pt: 1.5, borderTop: "1px dashed #e2e8f0" }}>
-                                {day.meals && (
-                                  <Chip icon={<RestaurantRoundedIcon sx={{ fontSize: "15px !important" }} />} label={day.meals} size="small" sx={{ bgcolor: "#ffedd5", color: "#9a3412", fontWeight: 600, borderRadius: "6px" }} />
-                                )}
-                                {day.stay && (
-                                  <Chip icon={<HotelRoundedIcon sx={{ fontSize: "15px !important" }} />} label={day.stay} size="small" sx={{ bgcolor: "#e0f2fe", color: "#075985", fontWeight: 600, borderRadius: "6px" }} />
-                                )}
-                              </Box>
-                            )}
-                          </AccordionDetails>
-                        </Accordion>
-                      </Box>
-                    ))}
-                  </Box>
-                </Paper>
-              </Reveal>
+                      </AccordionSummary>
+                      <AccordionDetails sx={{ pt: 0, pb: 2 }}>
+                        <Typography variant="body2" sx={{ color: "#475569", lineHeight: 1.7, mb: 1.5, fontSize: "0.92rem" }}>{day.description}</Typography>
+                        {(day.meals || day.stay) && (
+                          <Box sx={{ display: "flex", gap: 2.5, flexWrap: "wrap", pt: 1.25, borderTop: "1px dashed #e5e7eb", color: "#64748b", fontSize: "0.82rem" }}>
+                            {day.meals && <span><strong style={{ color: "#334155" }}>Meals:</strong> {day.meals}</span>}
+                            {day.stay && <span><strong style={{ color: "#334155" }}>Stay:</strong> {day.stay}</span>}
+                          </Box>
+                        )}
+                      </AccordionDetails>
+                    </Accordion>
+                  ))}
+                </Box>
+              </Paper>
             )}
 
             {/* All departure dates (every city) */}
             {allDepartures.length > 0 && (
-              <Reveal>
-                <DepartureDates
-                  departures={allDepartures}
-                  selectedId={selectedDepartureId}
-                  onPick={(d) => {
-                    handleCityChange(d.cityId);
-                    selectDeparture(d);
-                  }}
-                />
-              </Reveal>
+              <DepartureDates
+                departures={allDepartures}
+                selectedId={selectedDepartureId}
+                onPick={(d) => {
+                  handleCityChange(d.cityId);
+                  selectDeparture(d);
+                }}
+              />
             )}
 
             {/* Inclusions and Exclusions */}
             <Grid container spacing={3} sx={{ mb: 3 }}>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <Reveal>
-                  <Paper elevation={0} sx={{ p: 3, height: "100%", borderRadius: "6px", border: "1px solid #bbf7d0", bgcolor: "#f0fdf4" }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: "#059669", mb: 2, display: "flex", alignItems: "center", gap: 1, fontSize: "1.05rem" }}>
-                      <CheckCircleIcon /> What&apos;s Included
-                    </Typography>
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                      {tour.inclusions?.map((inc: string, i: number) => (
-                        <Box key={i} sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
-                          <CheckCircleIcon sx={{ fontSize: 17, color: "#10b981", mt: 0.3 }} />
-                          <Typography variant="body2" sx={{ color: "#334155", fontSize: "0.9rem", lineHeight: 1.6 }}>{inc}</Typography>
-                        </Box>
-                      ))}
-                    </Box>
-                  </Paper>
-                </Reveal>
+                <Paper elevation={0} sx={{ p: 3, height: "100%", borderRadius: "6px", border: "1px solid #e5e7eb" }}>
+                  <Typography component="h2" sx={{ fontWeight: 800, mb: 2, fontSize: "1.15rem" }}>What&apos;s included</Typography>
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1.1 }}>
+                    {tour.inclusions?.map((inc: string, i: number) => (
+                      <Box key={i} sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                        <CheckCircleIcon sx={{ fontSize: 18, color: "#16a34a", mt: 0.3 }} />
+                        <Typography variant="body2" sx={{ color: "#334155", fontSize: "0.92rem", lineHeight: 1.6 }}>{inc}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Paper>
               </Grid>
-
               <Grid size={{ xs: 12, sm: 6 }}>
-                <Reveal delay={0.1}>
-                  <Paper elevation={0} sx={{ p: 3, height: "100%", borderRadius: "6px", border: "1px solid #fecaca", bgcolor: "#fef2f2" }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 800, color: "#dc2626", mb: 2, display: "flex", alignItems: "center", gap: 1, fontSize: "1.05rem" }}>
-                      <CancelIcon /> What&apos;s Not Included
-                    </Typography>
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                      {tour.exclusions?.map((exc: string, i: number) => (
-                        <Box key={i} sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
-                          <CancelIcon sx={{ fontSize: 17, color: "#ef4444", mt: 0.3 }} />
-                          <Typography variant="body2" sx={{ color: "#334155", fontSize: "0.9rem", lineHeight: 1.6 }}>{exc}</Typography>
-                        </Box>
-                      ))}
-                    </Box>
-                  </Paper>
-                </Reveal>
+                <Paper elevation={0} sx={{ p: 3, height: "100%", borderRadius: "6px", border: "1px solid #e5e7eb" }}>
+                  <Typography component="h2" sx={{ fontWeight: 800, mb: 2, fontSize: "1.15rem" }}>What&apos;s not included</Typography>
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1.1 }}>
+                    {tour.exclusions?.map((exc: string, i: number) => (
+                      <Box key={i} sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                        <CancelIcon sx={{ fontSize: 18, color: "#dc2626", mt: 0.3 }} />
+                        <Typography variant="body2" sx={{ color: "#334155", fontSize: "0.92rem", lineHeight: 1.6 }}>{exc}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Paper>
               </Grid>
             </Grid>
           </Grid>
 
           {/* Right Column: Sticky Booking Widget */}
           <Grid size={{ xs: 12, md: 4 }}>
-            <Box component={motion.div} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.3 }} sx={{ position: "sticky", top: 92 }}>
+            <Box sx={{ position: "sticky", top: 92 }}>
               <Paper
                 elevation={0}
                 sx={{
                   p: 3,
                   borderRadius: "6px",
-                  border: "1px solid #e2e8f0",
+                  border: "1px solid #e5e7eb",
                   backgroundColor: "#ffffff",
-                  borderTop: "4px solid #facc15",
-                  position: "relative",
-                  overflow: "hidden",
                 }}
               >
-                <Box sx={{ position: "absolute", right: -30, top: -30, width: 110, height: 110, borderRadius: "50%", bgcolor: "#facc15", opacity: 0.18 }} />
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="caption" sx={{ color: "#94a3b8", textTransform: "uppercase", fontWeight: 700 }}>
                     {selectedDeparture ? "Price Per Traveler" : "Starting From"}
@@ -809,9 +671,16 @@ export default function TourDetailPage() {
                   {selectedDeparture ? "Book This Journey" : "Select a date to book"}
                 </Button>
 
-                <Box sx={{ display: "flex", justifyContent: "center", gap: 1, flexWrap: "wrap", mt: 1.75 }}>
-                  <Chip icon={<BoltRoundedIcon sx={{ fontSize: "15px !important", color: "#ca8a04 !important" }} />} label="Instant confirmation" size="small" sx={{ bgcolor: "#fef9c3", color: "#854d0e", fontWeight: 700, borderRadius: "6px" }} />
-                  <Chip icon={<VerifiedRoundedIcon sx={{ fontSize: "15px !important", color: "#059669 !important" }} />} label="Verified local partner" size="small" sx={{ bgcolor: "#dcfce7", color: "#166534", fontWeight: 700, borderRadius: "6px" }} />
+                <Box sx={{ mt: 1.75, display: "flex", flexDirection: "column", gap: 0.75 }}>
+                  {[
+                    { icon: <BoltRoundedIcon />, text: "Instant confirmation" },
+                    { icon: <VerifiedRoundedIcon />, text: "Verified local partner" },
+                  ].map((r) => (
+                    <Box key={r.text} sx={{ display: "flex", alignItems: "center", gap: 1, color: "#475569", fontSize: "0.82rem", fontWeight: 600 }}>
+                      {React.cloneElement(r.icon as React.ReactElement<any>, { sx: { fontSize: 17, color: "#a16207" } })}
+                      {r.text}
+                    </Box>
+                  ))}
                 </Box>
               </Paper>
             </Box>

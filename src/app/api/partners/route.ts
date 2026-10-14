@@ -78,6 +78,12 @@ export async function POST(req: NextRequest) {
     await connectToDatabase();
     const body = await req.json();
     const { name, email, password, phone, assignedDestination } = body;
+    const extra = {
+      secondaryPhone: String(body.secondaryPhone ?? "").trim(),
+      companyName: String(body.companyName ?? "").trim(),
+      address: String(body.address ?? "").trim(),
+      notes: String(body.notes ?? "").trim(),
+    };
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -104,6 +110,7 @@ export async function POST(req: NextRequest) {
       password: hashedPassword,
       role: "partner",
       phone: phone || "",
+      ...extra,
       assignedDestination: assignedDestination || null,
     });
 

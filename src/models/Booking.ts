@@ -18,6 +18,7 @@ export interface IInstallment {
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   simulated?: boolean;
+  offline?: boolean;
   paidAt?: Date;
 }
 
@@ -74,6 +75,8 @@ const InstallmentSchema = new Schema(
     razorpayOrderId: { type: String },
     razorpayPaymentId: { type: String },
     simulated: { type: Boolean, default: false },
+    // Recorded manually by an admin (cash / bank transfer).
+    offline: { type: Boolean, default: false },
     paidAt: { type: Date },
   },
   { _id: false }

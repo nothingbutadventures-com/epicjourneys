@@ -21,7 +21,7 @@ export async function GET(
 
     const tour = await Tour.findOne(query)
       .populate("destinationId", "name state coordinates coverImage description")
-      .populate("departures.cityId", "name state coordinates");
+      .populate("departures.cityId", "name state coordinates addresses");
 
     if (!tour) {
       return NextResponse.json({ error: "Tour not found" }, { status: 404 });
@@ -56,6 +56,12 @@ export async function GET(
           _id: d._id,
           cityId: d.cityId?._id ? String(d.cityId._id) : d.cityId ? String(d.cityId) : null,
           cityName: d.cityId?.name || tour.startingPoint,
+          addressId: d.addressId ? String(d.addressId) : null,
+          address: (() => {
+            const a = d.addressId ? (d.cityId?.addresses || []).find((x: any) => String(x._id) === String(d.addressId)) : null;
+            // Public page: no phone numbers. The booking owner sees the full address on their booking page.
+            return a ? { _id: a._id, label: a.label, address: a.address, landmark: a.landmark, pincode: a.pincode, mapUrl: a.mapUrl } : null;
+          })(),
           price: d.price ?? tour.priceInr,
           startDate: d.startDate,
           endDate: d.endDate,

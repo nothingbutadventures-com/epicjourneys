@@ -2,9 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Alert, Box, Button, CircularProgress, IconButton, InputAdornment, Stack, TextField, Typography } from "@mui/material";
-import { AnimatePresence, motion } from "framer-motion";
-import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
-import RocketLaunchRoundedIcon from "@mui/icons-material/RocketLaunchRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
 import MarkEmailReadRoundedIcon from "@mui/icons-material/MarkEmailReadRounded";
@@ -145,9 +142,9 @@ export default function InlineAuth({ onAuthed, tourTitle }: { onAuthed: () => vo
 
   return (
     <Box>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
+      <Box sx={{ mb: 2.5 }}>
         <Box>
-          <Typography sx={{ fontWeight: 800, fontSize: "1.35rem", letterSpacing: "-0.015em", lineHeight: 1.15 }}>
+          <Typography component="h2" sx={{ fontWeight: 800, fontSize: "1.4rem", letterSpacing: "-0.015em", lineHeight: 1.2 }}>
             {verifyEmail ? "Verify your email" : "Log in to continue"}
           </Typography>
           <Typography sx={{ color: "#64748b", fontSize: "0.88rem" }}>
@@ -157,10 +154,10 @@ export default function InlineAuth({ onAuthed, tourTitle }: { onAuthed: () => vo
       </Box>
 
       {!verifyEmail && (
-        <Box sx={{ position: "relative", display: "flex", p: 0.5, mb: 3, borderRadius: "6px", bgcolor: "#f1f5f9" }}>
+        <Box sx={{ display: "flex", mb: 3, borderBottom: "1px solid #e5e7eb" }}>
           {([
-            { key: "login" as Mode, label: "Login", icon: <LoginRoundedIcon sx={{ fontSize: 19 }} /> },
-            { key: "register" as Mode, label: "Register", icon: <RocketLaunchRoundedIcon sx={{ fontSize: 19 }} /> },
+            { key: "login" as Mode, label: "Login" },
+            { key: "register" as Mode, label: "Register" },
           ]).map((t) => (
             <Box
               key={t.key}
@@ -169,19 +166,15 @@ export default function InlineAuth({ onAuthed, tourTitle }: { onAuthed: () => vo
               tabIndex={0}
               onClick={() => switchMode(t.key)}
               onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), switchMode(t.key))}
-              sx={{ position: "relative", flex: 1, py: 1.1, display: "flex", alignItems: "center", justifyContent: "center", gap: 0.75, cursor: "pointer", fontWeight: 800, fontSize: "0.92rem", color: mode === t.key ? "#0f172a" : "#64748b", outline: "none" }}
+              sx={{ flex: 1, py: 1.25, textAlign: "center", cursor: "pointer", fontWeight: 800, fontSize: "0.95rem", color: mode === t.key ? "#0f172a" : "#6b7280", borderBottom: "3px solid", borderColor: mode === t.key ? "#facc15" : "transparent", mb: "-1px", outline: "none" }}
             >
-              {mode === t.key && (
-                <motion.div layoutId="checkout-auth-tab" transition={{ type: "spring", stiffness: 400, damping: 32 }} style={{ position: "absolute", inset: 0, borderRadius: 6, background: "#facc15" }} />
-              )}
-              <Box sx={{ position: "relative", display: "flex", alignItems: "center", gap: 0.75 }}>{t.icon}{t.label}</Box>
+              {t.label}
             </Box>
           ))}
         </Box>
       )}
 
-      <AnimatePresence mode="wait">
-        <motion.div key={verifyEmail ? "verify" : mode} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.25 }}>
+      <Box>
           {verifyEmail ? (
             <form onSubmit={submitVerify}>
               <Stack spacing={2.5}>
@@ -270,8 +263,7 @@ export default function InlineAuth({ onAuthed, tourTitle }: { onAuthed: () => vo
               </Stack>
             </form>
           )}
-        </motion.div>
-      </AnimatePresence>
+      </Box>
     </Box>
   );
 }

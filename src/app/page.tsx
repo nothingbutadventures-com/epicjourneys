@@ -8,7 +8,6 @@ import {
   Grid,
   Chip,
   TextField,
-  InputAdornment,
   Button,
   CircularProgress,
   Paper,
@@ -20,23 +19,19 @@ import {
   DialogActions,
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import LandscapeRoundedIcon from "@mui/icons-material/LandscapeRounded";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import {
-  CtaBanner,
-  ExperienceRail,
-  HowItWorks,
-  SectionHeading,
-  StatsStrip,
-  WhyUs,
-} from "@/components/home/HomeSections";
+import LocationCityRoundedIcon from "@mui/icons-material/LocationCityRounded";
+import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
+import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
+import Groups2OutlinedIcon from "@mui/icons-material/Groups2Outlined";
+import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
+import SupportAgentOutlinedIcon from "@mui/icons-material/SupportAgentOutlined";
+import Link from "next/link";
+import { Reveal } from "@/components/home/HomeSections";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import HeroSlider from "@/components/HeroSlider";
 import TourCard from "@/components/TourCard";
 import { calculateDistanceKm, formatDistance } from "@/lib/geo";
 import { KNOWN_DESTINATION_COORDINATES } from "@/lib/constants";
@@ -57,7 +52,6 @@ interface UserLocation {
 }
 
 export default function HomePage() {
-  const router = useRouter();
   const [tours, setTours] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -260,11 +254,13 @@ export default function HomePage() {
         map.set(c._id, e);
       }
     }
+    const covers = new Map<string, string>(dbDestinations.map((d: any) => [String(d._id), d.coverImage as string]));
     const entries = [...map.values()].map((c) => ({
       id: c.id,
       name: c.name,
       state: c.state,
       tourCount: c.tourCount,
+      coverImage: covers.get(c.id) || "",
       distance:
         userLocation && c.lat !== undefined && c.lng !== undefined
           ? calculateDistanceKm(userLocation.lat, userLocation.lng, c.lat, c.lng)
@@ -273,7 +269,7 @@ export default function HomePage() {
     if (userLocation) entries.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
     else entries.sort((a, b) => b.tourCount - a.tourCount);
     return entries.slice(0, 8);
-  }, [allTours, userLocation]);
+  }, [allTours, dbDestinations, userLocation]);
 
   const statsData = useMemo(() => {
     const withTours = dbDestinations.filter((d) => d.tourCount > 0);
@@ -284,6 +280,11 @@ export default function HomePage() {
       cities: fromOptions.length,
     };
   }, [allTours, dbDestinations, fromOptions]);
+
+  const heroPhotos = useMemo(
+    () => [...new Set<string>(allTours.map((t) => t.coverImage).filter(Boolean))].slice(0, 3),
+    [allTours]
+  );
 
   const scrollToResults = () => document.getElementById("tour-results")?.scrollIntoView({ behavior: "smooth" });
 
@@ -311,237 +312,194 @@ export default function HomePage() {
     "Goa",
   ];
 
+  const searchFields = [
+    { label: "From", placeholder: "Select starting point", value: fromCity, options: fromOptions, icon: <MyLocationRoundedIcon sx={{ color: "#ca8a04" }} />, onChange: selectFromCity },
+    { label: "To", placeholder: "Select destination", value: toCity, options: toOptions, icon: <LocationOnIcon sx={{ color: "#ef4444" }} />, onChange: setToCity },
+  ];
+
+  const sectionTitle = (title: React.ReactNode, sub?: string, action?: React.ReactNode) => (
+    <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 2, mb: 3, flexWrap: "wrap" }}>
+      <Box>
+        <Typography component="h2" sx={{ fontSize: { xs: "1.5rem", md: "1.9rem" }, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+          {title}
+        </Typography>
+        {sub && <Typography sx={{ color: "#64748b", fontSize: "0.95rem", mt: 0.5 }}>{sub}</Typography>}
+      </Box>
+      {action}
+    </Box>
+  );
+
+  const reasons = [
+    { icon: VerifiedUserOutlinedIcon, title: "Verified tours", text: "Every itinerary is checked by our team before it is listed." },
+    { icon: Groups2OutlinedIcon, title: "Local operators", text: "Trips are run by partners who live and work in the destination." },
+    { icon: PaymentsOutlinedIcon, title: "Clear pricing", text: "Per-person prices in rupees. Reserve with a small deposit on many tours." },
+    { icon: SupportAgentOutlinedIcon, title: "Help when you need it", text: "Questions before or during your trip? Our team is a message away." },
+  ];
+
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: "#f8fafc" }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: "#ffffff" }}>
       <Navbar
         userLocationName={userLocation?.name}
         onLocationClick={() => setLocationDialogOpen(true)}
       />
 
-      <HeroSlider onBook={() => document.getElementById("journey-search")?.scrollIntoView({ behavior: "smooth" })} />
-
-      {/* Search Your Journey */}
-      <Container maxWidth="lg" id="journey-search" sx={{ pt: 2.5, position: "relative", zIndex: 4, mt: { md: -4 } }}>
-        <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}>
-        <Paper
-          elevation={0}
-          sx={{
-            p: { xs: 1.5, md: 1 },
-            borderRadius: "6px",
-            border: "1px solid #e2e8f0",
-            bgcolor: "#ffffff",
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            alignItems: "stretch",
-            gap: { xs: 2, md: 0 },
-            boxShadow: "0 12px 32px -12px rgba(15, 23, 42, 0.18)",
-          }}
-        >
-          {[
-            { label: "From", placeholder: "Select Starting point", value: fromCity, options: fromOptions, icon: <MyLocationRoundedIcon sx={{ color: "#ca8a04" }} />,
-              onChange: selectFromCity },
-            { label: "To", placeholder: "Select Destination", value: toCity, options: toOptions, icon: <LocationOnIcon sx={{ color: "#ef4444" }} />,
-              onChange: setToCity },
-          ].map((f, i) => (
-            <Box
-              key={f.label}
-              sx={{
-                flex: 1,
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
-                px: { md: 2.5 },
-                borderLeft: { md: i ? "1px solid #e2e8f0" : "none" },
-              }}
-            >
-              {f.icon}
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  {f.label}
-                </Typography>
-                <Autocomplete
-                  options={f.options}
-                  value={f.value}
-                  getOptionLabel={(o) => o.name}
-                  isOptionEqualToValue={(o, v) => o.id === v.id}
-                  noOptionsText="No cities available"
-                  onChange={(_, v) => f.onChange(v)}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      variant="standard"
-                      placeholder={f.placeholder}
-                      slotProps={{
-                        ...params.slotProps,
-                        input: { ...params.slotProps.input, disableUnderline: true },
-                      }}
-                      sx={{ "& input": { fontSize: "1rem", fontWeight: 600, color: "#0f172a", py: 0.5 } }}
-                    />
-                  )}
-                />
-              </Box>
-            </Box>
-          ))}
-          <Button
-            variant="contained"
-            startIcon={<SearchRoundedIcon />}
-            onClick={() => {
-              fetchTours();
-              document.getElementById("tour-results")?.scrollIntoView({ behavior: "smooth" });
-            }}
-            sx={{ minWidth: { md: 170 }, py: 1.1, bgcolor: "#facc15", color: "#0f172a", fontSize: "0.95rem", fontWeight: 700, borderRadius: "6px", boxShadow: "none", "&:hover": { bgcolor: "#eab308" } }}
-          >
-            Search
-          </Button>
-        </Paper>
-        </motion.div>
-      </Container>
-
-      {/* Nearby Destinations */}
-      <Container maxWidth="lg" id="destinations" sx={{ pt: 8 }}>
-        <SectionHeading
-          eyebrow="Near you"
-          title={userLocation ? "Tours starts near" : "Popular"}
-          accent={userLocation ? userLocation.name.split(",")[0] : "Destinations"}
-          subtitle="Sorted by distance from your location, nearest first."
-        />
-        <Grid container spacing={2.5}>
-          {nearbyDestinations.map(({ id, name, state, distance, tourCount }, idx) => {
-            const count = tourCount;
-            const active = fromCity?.id === id;
-            return (
-              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={id}>
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.5, delay: (idx % 4) * 0.08 }}
-                  whileHover={{ y: -6 }}
-                  style={{ height: "100%" }}
-                >
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 2.5,
-                    borderRadius: "6px",
-                    border: active ? "1px solid #94a3b8" : "1px solid #e2e8f0",
-                    bgcolor: "#fff",
-                    height: "100%",
-                    position: "relative",
-                    overflow: "hidden",
-                    borderTop: "4px solid #facc15",
-                    transition: "box-shadow .2s, transform .2s",
-                    "&:hover": { boxShadow: "0 14px 30px -14px rgba(15,23,42,0.25)", transform: "translateY(-2px)" },
-                  }}
-                >
-                  <LandscapeRoundedIcon sx={{ position: "absolute", right: -10, bottom: -14, fontSize: 96, color: "#f1f5f9" }} />
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5, position: "relative" }}>
-                    <Typography sx={{ color: "#64748b", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                      {state}
-                    </Typography>
-                    {distance !== null && (
-                      <Chip
-                        label={formatDistance(distance)}
-                        size="small"
-                        sx={{ height: 22, fontSize: "0.7rem", fontWeight: 600, bgcolor: "#fefce8", color: "#a16207", borderRadius: "6px" }}
-                      />
-                    )}
-                  </Box>
-                  <Typography sx={{ fontWeight: 800, color: "#0f172a", fontSize: "1.3rem", lineHeight: 1.3, mb: 2 }}>
-                    {name}
-                  </Typography>
-                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative" }}>
-                    <Typography sx={{ color: "#475569", fontSize: "0.85rem", fontWeight: 500 }}>
-                      {count} {count === 1 ? "Tour" : "Tours"}
-                    </Typography>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => {
-                        const qs = new URLSearchParams({ from: id });
-                        if (selectedState !== "All") qs.set("state", selectedState);
-                        if (selectedRadius !== "all") qs.set("radius", selectedRadius);
-                        router.push(`/tours?${qs.toString()}`);
-                      }}
-                      sx={{ color: "#0f172a", borderColor: "#cbd5e1", fontWeight: 600, borderRadius: "6px", "&:hover": { borderColor: "#0f172a", bgcolor: "#f8fafc" } }}
-                    >
-                      View Tours
-                    </Button>
-                  </Box>
-                </Paper>
-                </motion.div>
-              </Grid>
-            );
-          })}
-        </Grid>
-      </Container>
-
-
-      <StatsStrip {...statsData} />
-      <ExperienceRail onPick={scrollToResults} />
-
-      {/* Main Catalog Area */}
-      <Container maxWidth="lg" id="tour-results" sx={{ py: 4.5, flexGrow: 1 }}>
-        {/* Distance Filter Console Paper */}
-        <Paper
-          elevation={0}
-          sx={{
-            p: 2,
-            mb: 3,
-            borderRadius: "6px",
-            border: "1px solid #e2e8f0",
-            bgcolor: "#ffffff",
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            alignItems: { xs: "flex-start", md: "center" },
-            justifyContent: "space-between",
-            gap: 2,
-          }}
-        >
-          {/* Current location origin indicator */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: "6px",
-                bgcolor: "#fefce8",
-                color: "#ca8a04",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <LocationOnIcon sx={{ fontSize: 18 }} />
-            </Box>
-            <Box>
-              <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.82rem", lineHeight: 1.2 }}>
-                Origin: {userLocation?.name || "Detecting Location..."}
-              </Typography>
-              <Typography variant="caption" sx={{ color: "#64748b", fontSize: "0.72rem" }}>
-                {userLocation?.source === "gps"
-                  ? "Live GPS Coordinates"
-                  : userLocation?.source === "ip"
-                  ? "Network IP Location"
-                  : "Manual City Selection"}
-                {" • "}
-                <Box
-                  component="span"
-                  onClick={() => setLocationDialogOpen(true)}
-                  sx={{ color: "#ca8a04", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}
-                >
-                  Change City
+      {/* Hero */}
+      <Box sx={{ bgcolor: "#fff8dc", borderBottom: "1px solid #fde68a" }}>
+        <Container maxWidth="lg" sx={{ py: { xs: 4, md: 7 } }}>
+          <Grid container spacing={{ xs: 4, md: 6 }} sx={{ alignItems: "center" }}>
+            <Grid size={{ xs: 12, md: heroPhotos.length >= 2 ? 7 : 12 }}>
+              <Typography component="h1" sx={{ fontSize: { xs: "2.1rem", md: "3.2rem" }, fontWeight: 800, color: "#0f172a", lineHeight: 1.1, letterSpacing: "-0.03em" }}>
+                Group tours across India, starting{" "}
+                <Box component="span" sx={{ bgcolor: "#facc15", px: 1, boxDecorationBreak: "clone", WebkitBoxDecorationBreak: "clone" }}>
+                  {userLocation ? `near ${userLocation.name.split(",")[0]}` : "near you"}
                 </Box>
               </Typography>
+              <Typography sx={{ mt: 2, color: "#475569", fontSize: { xs: "1rem", md: "1.1rem" }, maxWidth: 560, lineHeight: 1.6 }}>
+                Pick where you&apos;re leaving from and where you want to go. Compare dates, prices and seats left, then book online.
+              </Typography>
+
+              <Paper
+                elevation={0}
+                id="journey-search"
+                sx={{ mt: 4, p: { xs: 1.5, md: 1 }, borderRadius: "6px", border: "1px solid #e5e7eb", display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: "stretch", gap: { xs: 2, md: 0 } }}
+              >
+                {searchFields.map((f, i) => (
+                  <Box key={f.label} sx={{ flex: 1, display: "flex", alignItems: "center", gap: 1.5, px: { md: 2 }, borderLeft: { md: i ? "1px solid #e5e7eb" : "none" }, minWidth: 0 }}>
+                    {f.icon}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>{f.label}</Typography>
+                      <Autocomplete
+                        options={f.options}
+                        value={f.value}
+                        getOptionLabel={(o) => o.name}
+                        isOptionEqualToValue={(o, v) => o.id === v.id}
+                        noOptionsText="No cities available"
+                        onChange={(_, v) => f.onChange(v)}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            variant="standard"
+                            placeholder={f.placeholder}
+                            slotProps={{ ...params.slotProps, input: { ...params.slotProps.input, disableUnderline: true } }}
+                            sx={{ "& input": { fontSize: "1rem", fontWeight: 600, color: "#0f172a", py: 0.5 } }}
+                          />
+                        )}
+                      />
+                    </Box>
+                  </Box>
+                ))}
+                <Button
+                  variant="contained"
+                  startIcon={<SearchRoundedIcon />}
+                  onClick={() => {
+                    fetchTours();
+                    scrollToResults();
+                  }}
+                  sx={{ minWidth: { md: 150 }, py: 1.2, bgcolor: "#facc15", color: "#0f172a", fontSize: "0.95rem", fontWeight: 700, borderRadius: "6px", boxShadow: "none", "&:hover": { bgcolor: "#eab308" } }}
+                >
+                  Search
+                </Button>
+              </Paper>
+
+              {statsData.tours > 0 && (
+                <Typography sx={{ mt: 2.5, color: "#64748b", fontSize: "0.9rem", fontWeight: 600 }}>
+                  {statsData.tours} tours · {statsData.cities} departure cities · {statsData.states} states
+                </Typography>
+              )}
+            </Grid>
+
+            {heroPhotos.length >= 2 && (
+              <Grid size={{ xs: 12, md: 5 }} sx={{ display: { xs: "none", md: "block" } }}>
+                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr", gap: 1.5, height: 400 }}>
+                  {heroPhotos.map((src, i) => (
+                    <Box
+                      key={src}
+                      component="img"
+                      src={src}
+                      alt=""
+                      sx={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "6px", gridRow: i === 0 ? "1 / span 2" : "auto" }}
+                    />
+                  ))}
+                </Box>
+              </Grid>
+            )}
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* Tours starting near you */}
+      {nearbyDestinations.length > 0 && (
+        <Container maxWidth="lg" id="destinations" sx={{ pt: { xs: 6, md: 8 } }}>
+          <Reveal>
+            {sectionTitle(
+              <>Tours starting near {userLocation ? userLocation.name.split(",")[0] : "you"}</>,
+              "Departure cities, nearest first.",
+              <Button component={Link} href="/tours" endIcon={<ArrowForwardRoundedIcon />} sx={{ color: "#0f172a", fontWeight: 700 }}>
+                View all tours
+              </Button>
+            )}
+          </Reveal>
+          <Grid container spacing={2.5}>
+            {nearbyDestinations.map(({ id, name, state, distance, tourCount }) => (
+              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={id}>
+                <Box
+                  component={Link}
+                  href={`/tours?${new URLSearchParams({
+                    from: id,
+                    ...(selectedState !== "All" ? { state: selectedState } : {}),
+                    ...(selectedRadius !== "all" ? { radius: selectedRadius } : {}),
+                  }).toString()}`}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.75,
+                    p: 2,
+                    height: "100%",
+                    bgcolor: "#fff",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "6px",
+                    transition: "border-color .2s, box-shadow .2s",
+                    "&:hover": { borderColor: "#facc15", boxShadow: "0 6px 16px -10px rgba(15,23,42,0.25)" },
+                    "&:hover .city-arrow": { transform: "translateX(3px)", color: "#0f172a" },
+                  }}
+                >
+                  <Box sx={{ width: 46, height: 46, borderRadius: "6px", bgcolor: "#fef3c7", color: "#a16207", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <LocationCityRoundedIcon />
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography sx={{ fontWeight: 800, fontSize: "1.05rem", lineHeight: 1.25 }} noWrap>{name}</Typography>
+                    <Typography sx={{ fontSize: "0.8rem", color: "#64748b" }} noWrap>
+                      {tourCount} {tourCount === 1 ? "tour" : "tours"}
+                      {distance !== null ? ` · ${formatDistance(distance)} away` : ` · ${state}`}
+                    </Typography>
+                  </Box>
+                  <ArrowForwardRoundedIcon className="city-arrow" sx={{ fontSize: 20, color: "#94a3b8", transition: "all .2s" }} />
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      )}
+
+      {/* Tours */}
+      <Container maxWidth="lg" id="tour-results" sx={{ pt: { xs: 6, md: 8 }, pb: { xs: 6, md: 8 }, flexGrow: 1 }}>
+        {sectionTitle(
+          selectedRadius !== "all" ? `Tours starting within ${selectedRadius} km` : "Upcoming tours",
+          `${tours.length} ${tours.length === 1 ? "tour" : "tours"}, nearest to ${userLocation?.name || "your location"} first.`,
+          <Button size="small" startIcon={<RefreshRoundedIcon sx={{ fontSize: 16 }} />} onClick={fetchTours} sx={{ color: "#64748b" }}>
+            Refresh
+          </Button>
+        )}
+
+        <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, justifyContent: "space-between", gap: 2, mb: 3, pb: 3, borderBottom: "1px solid #e5e7eb" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+            <LocationOnIcon sx={{ fontSize: 18, color: "#ca8a04" }} />
+            <Typography sx={{ fontWeight: 700, fontSize: "0.88rem" }}>{userLocation?.name || "Detecting location…"}</Typography>
+            <Box component="span" onClick={() => setLocationDialogOpen(true)} sx={{ color: "#a16207", fontWeight: 700, cursor: "pointer", fontSize: "0.85rem", textDecoration: "underline" }}>
+              Change city
             </Box>
           </Box>
-
-          {/* Radius Filter Pills */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexWrap: "wrap" }}>
-            <Typography sx={{ fontSize: "0.75rem", fontWeight: 600, color: "#64748b", mr: 0.5 }}>
-              Radius:
-            </Typography>
+          <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
             {radiusOptions.map((opt) => {
               const active = selectedRadius === opt.value;
               return (
@@ -550,150 +508,85 @@ export default function HomePage() {
                   label={opt.label}
                   onClick={() => setSelectedRadius(opt.value)}
                   size="small"
-                  sx={{
-                    fontWeight: active ? 700 : 500,
-                    fontSize: "0.72rem",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    bgcolor: active ? "#0f172a" : "#f1f5f9",
-                    color: active ? "#ffffff" : "#475569",
-                    border: active ? "1px solid #0f172a" : "1px solid #e2e8f0",
-                    "&:hover": {
-                      bgcolor: active ? "#1e293b" : "#e2e8f0",
-                    },
-                  }}
+                  sx={{ fontWeight: 600, bgcolor: active ? "#facc15" : "#fff", color: "#0f172a", border: "1px solid", borderColor: active ? "#facc15" : "#e5e7eb", "&:hover": { bgcolor: active ? "#eab308" : "#f9fafb" } }}
                 />
               );
             })}
           </Box>
-        </Paper>
+        </Box>
 
-        {/* State Filter Pills */}
         <Box sx={{ mb: 3, display: "flex", gap: 0.75, overflowX: "auto", pb: 0.5 }}>
           {popularStates.map((st) => {
             const active = selectedState === st;
             return (
               <Chip
                 key={st}
-                label={st === "All" ? "All Indian States" : st}
+                label={st === "All" ? "All states" : st}
                 onClick={() => setSelectedState(st)}
-                size="small"
-                sx={{
-                  fontWeight: active ? 700 : 500,
-                  fontSize: "0.75rem",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  bgcolor: active ? "#0f172a" : "#ffffff",
-                  color: active ? "#ffffff" : "#475569",
-                  border: "1px solid #e2e8f0",
-                  "&:hover": {
-                    bgcolor: active ? "#1e293b" : "#f8fafc",
-                  },
-                }}
+                sx={{ fontWeight: 600, bgcolor: active ? "#0f172a" : "#fff", color: active ? "#fff" : "#334155", border: "1px solid", borderColor: active ? "#0f172a" : "#e5e7eb", "&:hover": { bgcolor: active ? "#1e293b" : "#f9fafb" } }}
               />
             );
           })}
         </Box>
 
-        {/* Section Heading & Tour Count */}
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2.5 }}>
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: "#0f172a", fontSize: "1.05rem" }}>
-              {selectedRadius !== "all"
-                ? `Tours Starting Within ${selectedRadius} km`
-                : "All India Available Tours"}
-            </Typography>
-            <Typography variant="caption" sx={{ color: "#64748b" }}>
-              Showing {tours.length} verified tours sorted nearest to {userLocation?.name || "your location"}
-            </Typography>
-          </Box>
-
-          <Button
-            size="small"
-            startIcon={<RefreshRoundedIcon sx={{ fontSize: 16 }} />}
-            onClick={fetchTours}
-            sx={{ color: "#64748b", borderRadius: "6px", fontSize: "0.75rem" }}
-          >
-            Refresh
-          </Button>
-        </Box>
-
-        {/* Loading / Error States */}
         {loading && (
           <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
             <CircularProgress size={32} sx={{ color: "#0f172a" }} />
           </Box>
         )}
+        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 3, borderRadius: "6px" }}>
-            {error}
-          </Alert>
-        )}
-
-        {/* Tours Grid */}
         {!loading && tours.length > 0 && (
           <Grid container spacing={2.5}>
-            {tours.map((tour, i) => (
+            {tours.map((tour) => (
               <Grid size={{ xs: 12, sm: 6, md: 4 }} key={tour._id}>
-                <motion.div
-                  initial={{ opacity: 0, y: 36, scale: 0.97 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.5, delay: (i % 3) * 0.08 }}
-                  style={{ height: "100%" }}
-                >
-                  <TourCard tour={tour} fromCityId={fromCity?.id} />
-                </motion.div>
+                <TourCard tour={tour} fromCityId={fromCity?.id} />
               </Grid>
             ))}
           </Grid>
         )}
 
-        {/* Empty State */}
         {!loading && tours.length === 0 && (
-          <Paper
-            elevation={0}
-            sx={{
-              p: 5,
-              textAlign: "center",
-              borderRadius: "6px",
-              border: "1px dashed #cbd5e1",
-              bgcolor: "#ffffff",
-              my: 3,
-            }}
-          >
-            <LocationOnIcon sx={{ fontSize: 40, color: "#94a3b8", mb: 1.5 }} />
-            <Typography variant="h6" sx={{ fontWeight: 700, color: "#0f172a", mb: 1, fontSize: "1.05rem" }}>
+          <Paper elevation={0} sx={{ p: 5, textAlign: "center", border: "1px dashed #d1d5db", my: 3 }}>
+            <Typography sx={{ fontWeight: 700, fontSize: "1.05rem", mb: 1 }}>
               No tours found within {selectedRadius} km of {userLocation?.name || "your location"}
             </Typography>
-            <Typography variant="body2" sx={{ color: "#64748b", maxWidth: 460, mx: "auto", mb: 2.5, fontSize: "0.82rem" }}>
-              Expand your distance filter to 100 km, 250 km, 500 km or All India to discover verified tours across other regions.
+            <Typography sx={{ color: "#64748b", maxWidth: 460, mx: "auto", mb: 2.5, fontSize: "0.88rem" }}>
+              Try a wider distance to see tours from other cities.
             </Typography>
             <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => setSelectedRadius("250")}
-                sx={{ borderRadius: "6px", borderColor: "#e2e8f0", color: "#0f172a" }}
-              >
-                Try 250 km
-              </Button>
-              <Button
-                variant="contained"
-                size="small"
-                onClick={() => setSelectedRadius("all")}
-                sx={{ borderRadius: "6px", bgcolor: "#0f172a" }}
-              >
-                View All India
+              <Button variant="outlined" onClick={() => setSelectedRadius("250")}>Try 250 km</Button>
+              <Button variant="contained" onClick={() => setSelectedRadius("all")} sx={{ bgcolor: "#facc15", color: "#0f172a", "&:hover": { bgcolor: "#eab308" } }}>
+                View all India
               </Button>
             </Box>
           </Paper>
         )}
+
+        {!loading && tours.length > 0 && (
+          <Box sx={{ textAlign: "center", mt: 4 }}>
+            <Button component={Link} href="/tours" variant="outlined" endIcon={<ArrowForwardRoundedIcon />} sx={{ px: 4, py: 1.1, fontWeight: 700, color: "#0f172a", borderColor: "#0f172a" }}>
+              Browse all tours with filters
+            </Button>
+          </Box>
+        )}
       </Container>
 
-      <WhyUs />
-      <CtaBanner onExplore={scrollToResults} />
+      {/* Why us */}
+      <Box sx={{ bgcolor: "#fffbeb", borderTop: "1px solid #fde68a" }}>
+        <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
+          {sectionTitle("Why travel with EpicJourneys")}
+          <Grid container spacing={4}>
+            {reasons.map(({ icon: Icon, title, text }) => (
+              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={title}>
+                <Icon sx={{ fontSize: 34, color: "#a16207", mb: 1.25 }} />
+                <Typography sx={{ fontWeight: 800, fontSize: "1.05rem", mb: 0.5 }}>{title}</Typography>
+                <Typography sx={{ color: "#475569", fontSize: "0.92rem", lineHeight: 1.65 }}>{text}</Typography>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
 
       {/* Location Change Dialog */}
       <Dialog

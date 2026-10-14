@@ -61,7 +61,33 @@ export async function PATCH(
     }
 
     if (body.status) {
+      if (!["confirmed", "pending", "cancelled"].includes(body.status)) {
+        return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+      }
       booking.status = body.status;
+      if (body.status !== "pending") booking.holdExpiresAt = null;
+    }
+
+    // Admin: record an instalment collected outside the gateway (cash / bank transfer).
+    if (body.markInstallmentPaid !== undefined) {
+      if (auth.role !== "admin") {
+        return NextResponse.json({ error: "Only admins can record payments." }, { status: 403 });
+      }
+      const inst = booking.installments.find((i: any) => i.index === Number(body.markInstallmentPaid));
+      if (!inst) return NextResponse.json({ error: "Instalment not found" }, { status: 404 });
+      if (inst.status === "paid") return NextResponse.json({ error: "Instalment is already paid" }, { status: 400 });
+      inst.status = "paid";
+      inst.offline = true;
+      inst.paidAt = new Date();
+      booking.amountPaidInr = booking.installments
+        .filter((i: any) => i.status === "paid")
+        .reduce((sum: number, i: any) => sum + i.amountInr, 0);
+      booking.paymentStatus = booking.amountPaidInr >= booking.totalAmountInr ? "paid" : "partial";
+      if (booking.status === "pending") {
+        booking.status = "confirmed";
+        booking.holdExpiresAt = null;
+      }
+      booking.markModified("installments");
     }
 
     await booking.save();
