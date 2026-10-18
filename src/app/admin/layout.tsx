@@ -37,6 +37,7 @@ import ConfirmationNumberRoundedIcon from "@mui/icons-material/ConfirmationNumbe
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
 import StarRateRoundedIcon from "@mui/icons-material/StarRateRounded";
+import RocketLaunchRoundedIcon from "@mui/icons-material/RocketLaunchRounded";
 import ContactSupportRoundedIcon from "@mui/icons-material/ContactSupportRounded";
 
 const DRAWER_WIDTH = 230;
@@ -51,6 +52,11 @@ const NAV_ITEMS = [
     text: "Tours Management",
     href: "/admin/tours",
     icon: <LuggageRoundedIcon sx={{ fontSize: 18 }} />,
+  },
+  {
+    text: "Tour Launches",
+    href: "/admin/launches",
+    icon: <RocketLaunchRoundedIcon sx={{ fontSize: 18 }} />,
   },
   {
     text: "Destinations & Cities",

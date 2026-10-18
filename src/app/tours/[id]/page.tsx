@@ -31,10 +31,13 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import HikingRoundedIcon from "@mui/icons-material/HikingRounded";
 import VerifiedRoundedIcon from "@mui/icons-material/VerifiedRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
+import { combinedItinerary } from "@/lib/launch-shared";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 
+/** A date belongs to "base" (Joining / Leaving at the tour's own start) or to a partner city. */
+const depKey = (d: any) => (d.isBase ? "base" : d.cityId);
 const dkey = (iso: string) => String(iso).slice(0, 10);
 const utc = (iso: string, o: Intl.DateTimeFormatOptions) => new Date(iso).toLocaleDateString("en-IN", { ...o, timeZone: "UTC" });
 
@@ -50,9 +53,10 @@ function DepartureDates({
 }) {
   const [filter, setFilter] = useState<string>("all");
   const cities: { id: string; name: string }[] = [];
-  for (const d of departures) if (d.cityId && !cities.some((c) => c.id === d.cityId)) cities.push({ id: d.cityId, name: d.cityName });
+  if (departures.some((d) => d.isBase)) cities.push({ id: "base", name: "Joining / Leaving" });
+  for (const d of departures) if (!d.isBase && d.cityId && !cities.some((c) => c.id === d.cityId)) cities.push({ id: d.cityId, name: d.cityName });
 
-  const list = departures.filter((d) => filter === "all" || d.cityId === filter);
+  const list = departures.filter((d) => filter === "all" || depKey(d) === filter);
   const months: { key: string; label: string; items: any[] }[] = [];
   for (const d of list) {
     const k = dkey(d.startDate).slice(0, 7);
@@ -134,7 +138,7 @@ function DepartureDates({
                       </Typography>
                       <Typography sx={{ fontSize: "0.78rem", fontWeight: 700, color: "#334155" }}>₹{price.toLocaleString("en-IN")}</Typography>
                       <Typography sx={{ fontSize: "0.66rem", color: soldOut ? "#dc2626" : "#64748b", fontWeight: 600, pb: 0.75, px: 0.5 }} noWrap>
-                        {soldOut ? "Sold out" : filter === "all" ? d.cityName : d.discountPercentage > 0 ? `${d.discountPercentage}% off` : "\u00a0"}
+                        {soldOut ? "Sold out" : filter === "all" ? (d.isBase ? "Joining / Leaving" : d.cityName) : d.discountPercentage > 0 ? `${d.discountPercentage}% off` : "\u00a0"}
                       </Typography>
                     </Box>
                   </Box>
@@ -174,8 +178,10 @@ export default function TourDetailPage() {
     if (!tour || cityFromUrlApplied.current) return;
     cityFromUrlApplied.current = true;
     const from = new URLSearchParams(window.location.search).get("from");
-    if (from && (tour.departures || []).some((d: any) => d.cityId === from)) {
-      setSelectedCityId(from);
+    const deps: any[] = tour.departures || [];
+    if (from) {
+      if (deps.some((d) => depKey(d) === from)) setSelectedCityId(from);
+      else if (deps.some((d) => d.isBase && d.cityId === from)) setSelectedCityId("base"); // a base-city id from the listing page
     }
   }, [tour]);
 
@@ -255,13 +261,35 @@ export default function TourDetailPage() {
     new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
   const allDepartures: any[] = tour.departures || [];
-  const cityOptions: { id: string; name: string }[] = [];
+  // Start choices: the basic tour's own location first, then every city that has a partner.
+  const hasBaseDates = allDepartures.some((d) => d.isBase);
+  const baseName = tour.baseStartCity?.name;
+  const cityOptions: { id: string; name: string; short: string; disabled: boolean }[] = [
+    { id: "base", name: `Joining / Leaving${baseName ? ` — ${baseName}` : ""}`, short: baseName || "Tour start", disabled: !hasBaseDates },
+  ];
+  const seenCities = new Set<string>();
+  for (const c of tour.startCities || []) {
+    seenCities.add(c.id);
+    cityOptions.push({ id: c.id, name: c.name, short: c.name, disabled: !allDepartures.some((d) => !d.isBase && d.cityId === c.id) });
+  }
   for (const d of allDepartures) {
-    if (d.cityId && !cityOptions.some((c) => c.id === d.cityId)) cityOptions.push({ id: d.cityId, name: d.cityName });
+    // A city that still has live dates stays selectable even if its partner was removed.
+    if (!d.isBase && d.cityId && !seenCities.has(d.cityId)) {
+      seenCities.add(d.cityId);
+      cityOptions.push({ id: d.cityId, name: d.cityName, short: d.cityName, disabled: false });
+    }
   }
   const selectedCity = cityOptions.find((c) => c.id === selectedCityId) || null;
-  const departures: any[] = selectedCity ? allDepartures.filter((d) => d.cityId === selectedCityId) : [];
+  const departures: any[] = selectedCity ? allDepartures.filter((d) => depKey(d) === selectedCityId) : [];
   const selectedDeparture = departures.find((d) => d._id === selectedDepartureId) || null;
+  // Itinerary, length and starting-day details follow the chosen city (and date, when picked).
+  const itineraryDep: any = selectedDeparture || departures[0] || null;
+  const itineraryDays: any[] = itineraryDep
+    ? combinedItinerary(tour.itinerary || [], itineraryDep.startItinerary || [], itineraryDep.endItinerary || [])
+    : (tour.itinerary || []).map((d: any, i: number) => ({ ...d, day: d.day ?? i + 1, segment: "main" }));
+  const tripDays: number = itineraryDep?.durationDays || tour.durationDays;
+  const tripNights = Math.max(0, tripDays - 1);
+  const cityDays = itineraryDays.filter((d) => d.segment !== "main").length;
   const discount = selectedDeparture?.discountPercentage || 0;
   const pricePool = (selectedCity ? departures : allDepartures).map((d) => d.price);
   const basePrice = selectedDeparture ? selectedDeparture.price : pricePool.length ? Math.min(...pricePool) : tour.priceInr || 0;
@@ -287,9 +315,9 @@ export default function TourDetailPage() {
   if (gallery.length === 0) gallery.push("https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200&auto=format&fit=crop&q=80");
 
   const facts = [
-    { icon: <AccessTimeIcon />, label: "Duration", value: `${tour.durationDays} days / ${tour.durationNights} nights` },
+    { icon: <AccessTimeIcon />, label: "Duration", value: `${tripDays} days / ${tripNights} nights` },
     { icon: <PeopleIcon />, label: "Group size", value: `Up to ${tour.maxGroupSize || 15} travellers` },
-    { icon: <LocationOnIcon />, label: "Starts & ends", value: selectedCity ? selectedCity.name : "Select a city" },
+    { icon: <LocationOnIcon />, label: "Starts & ends", value: selectedCity ? selectedCity.short : "Select a city" },
     ...(tour.physicalRating ? [{ icon: <HikingRoundedIcon />, label: "Physical rating", value: tour.physicalRating }] : []),
   ];
 
@@ -318,7 +346,7 @@ export default function TourDetailPage() {
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <AccessTimeIcon sx={{ fontSize: 18, color: "#ca8a04" }} />
-            {tour.durationDays} days / {tour.durationNights} nights
+            {tripDays} days / {tripNights} nights
           </Box>
           {tour.discountPercentage ? (
             <Chip label={`${tour.discountPercentage}% off`} size="small" sx={{ bgcolor: "#ef4444", color: "#fff", fontWeight: 700 }} />
@@ -389,7 +417,7 @@ export default function TourDetailPage() {
               <Box sx={{ mt: 2.5, p: 2, borderRadius: "6px", bgcolor: "#fffbeb", border: "1px solid #fde68a", display: "flex", gap: 1.25, alignItems: "flex-start" }}>
                 <LocationOnIcon sx={{ color: "#a16207", fontSize: 20, mt: 0.15 }} />
                 <Typography variant="body2" sx={{ color: "#1e293b" }}>
-                  Based in <strong>{tour.targetCity || tour.startingPoint}</strong> ({tour.state}). Choose your start &amp; end city when booking{selectedCity ? <> — currently <strong>{selectedCity.name}</strong></> : null}.
+                  Based in <strong>{tour.targetCity || tour.startingPoint}</strong> ({tour.state}). Choose your start &amp; end city when booking{selectedCity ? <> — currently <strong>{selectedCity.short}</strong></> : null}.
                 </Typography>
               </Box>
             </Paper>
@@ -412,11 +440,21 @@ export default function TourDetailPage() {
             )}
 
             {/* Day-by-Day Itinerary */}
-            {tour.itinerary && tour.itinerary.length > 0 && (
+            {itineraryDays.length > 0 && (
               <Paper elevation={0} sx={cardSx}>
                 <SectionTitle>Day-by-day itinerary</SectionTitle>
+                {itineraryDep && cityDays > 0 && (
+                  <Typography sx={{ color: "#64748b", fontSize: "0.88rem", mt: -1.5, mb: 2 }}>
+                    Departing from {itineraryDep.cityName}: includes {cityDays} extra day{cityDays === 1 ? "" : "s"} for your journey to and from the tour.
+                  </Typography>
+                )}
+                {!itineraryDep && (
+                  <Typography sx={{ color: "#64748b", fontSize: "0.88rem", mt: -1.5, mb: 2 }}>
+                    Choose your start city to see the itinerary from your city.
+                  </Typography>
+                )}
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
-                  {tour.itinerary.map((day: any) => (
+                  {itineraryDays.map((day: any) => (
                     <Accordion
                       key={day.day}
                       defaultExpanded={day.day === 1}
@@ -427,6 +465,9 @@ export default function TourDetailPage() {
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                           <Chip label={`Day ${day.day}`} size="small" sx={{ backgroundColor: "#facc15", color: "#0f172a", fontWeight: 700, height: 24 }} />
                           <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.98rem" }}>{day.title}</Typography>
+                          {day.segment !== "main" && (
+                            <Chip label={day.segment === "start" ? "Getting there" : "Heading home"} size="small" sx={{ height: 20, fontSize: "0.66rem", bgcolor: "#fef9c3", color: "#854d0e", fontWeight: 600 }} />
+                          )}
                         </Box>
                       </AccordionSummary>
                       <AccordionDetails sx={{ pt: 0, pb: 2 }}>
@@ -450,7 +491,7 @@ export default function TourDetailPage() {
                 departures={allDepartures}
                 selectedId={selectedDepartureId}
                 onPick={(d) => {
-                  handleCityChange(d.cityId);
+                  handleCityChange(depKey(d));
                   selectDeparture(d);
                 }}
               />
@@ -526,14 +567,15 @@ export default function TourDetailPage() {
                   label="Start & End City"
                   value={selectedCityId}
                   onChange={(e) => handleCityChange(e.target.value)}
-                  disabled={cityOptions.length === 0}
-                  helperText={cityOptions.length === 0 ? "No cities available yet" : "Where you begin and finish the journey"}
+                  disabled={cityOptions.every((c) => c.disabled)}
+                  helperText="Join at the tour's own start, or pick a partner city to be brought to the tour"
                   fullWidth
                   sx={{ mb: 2.5, "& .MuiOutlinedInput-root": { borderRadius: "6px" } }}
                 >
                   {cityOptions.map((c) => (
-                    <MenuItem key={c.id} value={c.id}>
+                    <MenuItem key={c.id} value={c.id} disabled={c.disabled}>
                       {c.name}
+                      {c.disabled && <Typography component="span" sx={{ ml: 1, fontSize: "0.72rem", color: "#94a3b8" }}>No dates yet</Typography>}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -545,13 +587,13 @@ export default function TourDetailPage() {
 
                 {!selectedCity ? (
                   <Alert severity="info" sx={{ mb: 3, borderRadius: "6px" }}>
-                    {cityOptions.length === 0
+                    {cityOptions.every((c) => c.disabled)
                       ? "No upcoming dates are open for this journey right now. Please check back soon."
-                      : "Select your start & end city to see available dates."}
+                      : "Select where you'll start to see available dates."}
                   </Alert>
                 ) : departures.length === 0 ? (
                   <Alert severity="info" sx={{ mb: 3, borderRadius: "6px" }}>
-                    No upcoming dates from {selectedCity.name}. Try another city.
+                    No upcoming dates for {selectedCity.short}. Try another option.
                   </Alert>
                 ) : (
                   <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 2.5, maxHeight: 320, overflowY: "auto", pr: 0.5 }}>

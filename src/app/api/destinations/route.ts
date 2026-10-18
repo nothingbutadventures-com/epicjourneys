@@ -19,10 +19,19 @@ export async function GET(req: NextRequest) {
     if (activeOnly) filter.isActive = true;
     if (state && state !== "All") filter.state = state;
 
-    const destinations = await Destination.find(filter)
+    // Optional server-side search with a cap, used by pickers so big lists stay fast.
+    const q = (searchParams.get("search") || "").trim();
+    if (q) {
+      const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+      filter.$or = [{ name: rx }, { state: rx }];
+    }
+    const limit = Math.min(100, Math.max(0, parseInt(searchParams.get("limit") || "0", 10) || 0));
+
+    let query = Destination.find(filter)
       .populate("partnerId", "name email phone secondaryPhone")
-      .sort({ name: 1 })
-      .lean();
+      .sort({ name: 1 });
+    if (limit) query = query.limit(limit);
+    const destinations = await query.lean();
 
     // Attach real tour counts from MongoDB
     const destinationIds = destinations.map((d) => d._id);
@@ -40,6 +49,8 @@ export async function GET(req: NextRequest) {
       const { addresses, partnerId, ...rest } = dest;
       return {
         ...rest,
+        // Public callers only learn whether a partner exists, never who.
+        hasPartner: Boolean(partnerId),
         ...(isAdmin ? { addresses, partnerId } : {}),
         tourCount: countMap.get(dest._id.toString()) || 0,
       };

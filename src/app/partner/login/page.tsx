@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Box,
+  Container,
   Paper,
   Typography,
   TextField,
@@ -78,7 +79,7 @@ export default function PartnerLoginPage() {
               width: 48,
               height: 48,
               borderRadius: 2,
-              backgroundColor: "#2563eb",
+              backgroundColor: "#0f172a",
               color: "#ffffff",
               display: "flex",
               alignItems: "center",
@@ -90,10 +91,10 @@ export default function PartnerLoginPage() {
             <HandshakeIcon sx={{ fontSize: 26 }} />
           </Box>
           <Typography variant="h5" sx={{ fontWeight: 800, color: "#0f172a" }}>
-            Destination Partner Portal
+            Partner Portal
           </Typography>
           <Typography variant="body2" sx={{ color: "#64748b", mt: 0.5 }}>
-            Direct customer booking and destination management
+            EpicJourneys Destination Partners
           </Typography>
         </Box>
 
@@ -112,7 +113,7 @@ export default function PartnerLoginPage() {
               fullWidth
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="e.g. manali.partner@epicjourneys.in"
+              placeholder="partner@epicjourneys.in"
             />
 
             <TextField
@@ -131,8 +132,8 @@ export default function PartnerLoginPage() {
               disabled={loading}
               sx={{
                 py: 1.2,
-                backgroundColor: "#2563eb",
-                "&:hover": { backgroundColor: "#1d4ed8" },
+                backgroundColor: "#0f172a",
+                "&:hover": { backgroundColor: "#1e293b" },
                 fontWeight: 600,
               }}
             >

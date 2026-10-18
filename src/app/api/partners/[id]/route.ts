@@ -71,6 +71,13 @@ export async function PUT(
       const oldDestId = partner.assignedDestination?.toString();
       const newDestId = body.assignedDestination || null;
 
+      if (oldDestId !== newDestId && newDestId) {
+        const dest: any = await Destination.findById(newDestId).select("name partnerId");
+        if (dest?.partnerId && String(dest.partnerId) !== String(partner._id)) {
+          return NextResponse.json({ error: `${dest.name} already has a partner. A location can only have one.` }, { status: 409 });
+        }
+      }
+
       if (oldDestId !== newDestId) {
         if (oldDestId) {
           await Destination.findByIdAndUpdate(oldDestId, {

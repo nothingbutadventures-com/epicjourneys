@@ -36,6 +36,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "You already have a pending request for this location. We'll be in touch soon." }, { status: 409 });
     }
 
+    // One partner per location: refuse requests for a city that already has one.
+    const esc = (v: string) => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const taken = await Destination.findOne({
+      partnerId: { $ne: null },
+      $or: [
+        ...(body.destinationId && mongoose.isValidObjectId(body.destinationId) ? [{ _id: body.destinationId }] : []),
+        { name: new RegExp(`^${esc(city)}$`, "i"), state: new RegExp(`^${esc(state)}$`, "i") },
+      ],
+    }).select("_id");
+    if (taken) {
+      return NextResponse.json({ error: "This location already has a partner. Please choose a different location." }, { status: 409 });
+    }
+
     let destinationId: string | undefined;
     if (body.destinationId && mongoose.isValidObjectId(body.destinationId)) {
       const d = await Destination.findById(body.destinationId).select("_id");

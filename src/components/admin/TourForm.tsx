@@ -13,7 +13,6 @@ import {
   FormControl,
   InputLabel,
   Select,
-  Tooltip,
   MenuItem,
   Chip,
   IconButton,
@@ -25,19 +24,6 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
-import { INDIAN_STATES } from "@/lib/constants";
-
-interface DepartureRow {
-  addressId?: string;
-  _id?: string;
-  booked?: number;
-  cityId: string;
-  price: number | "";
-  startDate: string;
-  endDate: string;
-  seats: number | "";
-  discountPercentage: number;
-}
 
 interface ItineraryDay {
   day: number;
@@ -64,6 +50,11 @@ export default function TourForm({ tourId }: { tourId?: string }) {
   const [durationDays, setDurationDays] = useState<number | "">("");
   const [durationNights, setDurationNights] = useState<number | "">("");
   const [maxGroupSize, setMaxGroupSize] = useState<number | "">("");
+  const [basePrice, setBasePrice] = useState<number | "">("");
+  // Basic tour ("Joining / Leaving"): where it starts/ends and its own dates
+  const [baseCityId, setBaseCityId] = useState("");
+  const [baseAddressId, setBaseAddressId] = useState("");
+  const [baseDates, setBaseDates] = useState<{ _id?: string; startDate: string; seats: number | ""; price: number | ""; discountPercentage: number; booked?: number }[]>([]);
   const [singleRoomPrice, setSingleRoomPrice] = useState<number | "">("");
   const [depositType, setDepositType] = useState<"amount" | "percentage">("percentage");
   const [depositValue, setDepositValue] = useState<number | "">(30);
@@ -75,19 +66,11 @@ export default function TourForm({ tourId }: { tourId?: string }) {
 
   // Tour Classifications (Admin Created)
   const [travelStylesList, setTravelStylesList] = useState<any[]>([]);
+  const [discountsList, setDiscountsList] = useState<any[]>([]);
   const [selectedTravelStyles, setSelectedTravelStyles] = useState<string[]>([]);
   const [physicalRatingsList, setPhysicalRatingsList] = useState<any[]>([]);
   const [selectedPhysicalRating, setSelectedPhysicalRating] = useState<string>("");
-  const [discountsList, setDiscountsList] = useState<any[]>([]);
 
-  // Available dates (departures)
-  const [departures, setDepartures] = useState<DepartureRow[]>([]);
-  // Destination-first date management: pick a destination, then add its dates.
-  const [activeCityId, setActiveCityId] = useState("");
-  const [extraCities, setExtraCities] = useState<string[]>([]); // destinations added but without dates yet
-  const [pickingCity, setPickingCity] = useState(false);
-
-  // Inclusions & Exclusions
   const [inclusions, setInclusions] = useState<string[]>([]);
   const [newInclusion, setNewInclusion] = useState("");
 
@@ -119,6 +102,21 @@ export default function TourForm({ tourId }: { tourId?: string }) {
         setDurationNights(t.durationNights ?? "");
         setMaxGroupSize(t.maxGroupSize ?? "");
         setSingleRoomPrice(t.singleRoomPriceInr ?? "");
+        setBasePrice(t.basePriceInr || t.priceInr || "");
+        setBaseCityId(t.baseStartCityId || t.destinationId?._id || t.destinationId || "");
+        setBaseAddressId(t.baseAddressId || "");
+        setBaseDates(
+          (t.departures || [])
+            .filter((d: any) => d.isBase)
+            .map((d: any) => ({
+              _id: d._id,
+              startDate: String(d.startDate).split("T")[0],
+              seats: d.seats,
+              price: d.price,
+              discountPercentage: d.discountPercentage || 0,
+              booked: d.booked || 0,
+            }))
+        );
         setDepositType(t.depositType === "amount" ? "amount" : "percentage");
         setDepositValue(t.depositValue ?? 30);
         setCoverImage(t.coverImage || "");
@@ -128,19 +126,6 @@ export default function TourForm({ tourId }: { tourId?: string }) {
         setItinerary(t.itinerary || []);
         setSelectedTravelStyles(t.travelStyles || []);
         setSelectedPhysicalRating(t.physicalRating || "");
-        setDepartures(
-          (t.departures || []).map((d: any) => ({
-            _id: d._id,
-            booked: d.booked || 0,
-            cityId: d.cityId || "",
-            addressId: d.addressId || "",
-            price: d.price ?? t.priceInr ?? "",
-            startDate: String(d.startDate).split("T")[0],
-            endDate: String(d.endDate).split("T")[0],
-            seats: d.seats,
-            discountPercentage: d.discountPercentage || 0,
-          }))
-        );
       } catch (e: any) {
         setError(e.message || "Failed to load tour");
       } finally {
@@ -159,11 +144,11 @@ export default function TourForm({ tourId }: { tourId?: string }) {
       if (resStyles.success && resStyles.data) {
         setTravelStylesList(resStyles.data);
       }
-      if (resRatings.success && resRatings.data) {
-        setPhysicalRatingsList(resRatings.data);
-      }
       if (resDiscounts.success && resDiscounts.data) {
         setDiscountsList(resDiscounts.data);
+      }
+      if (resRatings.success && resRatings.data) {
+        setPhysicalRatingsList(resRatings.data);
       }
     } catch (e) {
       console.error("Error loading classifications:", e);
@@ -197,68 +182,6 @@ export default function TourForm({ tourId }: { tourId?: string }) {
     if (dest) {
       setState(dest.state);
     }
-  };
-
-  const updateDeparture = (index: number, field: keyof DepartureRow, val: any) => {
-    const updated = [...departures];
-    updated[index] = { ...updated[index], [field]: val };
-    if (field === "cityId") {
-      // Starting addresses belong to a city: reset, and auto-pick when the city has just one.
-      const city = destinations.find((c) => c._id === val);
-      const addrs = city?.addresses || [];
-      updated[index].addressId = addrs.length === 1 ? addrs[0]._id : "";
-    }
-    // Suggest an end date from the tour length when a start date is picked
-    if (field === "startDate" && val && !updated[index].endDate) {
-      const end = new Date(val);
-      end.setDate(end.getDate() + Math.max(0, (Number(durationDays) || 1) - 1));
-      updated[index].endDate = end.toISOString().split("T")[0];
-    }
-    setDepartures(updated);
-  };
-
-  const cityIds = React.useMemo(() => {
-    const ids: string[] = [];
-    for (const d of departures) if (d.cityId && !ids.includes(d.cityId)) ids.push(d.cityId);
-    for (const c of extraCities) if (!ids.includes(c)) ids.push(c);
-    return ids;
-  }, [departures, extraCities]);
-
-  // Select the first destination automatically (e.g. when an existing tour loads).
-  useEffect(() => {
-    if (!activeCityId || !cityIds.includes(activeCityId)) setActiveCityId(cityIds[0] || "");
-  }, [cityIds, activeCityId]);
-
-  const cityName = (id: string) => destinations.find((c) => c._id === id)?.name || "Destination";
-
-  const addDestination = (id: string) => {
-    if (!id) return;
-    if (!cityIds.includes(id)) setExtraCities((prev) => [...prev, id]);
-    setActiveCityId(id);
-    setPickingCity(false);
-  };
-
-  const addDateFor = (id: string) => {
-    const city = destinations.find((c) => c._id === id);
-    const addrs = city?.addresses || [];
-    setDepartures((prev) => [
-      ...prev,
-      { cityId: id, addressId: addrs.length === 1 ? addrs[0]._id : "", startDate: "", endDate: "", seats: maxGroupSize || "", price: "", discountPercentage: 0 },
-    ]);
-  };
-
-  const removeDestination = (id: string) => {
-    if (departures.some((d) => d.cityId === id && d.booked)) {
-      setError(`${cityName(id)} has dates with bookings, so it can't be removed.`);
-      return;
-    }
-    if (!window.confirm(`Remove ${cityName(id)} and all its dates from this tour?`)) return;
-    setDepartures((prev) => prev.filter((d) => d.cityId !== id));
-    setExtraCities((prev) => prev.filter((c) => c !== id));
-  };
-
-  const removeDeparture = (index: number) => {
-    setDepartures(departures.filter((_, i) => i !== index));
   };
 
   const addHighlight = () => {
@@ -333,40 +256,17 @@ export default function TourForm({ tourId }: { tourId?: string }) {
       setError("Enter the tour duration (days and nights).");
       return;
     }
-    if (departures.length === 0) {
-      setError("Add at least one available date.");
+    if (baseDates.length > 0 && !baseCityId) {
+      setError("Choose where the basic tour starts and ends before adding dates.");
       return;
     }
-    const empty = cityIds.find((id) => !departures.some((d) => d.cityId === id));
-    if (empty) {
-      setError(`Add at least one date for ${cityName(empty)}, or remove it.`);
+    if (baseDates.some((d) => !d.startDate || !(Number(d.seats) >= 1))) {
+      setError("Every basic-tour date needs a start date and number of travellers.");
       return;
     }
-    for (const [i, d] of departures.entries()) {
-      if (!d.cityId) {
-        setError(`Date ${i + 1}: select a start & end city.`);
-        return;
-      }
-      if (!(Number(d.price) > 0)) {
-        setError(`Date ${i + 1}: enter a valid price.`);
-        return;
-      }
-      if (!d.startDate || !d.endDate) {
-        setError(`Date ${i + 1}: start and end dates are required.`);
-        return;
-      }
-      if (d.booked && Number(d.seats) < d.booked) {
-        setError(`Date ${i + 1}: already has ${d.booked} travellers booked, so seats can't go below that.`);
-        return;
-      }
-      if (d.endDate < d.startDate) {
-        setError(`Date ${i + 1}: end date cannot be before start date.`);
-        return;
-      }
-      if (!(Number(d.seats) >= 1)) {
-        setError(`Date ${i + 1}: number of travellers must be at least 1.`);
-        return;
-      }
+    if (!(Number(basePrice) > 0)) {
+      setError("Enter the base price per person.");
+      return;
     }
     setLoading(true);
 
@@ -388,6 +288,10 @@ export default function TourForm({ tourId }: { tourId?: string }) {
           durationDays: Number(durationDays),
           durationNights: Number(durationNights),
           maxGroupSize: Number(maxGroupSize) || 15,
+          basePriceInr: Number(basePrice) || 0,
+          baseStartCityId: baseCityId || null,
+          baseAddressId: baseAddressId || null,
+          baseDepartures: baseDates.map((d) => ({ ...d, seats: Number(d.seats), price: Number(d.price) || Number(basePrice) || 0 })),
           singleRoomPriceInr: Number(singleRoomPrice) || 0,
           depositType,
           depositValue: Number(depositValue) || 0,
@@ -398,7 +302,6 @@ export default function TourForm({ tourId }: { tourId?: string }) {
           exclusions,
           travelStyles: selectedTravelStyles,
           physicalRating: selectedPhysicalRating,
-          departures: departures.map(({ booked, ...d }) => ({ ...d, addressId: d.addressId || null, seats: Number(d.seats), price: Number(d.price) })),
         }),
       });
 
@@ -633,6 +536,19 @@ export default function TourForm({ tourId }: { tourId?: string }) {
 
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
+                label="Base Price (₹ per person)"
+                type="number"
+                required
+                fullWidth
+                value={basePrice}
+                onChange={(e) => setBasePrice(e.target.value === "" ? "" : Number(e.target.value))}
+                helperText="Starting price for every city. Each partner city adds its own supplement (set when you approve its request)."
+                slotProps={{ htmlInput: { min: 1 } }}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
                 label="Single Room Price (₹ per person)"
                 type="number"
                 fullWidth
@@ -840,224 +756,104 @@ export default function TourForm({ tourId }: { tourId?: string }) {
           </Box>
         </Paper>
 
-        {/* Section 6: Available Dates */}
+        {/* Section 6: Basic tour (Joining / Leaving) */}
         <Paper elevation={0} sx={{ p: 2.5, mb: 2, borderRadius: "4px", border: "1px solid #e2e8f0", bgcolor: "#ffffff" }}>
           <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#0f172a" }}>
-              6. Available Dates
+              6. Joining / Leaving (basic tour)
             </Typography>
             <Typography variant="caption" sx={{ color: "#64748b" }}>
-              Customers can only book these dates. Seats left are tracked per date.
+              Where the tour itself starts and ends, and its own dates. Travellers who join here pay the tour's base price (no separate date price). Partner cities add their own extra days and price from the Tour Launches screen.
             </Typography>
           </Box>
 
-          {/* Destinations on this tour */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexWrap: "wrap", mb: 2 }}>
-            {cityIds.map((id) => {
-              const count = departures.filter((d) => d.cityId === id).length;
-              const on = id === activeCityId;
-              return (
-                <Chip
-                  key={id}
-                  label={`${cityName(id)} · ${count} ${count === 1 ? "date" : "dates"}`}
-                  clickable
-                  onClick={() => setActiveCityId(id)}
-                  sx={{
-                    borderRadius: "4px",
-                    fontWeight: 600,
-                    fontSize: "0.78rem",
-                    bgcolor: on ? "#0f172a" : "#f1f5f9",
-                    color: on ? "#ffffff" : "#334155",
-                    "&:hover": { bgcolor: on ? "#1e293b" : "#e2e8f0" },
+          <Grid container spacing={1.5} sx={{ mb: 2 }}>
+            <Grid size={{ xs: 12, sm: 5 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Start & end location</InputLabel>
+                <Select
+                  value={baseCityId}
+                  label="Start & end location"
+                  onChange={(e) => {
+                    setBaseCityId(e.target.value as string);
+                    setBaseAddressId("");
                   }}
-                />
-              );
-            })}
-            {pickingCity ? (
-              <>
-                <FormControl size="small" sx={{ minWidth: 220 }}>
-                  <InputLabel>Choose destination</InputLabel>
-                  <Select
-                    autoFocus
-                    value=""
-                    label="Choose destination"
-                    onChange={(e) => addDestination(e.target.value as string)}
-                    sx={{ borderRadius: "4px" }}
-                  >
-                    {destinations.filter((c) => !cityIds.includes(c._id)).map((c) => (
-                      <MenuItem key={c._id} value={c._id}>
-                        {c.name} ({c.state})
-                      </MenuItem>
-                    ))}
-                    {destinations.filter((c) => !cityIds.includes(c._id)).length === 0 && (
-                      <MenuItem disabled value="">All destinations already added</MenuItem>
-                    )}
-                  </Select>
-                </FormControl>
-                <Button size="small" onClick={() => setPickingCity(false)} sx={{ color: "#64748b" }}>Cancel</Button>
-              </>
-            ) : (
-              <Button size="small" startIcon={<AddRoundedIcon sx={{ fontSize: 16 }} />} onClick={() => setPickingCity(true)} sx={{ borderRadius: "4px" }}>
-                Add Destination
-              </Button>
-            )}
+                  sx={{ borderRadius: "4px" }}
+                >
+                  <MenuItem value=""><em>Not set</em></MenuItem>
+                  {destinations.map((c) => (
+                    <MenuItem key={c._id} value={c._id}>{c.name} ({c.state})</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 7 }}>
+              {(() => {
+                const addrs: any[] = destinations.find((c) => c._id === baseCityId)?.addresses || [];
+                return (
+                  <FormControl fullWidth size="small" disabled={!baseCityId || addrs.length === 0}>
+                    <InputLabel>Starting address</InputLabel>
+                    <Select value={baseAddressId} label="Starting address" onChange={(e) => setBaseAddressId(e.target.value as string)} sx={{ borderRadius: "4px" }}>
+                      <MenuItem value=""><em>No address selected</em></MenuItem>
+                      {addrs.map((a) => (
+                        <MenuItem key={a._id} value={a._id}>{a.label} — {a.address}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                );
+              })()}
+            </Grid>
+          </Grid>
+
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.25 }}>
+            <Typography sx={{ fontWeight: 700, fontSize: "0.85rem" }}>Dates</Typography>
+            <Button
+              size="small"
+              startIcon={<AddRoundedIcon sx={{ fontSize: 16 }} />}
+              onClick={() => setBaseDates([...baseDates, { startDate: "", seats: Number(maxGroupSize) || 15, price: basePrice, discountPercentage: 0 }])}
+              sx={{ borderRadius: "4px" }}
+            >
+              Add Date
+            </Button>
           </Box>
-
-          {cityIds.length === 0 && (
-            <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8" }}>
-              No destinations added yet. Add a destination, then add its dates.
-            </Typography>
-          )}
-
-          {/* Dates of the selected destination */}
-          {activeCityId && cityIds.includes(activeCityId) && (() => {
-            const city = destinations.find((c) => c._id === activeCityId);
-            const addrs: any[] = city?.addresses || [];
-            const rows = departures.map((d, index) => ({ d, index })).filter((x) => x.d.cityId === activeCityId);
+          {baseDates.length === 0 && <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8" }}>No dates yet.</Typography>}
+          {baseDates.map((d, i) => {
+            const set = (patch: Partial<typeof d>) => setBaseDates(baseDates.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+            const end = d.startDate ? new Date(new Date(`${d.startDate}T00:00:00Z`).getTime() + Math.max(0, (Number(durationDays) || 1) - 1) * 86400000).toISOString().slice(0, 10) : "";
             return (
-              <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "4px", p: 2, bgcolor: "#f8fafc" }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5, flexWrap: "wrap", gap: 1 }}>
-                  <Box>
-                    <Typography sx={{ fontWeight: 700, fontSize: "0.9rem" }}>
-                      {city?.name || "Destination"}{city?.state ? ` (${city.state})` : ""}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: "#64748b" }}>
-                      Start & end city for the dates below
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    <Button size="small" variant="outlined" startIcon={<AddRoundedIcon sx={{ fontSize: 16 }} />} onClick={() => addDateFor(activeCityId)} sx={{ borderRadius: "4px" }}>
-                      Add Date
-                    </Button>
-                    <Button size="small" color="error" onClick={() => removeDestination(activeCityId)} sx={{ borderRadius: "4px" }}>
-                      Remove destination
-                    </Button>
-                  </Box>
-                </Box>
-
-                {rows.length === 0 && (
-                  <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8" }}>No dates for this destination yet — click Add Date.</Typography>
-                )}
-
-                {rows.map(({ d, index }, n) => (
-                  <Box key={index} sx={{ mb: 1.5, p: 1.75, border: "1px solid #cbd5e1", borderRadius: "4px", bgcolor: "#ffffff", "&:last-child": { mb: 0 } }}>
-                    <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", mb: 1.25 }}>
-                      Date {n + 1}
-                    </Typography>
-                    <Grid container spacing={1.5} sx={{ mb: 1.5 }}>
-                      <Grid size={{ xs: 6, sm: 3 }}>
-                        <TextField
-                          label="Start Date"
-                          type="date"
-                          required
-                          fullWidth
-                          size="small"
-                          value={d.startDate}
-                          onChange={(e) => updateDeparture(index, "startDate", e.target.value)}
-                          slotProps={{ inputLabel: { shrink: true } }}
-                        />
-                      </Grid>
-                      <Grid size={{ xs: 6, sm: 3 }}>
-                        <TextField
-                          label="End Date"
-                          type="date"
-                          required
-                          fullWidth
-                          size="small"
-                          value={d.endDate}
-                          onChange={(e) => updateDeparture(index, "endDate", e.target.value)}
-                          slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: d.startDate || undefined } }}
-                        />
-                      </Grid>
-                      <Grid size={{ xs: 6, sm: 3 }}>
-                        <TextField
-                          label="Travellers"
-                          type="number"
-                          required
-                          fullWidth
-                          size="small"
-                          value={d.seats}
-                          onChange={(e) => updateDeparture(index, "seats", e.target.value === "" ? "" : Number(e.target.value))}
-                          slotProps={{ htmlInput: { min: 1 } }}
-                          helperText={d.booked ? `${d.booked} booked` : undefined}
-                        />
-                      </Grid>
-                      <Grid size={{ xs: 6, sm: 3 }}>
-                        <TextField
-                          label="Price (INR ₹)"
-                          type="number"
-                          required
-                          fullWidth
-                          size="small"
-                          value={d.price}
-                          onChange={(e) => updateDeparture(index, "price", e.target.value === "" ? "" : Number(e.target.value))}
-                          slotProps={{ htmlInput: { min: 1 } }}
-                        />
-                      </Grid>
-                    </Grid>
-                    <Grid container spacing={1.5} sx={{ alignItems: "center" }}>
-                      <Grid size={{ xs: 12, sm: 4 }}>
-                        <FormControl fullWidth size="small">
-                          <InputLabel>Discount</InputLabel>
-                          <Select
-                            value={d.discountPercentage}
-                            label="Discount"
-                            onChange={(e) => updateDeparture(index, "discountPercentage", Number(e.target.value))}
-                            sx={{ borderRadius: "4px" }}
-                          >
-                            <MenuItem value={0}>No Discount (0%)</MenuItem>
-                            {discountsList.map((disc) => (
-                              <MenuItem key={disc._id} value={disc.value}>
-                                {disc.name} ({disc.value}% OFF)
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                      <Grid size={{ xs: 10, sm: 7 }}>
-                        <FormControl fullWidth size="small" disabled={addrs.length === 0}>
-                          <InputLabel>Starting Address</InputLabel>
-                          <Select
-                            value={d.addressId || ""}
-                            label="Starting Address"
-                            onChange={(e) => updateDeparture(index, "addressId", e.target.value)}
-                            sx={{ borderRadius: "4px" }}
-                          >
-                            <MenuItem value=""><em>No address selected</em></MenuItem>
-                            {addrs.map((a) => (
-                              <MenuItem key={a._id} value={a._id}>
-                                {a.label} — {a.address}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                        {addrs.length === 0 && (
-                          <Typography variant="caption" sx={{ color: "#64748b", display: "block", mt: 0.5 }}>
-                            No addresses for {city?.name || "this city"} yet — add them under Destinations & Cities.
-                          </Typography>
-                        )}
-                      </Grid>
-                      <Grid size={{ xs: 2, sm: 1 }} sx={{ textAlign: "right" }}>
-                        <Tooltip title={d.booked ? `${d.booked} traveller${d.booked === 1 ? "" : "s"} booked — this date can't be deleted` : "Remove date"}>
-                          <span>
-                            <IconButton
-                              size="small"
-                              disabled={Boolean(d.booked)}
-                              onClick={() => removeDeparture(index)}
-                              aria-label="Remove date"
-                              sx={{ color: "#dc2626" }}
-                            >
-                              <DeleteRoundedIcon fontSize="small" />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                      </Grid>
-                    </Grid>
-                  </Box>
-                ))}
+              <Box key={d._id || `n${i}`} sx={{ mb: 1.25, p: 1.5, border: "1px solid #cbd5e1", borderRadius: "4px" }}>
+                <Grid container spacing={1.25} sx={{ alignItems: "center" }}>
+                  <Grid size={{ xs: 6, sm: 3 }}>
+                    <TextField label="Start date" type="date" required fullWidth size="small" value={d.startDate} onChange={(e) => set({ startDate: e.target.value })} slotProps={{ inputLabel: { shrink: true } }} />
+                  </Grid>
+                  <Grid size={{ xs: 6, sm: 3 }}>
+                    <TextField label="End date (auto)" fullWidth size="small" disabled value={end} slotProps={{ inputLabel: { shrink: true } }} />
+                  </Grid>
+                  <Grid size={{ xs: 4, sm: 2 }}>
+                    <TextField label="Travellers" type="number" required fullWidth size="small" value={d.seats} onChange={(e) => set({ seats: e.target.value === "" ? "" : Number(e.target.value) })} slotProps={{ htmlInput: { min: 1 } }} helperText={d.booked ? `${d.booked} booked` : undefined} />
+                  </Grid>
+                  <Grid size={{ xs: 8, sm: 3 }}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Discount</InputLabel>
+                      <Select value={d.discountPercentage} label="Discount" onChange={(e) => set({ discountPercentage: Number(e.target.value) })} sx={{ borderRadius: "4px" }}>
+                        <MenuItem value={0}>No Discount (0%)</MenuItem>
+                        {discountsList.map((disc) => (
+                          <MenuItem key={disc._id} value={disc.value}>
+                            {disc.name} ({disc.value}% OFF)
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 1 }} sx={{ textAlign: "right" }}>
+                    <IconButton size="small" disabled={Boolean(d.booked)} aria-label="Remove date" title={d.booked ? "This date has bookings and can't be deleted" : "Remove date"} onClick={() => setBaseDates(baseDates.filter((_, j) => j !== i))} sx={{ color: "#dc2626" }}>
+                      <DeleteRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </Grid>
+                </Grid>
               </Box>
             );
-          })()}
+          })}
         </Paper>
 
         {/* Action bar */}

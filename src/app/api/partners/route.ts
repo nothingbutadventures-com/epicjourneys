@@ -102,6 +102,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (assignedDestination) {
+      const dest: any = await Destination.findById(assignedDestination).select("name partnerId");
+      if (dest?.partnerId) {
+        return NextResponse.json({ error: `${dest.name} already has a partner. A location can only have one.` }, { status: 409 });
+      }
+    }
+
     const hashedPassword = await hashPassword(password);
 
     const partner = await User.create({

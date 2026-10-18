@@ -114,7 +114,7 @@ function CheckoutInner() {
 
   const departure = useMemo(() => (tour?.departures || []).find((d: any) => d._id === departureId) || null, [tour, departureId]);
   const sameCityDepartures = useMemo(
-    () => (tour?.departures || []).filter((d: any) => departure && d.cityId === departure.cityId),
+    () => (tour?.departures || []).filter((d: any) => departure && d.cityId === departure.cityId && Boolean(d.isBase) === Boolean(departure.isBase)),
     [tour, departure]
   );
   const maxTravellers = departure ? Math.min(20, departure.available) : 20;

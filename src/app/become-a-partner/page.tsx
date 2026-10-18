@@ -25,6 +25,7 @@ interface City {
   id: string;
   name: string;
   state: string;
+  hasPartner: boolean;
 }
 
 const initial = {
@@ -58,7 +59,7 @@ export default function BecomePartnerPage() {
   useEffect(() => {
     fetch("/api/destinations")
       .then((r) => r.json())
-      .then((d) => d.success && setCities((d.data || []).map((x: any) => ({ id: x._id, name: x.name, state: x.state }))))
+      .then((d) => d.success && setCities((d.data || []).map((x: any) => ({ id: x._id, name: x.name, state: x.state, hasPartner: Boolean(x.hasPartner) })).filter((c: City) => !c.hasPartner)))
       .catch(() => {});
   }, []);
 
@@ -184,7 +185,7 @@ export default function BecomePartnerPage() {
                             setForm((f) => ({ ...f, state: v.state }));
                           }
                         }}
-                        renderInput={(p) => <TextField {...p} label="City you want to partner for" required helperText="Pick from the list or type a new city" />}
+                        renderInput={(p) => <TextField {...p} label="City you want to partner for" required helperText="Locations that already have a partner aren't listed. You can also type a new city." />}
                       />
                     </Grid>
                     {!city && (

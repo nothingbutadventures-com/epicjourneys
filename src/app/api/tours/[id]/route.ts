@@ -4,7 +4,8 @@ import Tour from "@/models/Tour";
 import Destination from "@/models/Destination";
 import { getAuthFromRequest } from "@/lib/auth";
 import { calculateDistanceKm } from "@/lib/geo";
-import { sanitizeDepartures, deriveFromDepartures, bookedSeatsByDeparture } from "@/lib/departures";
+import { bookedSeatsByDeparture } from "@/lib/departures";
+import { applyBaseDepartures, cleanItinerary, refreshTourDerived } from "@/lib/launch";
 
 export async function GET(
   req: NextRequest,
@@ -56,6 +57,11 @@ export async function GET(
           _id: d._id,
           cityId: d.cityId?._id ? String(d.cityId._id) : d.cityId ? String(d.cityId) : null,
           cityName: d.cityId?.name || tour.startingPoint,
+          isBase: !d.launchId,
+          startItinerary: d.startItinerary || [],
+          endItinerary: d.endItinerary || [],
+          extraPriceInr: d.extraPriceInr ?? null,
+          durationDays: Math.max(1, Math.round((+new Date(d.endDate) - +new Date(d.startDate)) / 86400000) + 1),
           addressId: d.addressId ? String(d.addressId) : null,
           address: (() => {
             const a = d.addressId ? (d.cityId?.addresses || []).find((x: any) => String(x._id) === String(d.addressId)) : null;
@@ -72,12 +78,28 @@ export async function GET(
         };
       });
 
+    // Where travellers can start: the basic tour's own location, plus every city that has a partner.
+    const baseCityId = (tour as any).baseStartCityId || (tour.destinationId as any)?._id || tour.destinationId;
+    const baseCity: any = baseCityId ? await Destination.findById(baseCityId).select("name state").lean() : null;
+    const partnerCities: any[] = await Destination.find({ partnerId: { $ne: null }, isActive: true }).select("name state").sort({ name: 1 }).lean();
+
+    // Day destinations: show current city names even if a city was renamed after the tour was written.
+    const tourObj: any = tour.toObject();
+    const dayIds = [...new Set((tourObj.itinerary || []).map((d: any) => d.destinationId && String(d.destinationId)).filter(Boolean))];
+    if (dayIds.length) {
+      const names: any[] = await Destination.find({ _id: { $in: dayIds } }).select("name").lean();
+      const nameMap = new Map(names.map((n) => [String(n._id), n.name]));
+      tourObj.itinerary = tourObj.itinerary.map((d: any) => (d.destinationId && nameMap.has(String(d.destinationId)) ? { ...d, destinationName: nameMap.get(String(d.destinationId)) } : d));
+    }
+
     return NextResponse.json({
       success: true,
       data: {
-        ...tour.toObject(),
+        ...tourObj,
         departures,
         distanceKm,
+        baseStartCity: baseCity ? { id: String(baseCity._id), name: baseCity.name, state: baseCity.state } : null,
+        startCities: partnerCities.map((c) => ({ id: String(c._id), name: c.name, state: c.state })),
       },
     });
   } catch (error: any) {
@@ -116,35 +138,20 @@ export async function PUT(
       }
     }
 
-    if (body.departures !== undefined) {
-      const deps = await sanitizeDepartures(body.departures);
-      if (deps.error) {
-        return NextResponse.json({ error: deps.error }, { status: 400 });
-      }
-      const booked = await bookedSeatsByDeparture(tour._id);
-      const kept = new Set((deps.data || []).filter((d: any) => d._id).map((d: any) => String(d._id)));
-      for (const existing of tour.departures || []) {
-        const id = String(existing._id);
-        if ((booked[id] || 0) > 0 && !kept.has(id)) {
-          return NextResponse.json(
-            { error: "A date that already has bookings can't be removed. Cancel its bookings first." },
-            { status: 400 }
-          );
-        }
-      }
-      for (const d of deps.data || []) {
-        if (d._id && d.seats < (booked[String(d._id)] || 0)) {
-          return NextResponse.json(
-            { error: `A date already has ${booked[String(d._id)]} travellers booked, so seats can't go below that.` },
-            { status: 400 }
-          );
-        }
-      }
-      if (!deps.data || deps.data.length === 0) {
-        return NextResponse.json({ error: "Add at least one date." }, { status: 400 });
-      }
-      body.departures = deps.data;
-      Object.assign(body, deriveFromDepartures(deps.data, deps.cities!));
+    if (body.itinerary !== undefined) body.itinerary = cleanItinerary(body.itinerary);
+
+    // Dates are managed through partner launches, never through the tour form. Derived fields are protected too.
+    delete body.departures;
+    delete body.priceInr;
+    delete body.discountPercentage;
+    delete body.startingPoint;
+    delete body.endingPoint;
+
+    let newBase: number | null = null;
+    if (body.basePriceInr !== undefined) {
+      newBase = Math.round(Number(body.basePriceInr) || 0);
+      if (!(newBase > 0)) return NextResponse.json({ error: "Enter a valid base price per person." }, { status: 400 });
+      body.basePriceInr = newBase;
     }
 
     if (body.depositType !== undefined) body.depositType = body.depositType === "amount" ? "amount" : "percentage";
@@ -152,10 +159,29 @@ export async function PUT(
       body.depositValue = Math.max(0, Math.min(body.depositType === "amount" ? Infinity : 100, Number(body.depositValue) || 0));
     }
 
-    const updated = await Tour.findByIdAndUpdate(id, body, { new: true }).populate(
-      "destinationId",
-      "name state coordinates coverImage"
-    );
+    // Basic-tour location and dates are applied separately from the plain field update.
+    const baseSetup = { baseStartCityId: body.baseStartCityId, baseAddressId: body.baseAddressId, baseDepartures: body.baseDepartures };
+    delete body.baseStartCityId;
+    delete body.baseAddressId;
+    delete body.baseDepartures;
+
+    let updated: any = await Tour.findByIdAndUpdate(id, body, { new: true });
+
+    // A new base price flows into every date: launched dates = base + city supplement; basic dates that
+    // were still at the old base price follow the new one.
+    if (updated && (newBase !== null || baseSetup.baseDepartures !== undefined || baseSetup.baseStartCityId !== undefined)) {
+      if (newBase !== null) {
+                for (const d of updated.departures || []) {
+          if (d.extraPriceInr !== null && d.extraPriceInr !== undefined) d.price = newBase + d.extraPriceInr;
+          else if (!d.launchId) d.price = newBase;
+        }
+      }
+      const r = await applyBaseDepartures(updated, baseSetup);
+      if (r.error) return NextResponse.json({ error: r.error }, { status: 400 });
+      refreshTourDerived(updated);
+      await updated.save();
+    }
+    updated = await Tour.findById(id).populate("destinationId", "name state coordinates coverImage");
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {

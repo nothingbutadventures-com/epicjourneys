@@ -6,6 +6,15 @@ export interface IItineraryDay {
   description: string;
   meals?: string;
   stay?: string;
+  destinationId?: mongoose.Types.ObjectId | null;
+  destinationName?: string;
+}
+
+export interface IExtraDay {
+  title: string;
+  description?: string;
+  meals?: string;
+  stay?: string;
 }
 
 export interface IDeparture {
@@ -13,6 +22,11 @@ export interface IDeparture {
   cityId: mongoose.Types.ObjectId;
   addressId?: mongoose.Types.ObjectId;
   price: number;
+  extraPriceInr?: number | null;
+  startItinerary?: IExtraDay[];
+  endItinerary?: IExtraDay[];
+  launchId?: mongoose.Types.ObjectId | null;
+  partnerId?: mongoose.Types.ObjectId | null;
   startDate: Date;
   endDate: Date;
   seats: number;
@@ -32,6 +46,9 @@ export interface ITour extends Document {
   durationDays: number;
   durationNights: number;
   priceInr: number;
+  basePriceInr?: number;
+  baseStartCityId?: mongoose.Types.ObjectId | null;
+  baseAddressId?: mongoose.Types.ObjectId | null;
   highlights: string[];
   itinerary: IItineraryDay[];
   inclusions: string[];
@@ -58,6 +75,20 @@ const ItineraryDaySchema = new Schema<IItineraryDay>(
     description: { type: String, required: true },
     meals: { type: String, default: "Breakfast" },
     stay: { type: String, default: "Standard Hotel / Resort" },
+    // The city this day is spent in (a tour can span several).
+    destinationId: { type: Schema.Types.ObjectId, ref: "Destination", default: null },
+    destinationName: { type: String, default: "" },
+  },
+  { _id: false }
+);
+
+// Extra days a partner adds before / after the main itinerary for their city.
+const ExtraDaySchema = new Schema<IExtraDay>(
+  {
+    title: { type: String, required: true, trim: true },
+    description: { type: String, default: "" },
+    meals: { type: String, default: "" },
+    stay: { type: String, default: "" },
   },
   { _id: false }
 );
@@ -67,7 +98,13 @@ const DepartureSchema = new Schema<IDeparture>({
   cityId: { type: Schema.Types.ObjectId, ref: "Destination", required: true },
   // One of the city's addresses (Destination.addresses) where this date starts.
   addressId: { type: Schema.Types.ObjectId, default: null },
+  // Final per-person price for this date: tour base price + the city supplement (when launched via a partner).
   price: { type: Number, required: true, min: 0 },
+  extraPriceInr: { type: Number, default: null },
+  startItinerary: { type: [ExtraDaySchema], default: [] },
+  endItinerary: { type: [ExtraDaySchema], default: [] },
+  launchId: { type: Schema.Types.ObjectId, ref: "TourLaunch", default: null },
+  partnerId: { type: Schema.Types.ObjectId, ref: "User", default: null },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   seats: { type: Number, required: true, min: 1 },
@@ -86,12 +123,18 @@ const TourSchema = new Schema<ITour>(
       ref: "Destination",
       required: true,
     },
-    startingPoint: { type: String, required: true, trim: true },
-    endingPoint: { type: String, required: true, trim: true },
+    // Tours are no longer tied to a start/end city; those come from each partner launch.
+    startingPoint: { type: String, default: "", trim: true },
+    endingPoint: { type: String, default: "", trim: true },
     targetCity: { type: String, default: "", trim: true },
     durationDays: { type: Number, required: true, default: 3 },
     durationNights: { type: Number, required: true, default: 2 },
     priceInr: { type: Number, required: true },
+    // Admin-set base price per person. City supplements are added on top for each launched date.
+    basePriceInr: { type: Number, default: 0, min: 0 },
+    // Where the basic tour itself starts and ends ("Joining / Leaving"). Falls back to the tour's destination.
+    baseStartCityId: { type: Schema.Types.ObjectId, ref: "Destination", default: null },
+    baseAddressId: { type: Schema.Types.ObjectId, default: null },
     highlights: [{ type: String }],
     itinerary: [ItineraryDaySchema],
     inclusions: [{ type: String }],

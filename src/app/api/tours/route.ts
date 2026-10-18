@@ -4,8 +4,8 @@ import Tour from "@/models/Tour";
 import Destination from "@/models/Destination";
 import User from "@/models/User";
 import { getAuthFromRequest } from "@/lib/auth";
+import { applyBaseDepartures, cleanItinerary } from "@/lib/launch";
 import { calculateDistanceKm } from "@/lib/geo";
-import { sanitizeDepartures, deriveFromDepartures } from "@/lib/departures";
 
 export async function GET(req: NextRequest) {
   try {
@@ -118,8 +118,6 @@ export async function POST(req: NextRequest) {
       description,
       state,
       destinationId,
-      startingPoint,
-      endingPoint,
       durationDays,
       durationNights,
       priceInr,
@@ -139,17 +137,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const deps = await sanitizeDepartures(body.departures);
-    if (deps.error) {
-      return NextResponse.json({ error: deps.error }, { status: 400 });
+    // Dates and start/end cities come later, from partner launches. The admin only sets the base price.
+    const basePrice = Math.round(Number(body.basePriceInr ?? priceInr) || 0);
+    if (!(basePrice > 0)) {
+      return NextResponse.json({ error: "Enter the base price per person." }, { status: 400 });
     }
-    if (!deps.data || deps.data.length === 0) {
-      return NextResponse.json(
-        { error: "Add at least one date with a start & end city and price." },
-        { status: 400 }
-      );
-    }
-    const derived: any = deriveFromDepartures(deps.data, deps.cities!);
 
     const dest = await Destination.findById(destinationId);
     if (!dest) {
@@ -170,10 +162,6 @@ export async function POST(req: NextRequest) {
       slug = `${baseSlug}-${count++}`;
     }
 
-    // Start/end city now lives on each date; the tour-level values mirror the first date.
-    const finalStartingPoint = derived.startingPoint || dest.name;
-    const finalEndingPoint = derived.endingPoint || dest.name;
-
     const tour = await Tour.create({
       title: title.trim(),
       slug,
@@ -181,24 +169,25 @@ export async function POST(req: NextRequest) {
       description: description || "",
       state: dest.state,
       destinationId,
-      startingPoint: finalStartingPoint,
-      endingPoint: finalEndingPoint,
+      startingPoint: "",
+      endingPoint: "",
       targetCity: dest.name,
       durationDays: Number(durationDays) || 3,
       durationNights: Number(durationNights) || 2,
-      priceInr: derived.priceInr,
+      priceInr: basePrice,
+      basePriceInr: basePrice,
       highlights: Array.isArray(highlights) ? highlights : [],
-      itinerary: Array.isArray(itinerary) ? itinerary : [],
+      itinerary: cleanItinerary(itinerary),
       inclusions: Array.isArray(inclusions) ? inclusions : [],
       exclusions: Array.isArray(exclusions) ? exclusions : [],
       travelStyles: Array.isArray(body.travelStyles) ? body.travelStyles : [],
       physicalRating: body.physicalRating || "Easy / Relaxed",
-      discountPercentage: derived.discountPercentage || 0,
+      discountPercentage: 0,
       maxGroupSize: Number(maxGroupSize) || 15,
       singleRoomPriceInr: Math.max(0, Number(body.singleRoomPriceInr) || 0),
       depositType: body.depositType === "amount" ? "amount" : "percentage",
       depositValue: Math.max(0, Math.min(body.depositType === "amount" ? Infinity : 100, Number(body.depositValue) || 0)),
-      departures: deps.data,
+      departures: [],
       coverImage:
         coverImage ||
         dest.coverImage ||
@@ -206,6 +195,20 @@ export async function POST(req: NextRequest) {
       images: Array.isArray(images) ? images : [],
       isActive: true,
     });
+
+    // Basic tour setup: its own start/end location and dates ("Joining / Leaving").
+    if (body.baseStartCityId !== undefined || body.baseDepartures !== undefined) {
+      const r = await applyBaseDepartures(tour, {
+        baseStartCityId: body.baseStartCityId,
+        baseAddressId: body.baseAddressId,
+        baseDepartures: body.baseDepartures,
+      });
+      if (r.error) {
+        await Tour.deleteOne({ _id: tour._id });
+        return NextResponse.json({ error: r.error }, { status: 400 });
+      }
+      await tour.save();
+    }
 
     const populated = await Tour.findById(tour._id).populate(
       "destinationId",
