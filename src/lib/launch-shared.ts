@@ -15,6 +15,7 @@ export interface DayInput {
   description?: string;
   meals?: string;
   stay?: string;
+  destinations?: { destinationId: string; name: string }[];
 }
 
 /** Who has to act next, plus colours/labels for chips. */

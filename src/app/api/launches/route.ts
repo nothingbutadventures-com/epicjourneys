@@ -5,7 +5,7 @@ import User from "@/models/User";
 import Destination from "@/models/Destination";
 import TourLaunch from "@/models/TourLaunch";
 import { getAuthFromRequest } from "@/lib/auth";
-import { addMessage, isObjectId, sanitizeLaunchPatch } from "@/lib/launch";
+import { addMessage, composePartnerMessage, isObjectId, sanitizeLaunchPatch, sanitizeNotes } from "@/lib/launch";
 import type { LaunchStatus } from "@/lib/launch-shared";
 
 const OPEN: LaunchStatus[] = ["submitted", "awaiting_partner", "changes_requested", "partner_approved"];
@@ -77,6 +77,15 @@ export async function POST(req: NextRequest) {
     const city: any = await Destination.findById(cityId).select("name addresses").lean();
     if (!city) return NextResponse.json({ error: "City not found." }, { status: 404 });
 
+    // Partners only describe the extra days they have in mind; the admin builds the actual itinerary.
+    const isPartner = auth.role === "partner";
+    const startNotes = isPartner ? sanitizeNotes(body.startNotes) : [];
+    const endNotes = isPartner ? sanitizeNotes(body.endNotes) : [];
+    if (isPartner) {
+      delete body.startItinerary;
+      delete body.endItinerary;
+    }
+
     const parsed = sanitizeLaunchPatch(body, { tour, city }, { admin: auth.role === "admin" });
     if (parsed.error) return NextResponse.json({ error: parsed.error }, { status: 400 });
     const patch = parsed.data!;
@@ -103,10 +112,12 @@ export async function POST(req: NextRequest) {
       endItinerary: patch.endItinerary || [],
       extraPriceInr: patch.extraPriceInr ?? null,
       partnerNotes: patch.partnerNotes || "",
+      startNotes,
+      endNotes,
       status: "submitted",
       revision: 1,
     });
-    addMessage(launch, auth.role === "admin" ? "admin" : "partner", who?.name || auth.name, "request", patch.partnerNotes || "");
+    addMessage(launch, auth.role === "admin" ? "admin" : "partner", who?.name || auth.name, "request", composePartnerMessage(startNotes, endNotes, patch.partnerNotes || ""));
     await launch.save();
 
     return NextResponse.json({ success: true, data: launch });

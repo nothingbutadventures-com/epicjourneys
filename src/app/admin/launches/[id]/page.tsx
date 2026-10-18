@@ -64,6 +64,7 @@ export default function AdminLaunchDetailPage() {
   const [partnerNotes, setPartnerNotes] = useState("");
   const [extra, setExtra] = useState<string>("");
 
+  const [discounts, setDiscounts] = useState<any[]>([]);
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState<PendingAction>(null);
   const [pendingText, setPendingText] = useState("");
@@ -94,6 +95,10 @@ export default function AdminLaunchDetailPage() {
 
   useEffect(() => {
     load();
+    fetch("/api/discounts")
+      .then((r) => r.json())
+      .then((d) => d.success && setDiscounts(d.data || []))
+      .catch(() => {});
   }, [load]);
 
   const touch = <T,>(setter: (v: T) => void) => (v: T) => {
@@ -238,7 +243,18 @@ export default function AdminLaunchDetailPage() {
                       <TextField label="Seats" type="number" fullWidth size="small" disabled={!editable} value={d.seats} onChange={(e) => set({ seats: e.target.value === "" ? "" : Number(e.target.value) })} slotProps={{ htmlInput: { min: 1 } }} />
                     </Grid>
                     <Grid size={{ xs: 4, sm: 2 }}>
-                      <TextField label="Discount %" type="number" fullWidth size="small" disabled={!editable} value={d.discountPercentage} onChange={(e) => set({ discountPercentage: Number(e.target.value) })} slotProps={{ htmlInput: { min: 0, max: 100 } }} />
+                      <FormControl fullWidth size="small" disabled={!editable}>
+                        <InputLabel>Discount</InputLabel>
+                        <Select value={d.discountPercentage} label="Discount" onChange={(e) => set({ discountPercentage: Number(e.target.value) })}>
+                          <MenuItem value={0}>No Discount (0%)</MenuItem>
+                          {discounts.map((disc) => (
+                            <MenuItem key={disc._id} value={disc.value}>{disc.name} ({disc.value}% OFF)</MenuItem>
+                          ))}
+                          {d.discountPercentage > 0 && !discounts.some((x) => x.value === d.discountPercentage) && (
+                            <MenuItem value={d.discountPercentage}>Custom ({d.discountPercentage}% OFF)</MenuItem>
+                          )}
+                        </Select>
+                      </FormControl>
                     </Grid>
                     <Grid size={{ xs: 4, sm: 2 }} sx={{ textAlign: "right" }}>
                       {editable && (
@@ -278,6 +294,22 @@ export default function AdminLaunchDetailPage() {
             </FormControl>
             {addresses.length === 0 && <Typography variant="caption" sx={{ color: "#64748b", display: "block", mt: 0.5 }}>{city?.name} has no addresses yet — add them under Destinations & Cities.</Typography>}
           </SectionPaper>
+
+          {(launch.startNotes?.length > 0 || launch.endNotes?.length > 0) && (
+            <SectionPaper title="Partner's ideas for extra days" caption="Notes from the partner — turn them into itinerary days below.">
+              {[["Before the tour", launch.startNotes], ["After the tour", launch.endNotes]].map(
+                ([label, list]: any) =>
+                  list?.length > 0 && (
+                    <Box key={label} sx={{ mb: 1.25 }}>
+                      <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", mb: 0.5 }}>{label}</Typography>
+                      {list.map((n: string, i: number) => (
+                        <Typography key={i} sx={{ fontSize: "0.85rem", whiteSpace: "pre-line" }}>{i + 1}. {n}</Typography>
+                      ))}
+                    </Box>
+                  )
+              )}
+            </SectionPaper>
+          )}
 
           <SectionPaper title="City itinerary" caption="Days this city adds before and after the main tour (e.g. travel to the tour's starting point).">
             <DaysEditor title="Start itinerary" hint="Days before the main itinerary begins" days={startDays} onChange={touch(setStartDays)} readOnly={!editable} />

@@ -83,14 +83,20 @@ export async function GET(
     const baseCity: any = baseCityId ? await Destination.findById(baseCityId).select("name state").lean() : null;
     const partnerCities: any[] = await Destination.find({ partnerId: { $ne: null }, isActive: true }).select("name state").sort({ name: 1 }).lean();
 
-    // Day destinations: show current city names even if a city was renamed after the tour was written.
+    // Day cities: show current names (cities can be renamed) and upgrade old single-city days.
     const tourObj: any = tour.toObject();
-    const dayIds = [...new Set((tourObj.itinerary || []).map((d: any) => d.destinationId && String(d.destinationId)).filter(Boolean))];
+    const asList = (d: any) =>
+      d.destinations?.length ? d.destinations : d.destinationId ? [{ destinationId: d.destinationId, name: d.destinationName }] : [];
+    const dayIds = [...new Set<string>((tourObj.itinerary || []).flatMap((d: any) => asList(d).map((x: any) => String(x.destinationId))))];
+    const nameMap = new Map<string, string>();
     if (dayIds.length) {
       const names: any[] = await Destination.find({ _id: { $in: dayIds } }).select("name").lean();
-      const nameMap = new Map(names.map((n) => [String(n._id), n.name]));
-      tourObj.itinerary = tourObj.itinerary.map((d: any) => (d.destinationId && nameMap.has(String(d.destinationId)) ? { ...d, destinationName: nameMap.get(String(d.destinationId)) } : d));
+      names.forEach((n) => nameMap.set(String(n._id), n.name));
     }
+    tourObj.itinerary = (tourObj.itinerary || []).map((d: any) => ({
+      ...d,
+      destinations: asList(d).map((x: any) => ({ destinationId: String(x.destinationId), name: nameMap.get(String(x.destinationId)) || x.name || "" })),
+    }));
 
     return NextResponse.json({
       success: true,

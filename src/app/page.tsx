@@ -232,9 +232,11 @@ export default function HomePage() {
   const toOptions = useMemo<CityOption[]>(() => {
     const map = new Map<string, CityOption>();
     for (const t of allTours) {
-      const c = t.destinationId;
-      if (c?._id && !map.has(c._id)) {
-        map.set(c._id, { id: c._id, name: c.name, state: c.state, lat: c.coordinates?.lat, lng: c.coordinates?.lng });
+      // Where the tour is based plus every city on its itinerary.
+      for (const c of [t.destinationId, ...(t.itineraryCities || [])]) {
+        if (c?._id && !map.has(c._id)) {
+          map.set(c._id, { id: c._id, name: c.name, state: c.state, lat: c.coordinates?.lat, lng: c.coordinates?.lng });
+        }
       }
     }
     return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));

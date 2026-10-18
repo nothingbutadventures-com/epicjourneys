@@ -6,8 +6,9 @@ export interface IItineraryDay {
   description: string;
   meals?: string;
   stay?: string;
-  destinationId?: mongoose.Types.ObjectId | null;
+  destinationId?: mongoose.Types.ObjectId | null; // legacy single city
   destinationName?: string;
+  destinations?: { destinationId: mongoose.Types.ObjectId; name: string }[];
 }
 
 export interface IExtraDay {
@@ -15,6 +16,7 @@ export interface IExtraDay {
   description?: string;
   meals?: string;
   stay?: string;
+  destinations?: { destinationId: mongoose.Types.ObjectId; name: string }[];
 }
 
 export interface IDeparture {
@@ -78,6 +80,11 @@ const ItineraryDaySchema = new Schema<IItineraryDay>(
     // The city this day is spent in (a tour can span several).
     destinationId: { type: Schema.Types.ObjectId, ref: "Destination", default: null },
     destinationName: { type: String, default: "" },
+    // Cities visited that day, in order: City1 → City2 → City3.
+    destinations: {
+      type: [{ destinationId: { type: Schema.Types.ObjectId, ref: "Destination" }, name: { type: String, default: "" }, _id: false }],
+      default: [],
+    },
   },
   { _id: false }
 );
@@ -89,6 +96,10 @@ const ExtraDaySchema = new Schema<IExtraDay>(
     description: { type: String, default: "" },
     meals: { type: String, default: "" },
     stay: { type: String, default: "" },
+    destinations: {
+      type: [{ destinationId: { type: Schema.Types.ObjectId, ref: "Destination" }, name: { type: String, default: "" }, _id: false }],
+      default: [],
+    },
   },
   { _id: false }
 );

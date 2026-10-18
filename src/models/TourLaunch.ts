@@ -32,8 +32,10 @@ export interface ITourLaunch extends Document {
   partnerId?: mongoose.Types.ObjectId | null;
   addressId?: mongoose.Types.ObjectId | null;
   dates: ILaunchDate[];
-  startItinerary: { title: string; description?: string; meals?: string; stay?: string }[];
-  endItinerary: { title: string; description?: string; meals?: string; stay?: string }[];
+  startItinerary: { title: string; description?: string; meals?: string; stay?: string; destinations?: { destinationId: mongoose.Types.ObjectId; name: string }[] }[];
+  endItinerary: { title: string; description?: string; meals?: string; stay?: string; destinations?: { destinationId: mongoose.Types.ObjectId; name: string }[] }[];
+  startNotes: string[]; // partner's ideas for days before the tour
+  endNotes: string[]; // ...and days after
   extraPriceInr: number | null; // set by admin during review
   partnerNotes?: string;
   status: LaunchStatus;
@@ -50,6 +52,10 @@ const DaySchema = new Schema(
     description: { type: String, default: "" },
     meals: { type: String, default: "" },
     stay: { type: String, default: "" },
+    destinations: {
+      type: [{ destinationId: { type: Schema.Types.ObjectId, ref: "Destination" }, name: { type: String, default: "" }, _id: false }],
+      default: [],
+    },
   },
   { _id: false }
 );
@@ -81,6 +87,8 @@ const TourLaunchSchema = new Schema<ITourLaunch>(
     dates: { type: [LaunchDateSchema], default: [] },
     startItinerary: { type: [DaySchema], default: [] },
     endItinerary: { type: [DaySchema], default: [] },
+    startNotes: { type: [String], default: [] },
+    endNotes: { type: [String], default: [] },
     extraPriceInr: { type: Number, default: null, min: 0 },
     partnerNotes: { type: String, default: "" },
     status: {

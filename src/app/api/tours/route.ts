@@ -24,19 +24,26 @@ export async function GET(req: NextRequest) {
     const radiusStr = searchParams.get("radius");
 
     const filter: any = {};
+    const and: any[] = [];
     if (!all) filter.isActive = true;
     if (destinationId) filter.destinationId = destinationId;
-    if (toCity) filter.destinationId = toCity;
+    // A tour matches a "To" city when it is based there or when any day of its itinerary visits it.
+    if (toCity) {
+      and.push({ $or: [{ destinationId: toCity }, { "itinerary.destinations.destinationId": toCity }, { "itinerary.destinationId": toCity }] });
+    }
     if (fromCity) filter["departures.cityId"] = fromCity;
     if (state && state !== "All") filter.state = state;
     if (search) {
-      filter.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { startingPoint: { $regex: search, $options: "i" } },
-        { targetCity: { $regex: search, $options: "i" } },
-        { state: { $regex: search, $options: "i" } },
-      ];
+      and.push({
+        $or: [
+          { title: { $regex: search, $options: "i" } },
+          { startingPoint: { $regex: search, $options: "i" } },
+          { targetCity: { $regex: search, $options: "i" } },
+          { state: { $regex: search, $options: "i" } },
+        ],
+      });
     }
+    if (and.length) filter.$and = and;
 
     const isAdmin = getAuthFromRequest(req)?.role === "admin";
     const tours = await Tour.find(filter)
@@ -53,6 +60,14 @@ export async function GET(req: NextRequest) {
     const userLng = lngStr ? parseFloat(lngStr) : null;
     const radius = radiusStr && radiusStr !== "all" ? parseFloat(radiusStr) : null;
 
+    // Every city visited on any itinerary day, so searches and filters can treat them as target cities.
+    const dayCityIds = new Set<string>();
+    const cityIdsOf = (d: any): string[] =>
+      d.destinations?.length ? d.destinations.map((x: any) => String(x.destinationId)) : d.destinationId ? [String(d.destinationId)] : [];
+    for (const t of tours as any[]) for (const d of t.itinerary || []) cityIdsOf(d).forEach((id) => dayCityIds.add(id));
+    const cityDocs: any[] = dayCityIds.size ? await Destination.find({ _id: { $in: [...dayCityIds] } }).select("name state coordinates").lean() : [];
+    const cityMap = new Map(cityDocs.map((c) => [String(c._id), c]));
+
     // Distance is measured to the nearest start/end city of the tour (or only the selected one),
     // falling back to the target city for tours without dated departures.
     let processedTours = tours.map((tour: any) => {
@@ -68,8 +83,14 @@ export async function GET(req: NextRequest) {
         );
         if (dists.length) distanceKm = Math.min(...dists);
       }
+      const seen = new Set<string>();
+      const itineraryCities = (tour.itinerary || [])
+        .flatMap((d: any) => cityIdsOf(d))
+        .filter((id: string) => cityMap.has(id) && !seen.has(id) && seen.add(id))
+        .map((id: string) => cityMap.get(id));
       return {
         ...tour,
+        itineraryCities,
         distanceKm,
       };
     });

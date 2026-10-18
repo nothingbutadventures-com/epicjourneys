@@ -18,7 +18,12 @@ export function sanitizeDays(input: unknown, label: string): { data?: DayInput[]
     const description = text(d.description, 2000);
     if (!title && !description) continue; // ignore empty rows
     if (!title) return { error: `${label} day ${i + 1}: enter a title` };
-    out.push({ title, description, meals: text(d.meals, 120), stay: text(d.stay, 160) });
+    const seen = new Set<string>();
+    const destinations = (Array.isArray(d.destinations) ? d.destinations : [])
+      .filter((x: any) => x?.destinationId && mongoose.isValidObjectId(x.destinationId) && !seen.has(String(x.destinationId)) && seen.add(String(x.destinationId)))
+      .slice(0, 8)
+      .map((x: any) => ({ destinationId: String(x.destinationId), name: text(x.name, 120) }));
+    out.push({ title, description, meals: text(d.meals, 120), stay: text(d.stay, 160), destinations });
   }
   return { data: out };
 }
@@ -118,7 +123,7 @@ export function refreshEndDates(launch: any, tour: any) {
 }
 
 export function addMessage(launch: any, by: "partner" | "admin" | "system", name: string, kind: string, textValue = "") {
-  launch.messages.push({ by, name, kind, text: textValue.slice(0, 2000), at: new Date() });
+  launch.messages.push({ by, name, kind, text: textValue.slice(0, 6000), at: new Date() });
 }
 
 /** Keep the tour's headline price in step with its live dates. */
@@ -288,13 +293,34 @@ export async function applyBaseDepartures(
   return {};
 }
 
-/** Keeps each day's destination link valid (a bad id would otherwise fail the whole save). */
+/** Normalises each day's ordered cities (and upgrades the old single-city field). */
 export function cleanItinerary(input: unknown) {
   if (!Array.isArray(input)) return [];
-  return input.map((d: any, i: number) => ({
-    ...d,
-    day: Number(d?.day) || i + 1,
-    destinationId: d?.destinationId && mongoose.isValidObjectId(d.destinationId) ? d.destinationId : null,
-    destinationName: d?.destinationId && mongoose.isValidObjectId(d.destinationId) ? String(d.destinationName || "").slice(0, 120) : "",
-  }));
+  return input.map((d: any, i: number) => {
+    const raw: any[] = Array.isArray(d?.destinations) && d.destinations.length
+      ? d.destinations
+      : d?.destinationId ? [{ destinationId: d.destinationId, name: d.destinationName }] : [];
+    const seen = new Set<string>();
+    const destinations = raw
+      .filter((x) => x?.destinationId && mongoose.isValidObjectId(x.destinationId) && !seen.has(String(x.destinationId)) && seen.add(String(x.destinationId)))
+      .slice(0, 8)
+      .map((x) => ({ destinationId: x.destinationId, name: String(x.name || "").slice(0, 120) }));
+    return { ...d, day: Number(d?.day) || i + 1, destinations, destinationId: null, destinationName: "" };
+  });
+}
+
+
+/** Partner notes for extra days: a short list of plain text ideas. */
+export function sanitizeNotes(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return input.map((n) => text(n, 1000)).filter(Boolean).slice(0, 10);
+}
+
+/** One readable message (start and end together, numbered) for the admin's thread. */
+export function composePartnerMessage(startNotes: string[], endNotes: string[], notes: string) {
+  const parts: string[] = [];
+  if (startNotes.length) parts.push(`Before the tour (${startNotes.length} day${startNotes.length === 1 ? "" : "s"}):\n${startNotes.map((n, i) => `${i + 1}. ${n}`).join("\n")}`);
+  if (endNotes.length) parts.push(`After the tour (${endNotes.length} day${endNotes.length === 1 ? "" : "s"}):\n${endNotes.map((n, i) => `${i + 1}. ${n}`).join("\n")}`);
+  if (notes) parts.push(`Notes:\n${notes}`);
+  return parts.join("\n\n");
 }

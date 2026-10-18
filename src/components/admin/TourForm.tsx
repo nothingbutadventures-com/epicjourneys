@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import DestinationPicker from "@/components/admin/DestinationPicker";
+import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
 import {
   Box,
   Typography,
@@ -31,6 +33,7 @@ interface ItineraryDay {
   description: string;
   meals: string;
   stay: string;
+  destinations?: { destinationId: string; name: string }[];
 }
 
 export default function TourForm({ tourId }: { tourId?: string }) {
@@ -50,6 +53,7 @@ export default function TourForm({ tourId }: { tourId?: string }) {
   const [durationDays, setDurationDays] = useState<number | "">("");
   const [durationNights, setDurationNights] = useState<number | "">("");
   const [maxGroupSize, setMaxGroupSize] = useState<number | "">("");
+  const [pickerDay, setPickerDay] = useState<number | null>(null); // which itinerary day is choosing a destination
   const [basePrice, setBasePrice] = useState<number | "">("");
   // Basic tour ("Joining / Leaving"): where it starts/ends and its own dates
   const [baseCityId, setBaseCityId] = useState("");
@@ -236,6 +240,27 @@ export default function TourForm({ tourId }: { tourId?: string }) {
     updated[index] = { ...updated[index], [field]: val };
     setItinerary(updated);
   };
+
+  const toggleDayCity = (dayIdx: number, d: { _id: string; name: string }) =>
+    setItinerary((prev) =>
+      prev.map((x, i) => {
+        if (i !== dayIdx) return x;
+        const list = x.destinations || [];
+        const has = list.some((c) => c.destinationId === d._id);
+        return { ...x, destinations: has ? list.filter((c) => c.destinationId !== d._id) : [...list, { destinationId: d._id, name: d.name }] };
+      })
+    );
+
+  const moveDayCity = (dayIdx: number, from: number, to: number) =>
+    setItinerary((prev) =>
+      prev.map((x, i) => {
+        if (i !== dayIdx) return x;
+        const list = [...(x.destinations || [])];
+        const [m] = list.splice(from, 1);
+        list.splice(to, 0, m);
+        return { ...x, destinations: list };
+      })
+    );
 
   const removeItineraryDay = (index: number) => {
     const updated = itinerary
@@ -632,6 +657,57 @@ export default function TourForm({ tourId }: { tourId?: string }) {
                 <Grid container spacing={1.5}>
                   <Grid size={{ xs: 12 }}>
                     <TextField
+                      label="Destinations for this day"
+                      fullWidth
+                      value=""
+                      placeholder={(day.destinations || []).length ? "" : "Select destination"}
+                      onClick={() => setPickerDay(idx)}
+                      slotProps={{
+                        inputLabel: { shrink: true },
+                        input: {
+                          readOnly: true,
+                          startAdornment: (
+                            <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 0.5, mr: 0.5 }}>
+                              <PlaceRoundedIcon sx={{ fontSize: 18, color: (day.destinations || []).length ? "#0f172a" : "#94a3b8" }} />
+                              {(day.destinations || []).map((c, ci) => (
+                                <React.Fragment key={c.destinationId}>
+                                  {ci > 0 && <Typography sx={{ color: "#64748b", fontSize: "0.85rem" }}>→</Typography>}
+                                  <Chip
+                                    label={c.name}
+                                    size="small"
+                                    draggable
+                                    onDragStart={(e) => {
+                                      e.stopPropagation();
+                                      e.dataTransfer.setData("text/plain", String(ci));
+                                    }}
+                                    onDragOver={(e) => e.preventDefault()}
+                                    onDrop={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      const from = Number(e.dataTransfer.getData("text/plain"));
+                                      if (!isNaN(from) && from !== ci) moveDayCity(idx, from, ci);
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onDelete={(e) => {
+                                      e.stopPropagation();
+                                      toggleDayCity(idx, { _id: c.destinationId, name: c.name });
+                                    }}
+                                    sx={{ borderRadius: "4px", height: 22, fontSize: "0.75rem", fontWeight: 600, bgcolor: "#f1f5f9", cursor: "grab" }}
+                                  />
+                                </React.Fragment>
+                              ))}
+                            </Box>
+                          ),
+                          endAdornment: <Typography sx={{ fontSize: "0.72rem", color: "#0f172a", fontWeight: 600, whiteSpace: "nowrap" }}>{(day.destinations || []).length ? "Add / change" : "Add"}</Typography>,
+                          sx: { cursor: "pointer", flexWrap: "wrap", "& input": { cursor: "pointer", minWidth: 0, width: 0, p: 0 } },
+                        },
+                      }}
+                      helperText={(day.destinations || []).length > 1 ? "Drag a city to change the order" : undefined}
+                    />
+                  </Grid>
+
+                  <Grid size={{ xs: 12 }}>
+                    <TextField
                       label="Day Title"
                       fullWidth
                       value={day.title}
@@ -674,6 +750,13 @@ export default function TourForm({ tourId }: { tourId?: string }) {
             ))}
           </Box>
         </Paper>
+
+        <DestinationPicker
+          open={pickerDay !== null}
+          selectedIds={pickerDay !== null ? (itinerary[pickerDay]?.destinations || []).map((c) => c.destinationId) : []}
+          onClose={() => setPickerDay(null)}
+          onToggle={(d) => pickerDay !== null && toggleDayCity(pickerDay, d)}
+        />
 
         {/* Section 5: Highlights, Inclusions & Exclusions */}
         <Paper elevation={0} sx={{ p: 2.5, mb: 3, borderRadius: "4px", border: "1px solid #e2e8f0", bgcolor: "#ffffff" }}>

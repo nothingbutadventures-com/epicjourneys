@@ -113,7 +113,7 @@ export default function PartnerRequestDetailPage() {
         <Alert severity="warning" sx={{ mb: 2, borderRadius: "4px" }}
           action={
             <Box sx={{ display: "flex", gap: 1 }}>
-              <Button size="small" variant="contained" disabled={busy} onClick={() => setPending({ action: "agree", title: "Approve this plan", button: "Approve", help: "By approving you agree to the dates, itinerary and price below. The admin then gives the final approval." })} sx={{ bgcolor: "#0f172a", borderRadius: "4px", "&:hover": { bgcolor: "#1e293b" } }}>Approve</Button>
+              <Button size="small" variant="contained" disabled={busy} onClick={() => setPending({ action: "agree", title: "Accept this plan", button: "Accept", help: "By accepting you agree to the dates, itinerary and price below. The admin then gives the final approval." })} sx={{ bgcolor: "#0f172a", borderRadius: "4px", "&:hover": { bgcolor: "#1e293b" } }}>Accept</Button>
               <Button size="small" variant="outlined" disabled={busy} onClick={() => setPending({ action: "request_changes", title: "Ask for changes", button: "Send to admin", required: true, help: "Describe what you'd like changed:" })} sx={{ borderRadius: "4px" }}>Request changes</Button>
             </Box>
           }
@@ -121,7 +121,7 @@ export default function PartnerRequestDetailPage() {
           The admin has reviewed your request and priced it. Please check the details and confirm — you can't edit them, but you can ask for changes.
         </Alert>
       )}
-      {status === "partner_approved" && <Alert severity="success" sx={{ mb: 2, borderRadius: "4px" }}>You approved this plan. It's now waiting for the admin's final approval.</Alert>}
+      {status === "partner_approved" && <Alert severity="success" sx={{ mb: 2, borderRadius: "4px" }}>You accepted this plan. It's now waiting for the admin's final approval.</Alert>}
       {status === "approved" && <Alert severity="success" sx={{ mb: 2, borderRadius: "4px" }}>Approved — these dates are live on the website for travellers from {city?.name}.</Alert>}
       {status === "rejected" && <Alert severity="error" sx={{ mb: 2, borderRadius: "4px" }}>This request was rejected. See the messages for the reason.</Alert>}
 
@@ -159,6 +159,22 @@ export default function PartnerRequestDetailPage() {
               </>
             ) : <Typography sx={{ fontSize: "0.82rem", color: "#94a3b8" }}>No address attached yet.</Typography>}
           </SectionPaper>
+
+          {(launch.startNotes?.length > 0 || launch.endNotes?.length > 0) && (
+            <SectionPaper title="Your notes for extra days" caption="The admin turns these into itinerary days.">
+              {[["Before the tour", launch.startNotes], ["After the tour", launch.endNotes]].map(
+                ([label, list]: any) =>
+                  list?.length > 0 && (
+                    <Box key={label} sx={{ mb: 1.25 }}>
+                      <Typography sx={{ fontSize: "0.72rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", mb: 0.5 }}>{label}</Typography>
+                      {list.map((n: string, i: number) => (
+                        <Typography key={i} sx={{ fontSize: "0.85rem", whiteSpace: "pre-line" }}>{i + 1}. {n}</Typography>
+                      ))}
+                    </Box>
+                  )
+              )}
+            </SectionPaper>
+          )}
 
           <SectionPaper title="City itinerary">
             <DaysEditor title="Start itinerary" hint="Days before the main tour" days={launch.startItinerary} onChange={() => {}} readOnly />

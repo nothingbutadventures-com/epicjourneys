@@ -465,6 +465,14 @@ export default function TourDetailPage() {
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                           <Chip label={`Day ${day.day}`} size="small" sx={{ backgroundColor: "#facc15", color: "#0f172a", fontWeight: 700, height: 24 }} />
                           <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.98rem" }}>{day.title}</Typography>
+                          {(day.destinations || []).length > 0 && (
+                            <Chip
+                              icon={<LocationOnIcon sx={{ fontSize: "13px !important" }} />}
+                              label={day.destinations.map((c: any) => c.name).join(" → ")}
+                              size="small"
+                              sx={{ height: 20, fontSize: "0.68rem", bgcolor: "#f1f5f9", color: "#334155", fontWeight: 600 }}
+                            />
+                          )}
                           {day.segment !== "main" && (
                             <Chip label={day.segment === "start" ? "Getting there" : "Heading home"} size="small" sx={{ height: 20, fontSize: "0.66rem", bgcolor: "#fef9c3", color: "#854d0e", fontWeight: 600 }} />
                           )}

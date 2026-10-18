@@ -161,8 +161,10 @@ function ToursExplorer() {
         const c = d.cityId;
         if (c?._id && !from.has(c._id)) from.set(c._id, { id: c._id, name: c.name, state: c.state });
       }
-      const c = t.destinationId;
-      if (c?._id && !to.has(c._id)) to.set(c._id, { id: c._id, name: c.name, state: c.state });
+      // Target cities: where the tour is based plus every city on its itinerary.
+      for (const c of [t.destinationId, ...(t.itineraryCities || [])]) {
+        if (c?._id && !to.has(c._id)) to.set(c._id, { id: c._id, name: c.name, state: c.state });
+      }
       if (t.state) st.add(t.state);
       pMin = Math.min(pMin, t.priceInr); pMax = Math.max(pMax, t.priceInr);
       dMin = Math.min(dMin, t.durationDays); dMax = Math.max(dMax, t.durationDays);
@@ -195,7 +197,7 @@ function ToursExplorer() {
           .toLowerCase();
         if (!hay.includes(q)) return false;
       }
-      if (toId && t.destinationId?._id !== toId) return false;
+      if (toId && t.destinationId?._id !== toId && !(t.itineraryCities || []).some((c: any) => c._id === toId)) return false;
       if (fromId && !(t.departures || []).some((d: any) => d.cityId?._id === fromId)) return false;
       if (state !== "All" && t.state !== state) return false;
       if (styles.length && !styles.some((s) => (t.travelStyles || []).includes(s))) return false;
