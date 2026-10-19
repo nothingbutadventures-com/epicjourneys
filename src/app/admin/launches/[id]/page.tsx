@@ -173,7 +173,7 @@ export default function AdminLaunchDetailPage() {
   return (
     <Box>
       <Button component={Link} href="/admin/launches" startIcon={<ArrowBackRoundedIcon sx={{ fontSize: 16 }} />} size="small" sx={{ color: "#64748b", mb: 1 }}>
-        All launches
+        All partner requests
       </Button>
 
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2, flexWrap: "wrap", gap: 1.5 }}>

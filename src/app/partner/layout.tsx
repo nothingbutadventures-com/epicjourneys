@@ -28,6 +28,7 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
+import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 
 const DRAWER_WIDTH = 230;
 
@@ -36,6 +37,11 @@ const NAV_ITEMS = [
     text: "Dashboard",
     href: "/partner",
     icon: <DashboardRoundedIcon sx={{ fontSize: 18 }} />,
+  },
+  {
+    text: "Leads CRM",
+    href: "/partner/leads",
+    icon: <TrendingUpRoundedIcon sx={{ fontSize: 18 }} />,
   },
   {
     text: "Tours",

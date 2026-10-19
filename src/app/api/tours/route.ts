@@ -48,11 +48,18 @@ export async function GET(req: NextRequest) {
     const isAdmin = getAuthFromRequest(req)?.role === "admin";
     const tours = await Tour.find(filter)
       .populate("destinationId", "name state coordinates coverImage")
-      .populate(
-        isAdmin
-          ? { path: "departures.cityId", select: "name state coordinates addresses partnerId", populate: { path: "partnerId", select: "phone secondaryPhone" } }
-          : { path: "departures.cityId", select: "name state coordinates" }
-      )
+      .populate({
+        path: "departures.cityId",
+        select: "name state coordinates addresses partnerId",
+        populate: {
+          path: "partnerId",
+          select: "name email companyName phone secondaryPhone assignedDestination",
+        },
+      })
+      .populate({
+        path: "departures.partnerId",
+        select: "name email companyName phone assignedDestination",
+      })
       .sort({ createdAt: -1 })
       .lean();
 
@@ -153,7 +160,7 @@ export async function POST(req: NextRequest) {
 
     if (!title || !destinationId) {
       return NextResponse.json(
-        { error: "Title and target city are required." },
+        { error: "Title and tour destination are required." },
         { status: 400 }
       );
     }

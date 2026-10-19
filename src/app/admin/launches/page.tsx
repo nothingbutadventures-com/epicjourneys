@@ -131,7 +131,7 @@ export default function AdminLaunchesPage() {
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, flexWrap: "wrap", gap: 1.5 }}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem", lineHeight: 1.2 }}>Tour Launches</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem", lineHeight: 1.2 }}>Partner Requests</Typography>
           <Typography variant="caption" sx={{ color: "#64748b", fontSize: "0.75rem" }}>
             Partner requests to start a tour from their city — review, price, confirm with the partner and approve
           </Typography>
@@ -143,7 +143,7 @@ export default function AdminLaunchesPage() {
           onClick={() => { setNTour(""); setNPartner(""); setNDate(""); setNSeats(15); setDialogError(null); setOpen(true); }}
           sx={{ bgcolor: "#0f172a", color: "#fff", borderRadius: "4px", height: 30, fontSize: "0.78rem", "&:hover": { bgcolor: "#1e293b" } }}
         >
-          New launch
+          New partner request
         </Button>
       </Box>
 
@@ -239,7 +239,7 @@ export default function AdminLaunchesPage() {
 
       <Dialog open={open} onClose={() => !saving && setOpen(false)} maxWidth="sm" fullWidth slotProps={{ paper: { sx: { borderRadius: "4px", border: "1px solid #e2e8f0" } } }}>
         <form onSubmit={create}>
-          <DialogTitle sx={{ fontWeight: 700, fontSize: "1rem", pb: 1 }}>New launch</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 700, fontSize: "1rem", pb: 1 }}>New Partner Request</DialogTitle>
           <DialogContent sx={{ pt: 1 }}>
             {dialogError && <Alert severity="error" sx={{ mb: 2, borderRadius: "4px" }}>{dialogError}</Alert>}
             <Typography variant="caption" sx={{ color: "#64748b", display: "block", mb: 2 }}>

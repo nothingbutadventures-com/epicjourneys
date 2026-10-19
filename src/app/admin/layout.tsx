@@ -39,6 +39,7 @@ import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
 import StarRateRoundedIcon from "@mui/icons-material/StarRateRounded";
 import RocketLaunchRoundedIcon from "@mui/icons-material/RocketLaunchRounded";
 import ContactSupportRoundedIcon from "@mui/icons-material/ContactSupportRounded";
+import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 
 const DRAWER_WIDTH = 230;
 
@@ -49,12 +50,17 @@ const NAV_ITEMS = [
     icon: <DashboardRoundedIcon sx={{ fontSize: 18 }} />,
   },
   {
+    text: "Leads CRM",
+    href: "/admin/leads",
+    icon: <TrendingUpRoundedIcon sx={{ fontSize: 18 }} />,
+  },
+  {
     text: "Tours Management",
     href: "/admin/tours",
     icon: <LuggageRoundedIcon sx={{ fontSize: 18 }} />,
   },
   {
-    text: "Tour Launches",
+    text: "Partner Requests",
     href: "/admin/launches",
     icon: <RocketLaunchRoundedIcon sx={{ fontSize: 18 }} />,
   },

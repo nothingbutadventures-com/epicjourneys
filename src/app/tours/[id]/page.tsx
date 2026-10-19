@@ -20,6 +20,10 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -165,6 +169,48 @@ export default function TourDetailPage() {
   const [selectedDepartureId, setSelectedDepartureId] = useState<string>("");
   const [selectedCityId, setSelectedCityId] = useState<string>("");
   const [numberOfTravelers, setNumberOfTravelers] = useState<number>(2);
+
+  // Lead Inquiry state
+  const [inquiryOpen, setInquiryOpen] = useState(false);
+  const [inquiryName, setInquiryName] = useState("");
+  const [inquiryPhone, setInquiryPhone] = useState("");
+  const [inquiryEmail, setInquiryEmail] = useState("");
+  const [inquiryPax, setInquiryPax] = useState(2);
+  const [inquiryDates, setInquiryDates] = useState("");
+  const [inquiryMessage, setInquiryMessage] = useState("");
+  const [inquirySubmitting, setInquirySubmitting] = useState(false);
+  const [inquirySuccess, setInquirySuccess] = useState(false);
+  const [inquiryError, setInquiryError] = useState<string | null>(null);
+
+  const handleInquirySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInquirySubmitting(true);
+    setInquiryError(null);
+    try {
+      const res = await fetch("/api/queries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: inquiryName.trim(),
+          email: inquiryEmail.trim(),
+          phone: inquiryPhone.trim(),
+          subject: `Tour Inquiry: ${tour.title}`,
+          category: "Tour Booking",
+          message: `Interested in: ${tour.title}\nPreferred Dates: ${inquiryDates || "Flexible"}\nTravelers: ${inquiryPax} Pax\n\nNotes / Questions:\n${inquiryMessage || "Requested callback and custom quote."}`,
+        }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        setInquirySuccess(true);
+      } else {
+        setInquiryError(d.error || "Failed to submit inquiry");
+      }
+    } catch (err: any) {
+      setInquiryError(err.message || "Failed to submit inquiry");
+    } finally {
+      setInquirySubmitting(false);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -721,6 +767,30 @@ export default function TourDetailPage() {
                   {selectedDeparture ? "Book This Journey" : "Select a date to book"}
                 </Button>
 
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  size="medium"
+                  onClick={() => {
+                    setInquirySuccess(false);
+                    setInquiryError(null);
+                    setInquiryOpen(true);
+                  }}
+                  sx={{
+                    mt: 1.25,
+                    py: 1.1,
+                    color: "#0f172a",
+                    borderColor: "#cbd5e1",
+                    borderRadius: "6px",
+                    fontWeight: 700,
+                    fontSize: "0.88rem",
+                    textTransform: "none",
+                    "&:hover": { borderColor: "#0f172a", bgcolor: "#f8fafc" },
+                  }}
+                >
+                  Request Custom Quote / Inquire
+                </Button>
+
                 <Box sx={{ mt: 1.75, display: "flex", flexDirection: "column", gap: 0.75 }}>
                   {[
                     { icon: <BoltRoundedIcon />, text: "Instant confirmation" },
@@ -737,6 +807,126 @@ export default function TourDetailPage() {
           </Grid>
         </Grid>
       </Container>
+
+      {/* Inquiry Dialog */}
+      <Dialog
+        open={inquiryOpen}
+        onClose={() => setInquiryOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{ paper: { sx: { borderRadius: "8px" } } }}
+      >
+        <DialogTitle sx={{ fontWeight: 800, color: "#0f172a", borderBottom: "1px solid #e2e8f0" }}>
+          Inquire About {tour?.title}
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2.5 }}>
+          {inquirySuccess ? (
+            <Alert severity="success" sx={{ my: 2, borderRadius: "6px" }}>
+              Thank you, <b>{inquiryName}</b>! Your inquiry has been sent to our verified travel partner. We will get in touch with your custom quote shortly.
+            </Alert>
+          ) : (
+            <Box component="form" id="tour-inquiry-form" onSubmit={handleInquirySubmit} sx={{ mt: 1 }}>
+              {inquiryError && (
+                <Alert severity="error" sx={{ mb: 2, borderRadius: "6px" }}>
+                  {inquiryError}
+                </Alert>
+              )}
+              <Typography variant="body2" sx={{ color: "#64748b", mb: 2 }}>
+                Have specific dates, group discount requests, or custom itinerary requirements? Share them below and our expert will coordinate with you.
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Your Full Name"
+                    required
+                    value={inquiryName}
+                    onChange={(e) => setInquiryName(e.target.value)}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Phone Number"
+                    required
+                    placeholder="+91 98765 43210"
+                    value={inquiryPhone}
+                    onChange={(e) => setInquiryPhone(e.target.value)}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Email Address"
+                    type="email"
+                    required
+                    value={inquiryEmail}
+                    onChange={(e) => setInquiryEmail(e.target.value)}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Preferred Travel Month or Date"
+                    placeholder="e.g. Next month, 15-20 Nov"
+                    value={inquiryDates}
+                    onChange={(e) => setInquiryDates(e.target.value)}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="number"
+                    label="Travelers (Pax)"
+                    value={inquiryPax}
+                    onChange={(e) => setInquiryPax(Number(e.target.value))}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    multiline
+                    rows={3}
+                    label="Custom Preferences or Questions"
+                    placeholder="Hotel tier, transport requests, special dietary needs..."
+                    value={inquiryMessage}
+                    onChange={(e) => setInquiryMessage(e.target.value)}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, borderTop: "1px solid #e2e8f0" }}>
+          <Button onClick={() => setInquiryOpen(false)} sx={{ color: "#64748b" }}>
+            {inquirySuccess ? "Close" : "Cancel"}
+          </Button>
+          {!inquirySuccess && (
+            <Button
+              type="submit"
+              form="tour-inquiry-form"
+              variant="contained"
+              disabled={inquirySubmitting}
+              sx={{
+                bgcolor: "#0f172a",
+                color: "#ffffff",
+                fontWeight: 700,
+                borderRadius: "6px",
+                px: 2.5,
+                "&:hover": { bgcolor: "#1e293b" },
+              }}
+            >
+              {inquirySubmitting ? "Submitting..." : "Send Inquiry"}
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
 
       <Footer />
     </Box>

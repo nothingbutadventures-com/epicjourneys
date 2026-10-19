@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Box,
   Typography,
@@ -337,18 +338,29 @@ export default function AdminQueriesPage() {
               size="small"
             />
           </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 2.5 }}>
-            <Button onClick={() => setOpenDialog(false)} sx={{ color: "#64748b", borderRadius: "4px" }}>
-              Close
-            </Button>
+          <DialogActions sx={{ px: 3, pb: 2.5, justifyContent: "space-between" }}>
             <Button
-              type="submit"
-              variant="contained"
-              disabled={saving}
-              sx={{ borderRadius: "4px", px: 2.5 }}
+              component={Link}
+              href={`/admin/leads?search=${encodeURIComponent(selectedItem?.email || selectedItem?.name || "")}`}
+              variant="outlined"
+              size="small"
+              sx={{ borderRadius: "4px", fontSize: "0.78rem", fontWeight: 700 }}
             >
-              {saving ? <CircularProgress size={18} sx={{ color: "#ffffff" }} /> : "Save Status"}
+              View in CRM Pipeline
             </Button>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Button onClick={() => setOpenDialog(false)} sx={{ color: "#64748b", borderRadius: "4px" }}>
+                Close
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={saving}
+                sx={{ borderRadius: "4px", px: 2.5 }}
+              >
+                {saving ? <CircularProgress size={18} sx={{ color: "#ffffff" }} /> : "Save Status"}
+              </Button>
+            </Box>
           </DialogActions>
         </form>
       </Dialog>

@@ -274,7 +274,7 @@ export default function TourForm({ tourId }: { tourId?: string }) {
     setError(null);
 
     if (!destinationId) {
-      setError("Select a target city.");
+      setError("Select a tour destination.");
       return;
     }
     if (!(Number(durationDays) >= 1) || durationNights === "") {
@@ -500,19 +500,19 @@ export default function TourForm({ tourId }: { tourId?: string }) {
           </Grid>
         </Paper>
 
-        {/* Section 3: Target City & Duration */}
+        {/* Section 3: Tour Destination */}
         <Paper elevation={0} sx={{ p: 2.5, mb: 2, borderRadius: "4px", border: "1px solid #e2e8f0", bgcolor: "#ffffff" }}>
           <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: "#0f172a" }}>
-            3. Target City & Duration
+            3. Tour Destination
           </Typography>
 
           <Grid container spacing={1.5}>
             <Grid size={{ xs: 12 }}>
               <FormControl fullWidth size="small" required>
-                <InputLabel>Target City</InputLabel>
+                <InputLabel>Tour Destination</InputLabel>
                 <Select
                   value={destinationId}
-                  label="Target City"
+                  label="Tour Destination"
                   onChange={(e) => handleDestinationChange(e.target.value)}
                 >
                   {destinations.map((d) => (
