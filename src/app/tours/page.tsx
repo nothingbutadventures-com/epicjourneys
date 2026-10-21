@@ -82,11 +82,11 @@ function ToggleChips({ options, selected, onToggle }: { options: string[]; selec
               fontWeight: on ? 700 : 500,
               fontSize: "0.75rem",
               cursor: "pointer",
-              bgcolor: on ? "#facc15" : "#fff",
+              bgcolor: on ? "#FF9900" : "#fff",
               color: "#0f172a",
               border: "1px solid",
-              borderColor: on ? "#facc15" : "#e5e7eb",
-              "&:hover": { bgcolor: on ? "#eab308" : "#f9fafb" },
+              borderColor: on ? "#FF9900" : "#E2E2E2",
+              "&:hover": { bgcolor: on ? "#E68A00" : "#FDF9EC" },
             }}
           />
         );
@@ -278,7 +278,7 @@ function ToursExplorer() {
           max={bounds.price[1] || 1}
           step={500}
           onChange={(_, v) => setPriceRange(v as number[])}
-          sx={{ color: "#facc15", mx: 0.5, width: "calc(100% - 8px)" }}
+          sx={{ color: "#FF9900", mx: 0.5, width: "calc(100% - 8px)" }}
         />
       </FilterGroup>
       <Divider />
@@ -294,7 +294,7 @@ function ToursExplorer() {
           step={1}
           marks
           onChange={(_, v) => setDurationRange(v as number[])}
-          sx={{ color: "#facc15", mx: 0.5, width: "calc(100% - 8px)" }}
+          sx={{ color: "#FF9900", mx: 0.5, width: "calc(100% - 8px)" }}
         />
       </FilterGroup>
       <Divider />
@@ -320,7 +320,7 @@ function ToursExplorer() {
   );
 
   const searchFields = [
-    { label: "From", placeholder: "Any starting point", value: fromCity, options: fromOptions, icon: <MyLocationRoundedIcon sx={{ color: "#ca8a04" }} />, onChange: (v: CityOption | null) => setFromId(v?.id || null) },
+    { label: "From", placeholder: "Any starting point", value: fromCity, options: fromOptions, icon: <MyLocationRoundedIcon sx={{ color: "#E68A00" }} />, onChange: (v: CityOption | null) => setFromId(v?.id || null) },
     { label: "To", placeholder: "Any destination", value: toCity, options: toOptions, icon: <LocationOnIcon sx={{ color: "#ef4444" }} />, onChange: (v: CityOption | null) => setToId(v?.id || null) },
   ];
 
@@ -329,14 +329,14 @@ function ToursExplorer() {
       <Navbar userLocationName={location?.name} />
 
       {/* Search bar — stays pinned under the header */}
-      <Box sx={{ position: "sticky", top: 68, zIndex: 900, bgcolor: "#fff8dc", borderBottom: "1px solid #fde68a", py: 1.75 }}>
+      <Box sx={{ position: "sticky", top: 68, zIndex: 900, bgcolor: "#FFF3DB", borderBottom: "1px solid #FFD699", py: 1.75 }}>
         <Container maxWidth="lg">
           <Paper
             elevation={0}
             sx={{
               p: { xs: 1.5, md: 0.75 },
-              borderRadius: "6px",
-              border: "1px solid #e5e7eb",
+              borderRadius: "4px",
+              border: "1px solid #E2E2E2",
               display: "flex",
               flexDirection: { xs: "column", md: "row" },
               alignItems: "stretch",
@@ -363,7 +363,7 @@ function ToursExplorer() {
               </Box>
             </Box>
             {searchFields.map((f) => (
-              <Box key={f.label} sx={{ flex: 1, display: "flex", alignItems: "center", gap: 1.5, px: { md: 2 }, borderLeft: { md: "1px solid #e5e7eb" }, minWidth: 0 }}>
+              <Box key={f.label} sx={{ flex: 1, display: "flex", alignItems: "center", gap: 1.5, px: { md: 2 }, borderLeft: { md: "1px solid #E2E2E2" }, minWidth: 0 }}>
                 {f.icon}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>{f.label}</Typography>
@@ -391,7 +391,7 @@ function ToursExplorer() {
               variant="contained"
               startIcon={<SearchRoundedIcon />}
               onClick={() => document.getElementById("tour-results")?.scrollIntoView({ behavior: "smooth" })}
-              sx={{ minWidth: { md: 140 }, py: 1.1, bgcolor: "#facc15", color: "#0f172a", fontSize: "0.95rem", fontWeight: 700, borderRadius: "6px", boxShadow: "none", "&:hover": { bgcolor: "#eab308" } }}
+              sx={{ minWidth: { md: 140 }, py: 1.1, bgcolor: "#FF9900", color: "#0f172a", fontSize: "0.95rem", fontWeight: 700, borderRadius: "4px", boxShadow: "none", "&:hover": { bgcolor: "#E68A00" } }}
             >
               Search
             </Button>
@@ -403,7 +403,7 @@ function ToursExplorer() {
       <Container maxWidth="lg" id="tour-results" sx={{ py: { xs: 3, md: 4 }, flexGrow: 1 }}>
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "280px minmax(0, 1fr)" }, gap: { xs: 2, md: 4 }, alignItems: "start" }}>
           <Box sx={{ display: { xs: "none", md: "block" }, position: "sticky", top: 160, maxHeight: "calc(100vh - 176px)", overflowY: "auto", pr: 0.5 }}>
-            <Box sx={{ border: "1px solid #e5e7eb", borderRadius: "6px", px: 2, bgcolor: "#fff" }}>
+            <Box sx={{ border: "1px solid #E2E2E2", borderRadius: "4px", px: 2, bgcolor: "#fff" }}>
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pt: 1.5 }}>
                 <Typography sx={{ fontWeight: 800, fontSize: "1.05rem" }}>Filters</Typography>
                 <Button size="small" onClick={clearAll} disabled={!activeChips.length} sx={{ color: "#64748b" }}>Reset</Button>
@@ -444,7 +444,7 @@ function ToursExplorer() {
             {activeChips.length > 0 && (
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 2.5, alignItems: "center" }}>
                 {activeChips.map((c) => (
-                  <Chip key={c.key} label={c.label} size="small" onDelete={c.clear} sx={{ bgcolor: "#fef9c3", color: "#854d0e", fontWeight: 700, border: "1px solid #fde68a", "& .MuiChip-deleteIcon": { color: "#a16207" } }} />
+                  <Chip key={c.key} label={c.label} size="small" onDelete={c.clear} sx={{ bgcolor: "#FFF0D1", color: "#8A5200", fontWeight: 700, border: "1px solid #FFD699", "& .MuiChip-deleteIcon": { color: "#B36B00" } }} />
                 ))}
                 <Button size="small" onClick={clearAll} sx={{ color: "#64748b", fontSize: "0.78rem" }}>Clear all</Button>
               </Box>
@@ -474,7 +474,7 @@ function ToursExplorer() {
                 <Typography sx={{ color: "#64748b", fontSize: "0.88rem", maxWidth: 420, mx: "auto", mb: 2.5 }}>
                   Try removing a few filters or widening the price, duration or distance range.
                 </Typography>
-                <Button variant="contained" onClick={clearAll} startIcon={<RestartAltRoundedIcon />} sx={{ bgcolor: "#facc15", color: "#0f172a", "&:hover": { bgcolor: "#eab308" } }}>
+                <Button variant="contained" onClick={clearAll} startIcon={<RestartAltRoundedIcon />} sx={{ bgcolor: "#FF9900", color: "#0f172a", "&:hover": { bgcolor: "#E68A00" } }}>
                   Reset all filters
                 </Button>
               </Paper>
@@ -490,7 +490,7 @@ function ToursExplorer() {
           <Button size="small" onClick={clearAll} sx={{ color: "#64748b" }}>Reset</Button>
         </Box>
         {filtersPanel}
-        <Button fullWidth variant="contained" onClick={() => setDrawerOpen(false)} sx={{ mt: 1, py: 1.1, bgcolor: "#facc15", color: "#0f172a", fontWeight: 700, "&:hover": { bgcolor: "#eab308" } }}>
+        <Button fullWidth variant="contained" onClick={() => setDrawerOpen(false)} sx={{ mt: 1, py: 1.1, bgcolor: "#FF9900", color: "#0f172a", fontWeight: 700, "&:hover": { bgcolor: "#E68A00" } }}>
           Show {filtered.length} {filtered.length === 1 ? "tour" : "tours"}
         </Button>
       </Drawer>

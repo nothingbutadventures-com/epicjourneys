@@ -9,8 +9,8 @@ export function MountainScene({ height = 220 }: { height?: number }) {
     <svg viewBox="0 0 800 220" preserveAspectRatio="xMidYMax slice" width="100%" height={height} aria-hidden>
       <defs>
         <linearGradient id="ms-sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#fde68a" />
-          <stop offset="1" stopColor="#fff7d6" />
+          <stop offset="0" stopColor="#FFD699" />
+          <stop offset="1" stopColor="#FFF0D1" />
         </linearGradient>
       </defs>
       <rect width="800" height="220" fill="url(#ms-sky)" />
@@ -18,7 +18,7 @@ export function MountainScene({ height = 220 }: { height?: number }) {
         cx="620"
         cy="70"
         r="34"
-        fill="#facc15"
+        fill="#FF9900"
         animate={{ scale: [1, 1.08, 1] }}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
         style={{ transformOrigin: "620px 70px" }}
@@ -66,8 +66,8 @@ export function MountainScene({ height = 220 }: { height?: number }) {
 export function CompassRose({ size = 120 }: { size?: number }) {
   return (
     <svg viewBox="0 0 120 120" width={size} height={size} aria-hidden>
-      <circle cx="60" cy="60" r="56" fill="#fff" stroke="#facc15" strokeWidth="4" />
-      <circle cx="60" cy="60" r="46" fill="none" stroke="#e2e8f0" strokeWidth="1.5" strokeDasharray="2 5" />
+      <circle cx="60" cy="60" r="56" fill="#fff" stroke="#FF9900" strokeWidth="4" />
+      <circle cx="60" cy="60" r="46" fill="none" stroke="#E2E2E2" strokeWidth="1.5" strokeDasharray="2 5" />
       {["N", "E", "S", "W"].map((l, i) => {
         const a = (i * Math.PI) / 2 - Math.PI / 2;
         return (
@@ -84,7 +84,7 @@ export function CompassRose({ size = 120 }: { size?: number }) {
         <path d="M60 24 L70 60 L60 66 L50 60Z" fill="#ef4444" />
         <path d="M60 96 L70 60 L60 54 L50 60Z" fill="#0f172a" />
       </motion.g>
-      <circle cx="60" cy="60" r="4" fill="#facc15" stroke="#0f172a" strokeWidth="1.5" />
+      <circle cx="60" cy="60" r="4" fill="#FF9900" stroke="#0f172a" strokeWidth="1.5" />
     </svg>
   );
 }
@@ -95,21 +95,21 @@ export function StepIllustration({ kind }: { kind: "search" | "pick" | "pack" | 
   if (kind === "search")
     return (
       <svg {...common}>
-        <rect x="10" y="62" width="100" height="6" rx="3" fill="#e2e8f0" />
+        <rect x="10" y="62" width="100" height="6" rx="3" fill="#E2E2E2" />
         <path d="M20 62 L45 28 L62 50 L78 34 L100 62Z" fill="#cbd5e1" />
-        <circle cx="52" cy="40" r="20" fill="#fef9c3" stroke="#facc15" strokeWidth="5" />
+        <circle cx="52" cy="40" r="20" fill="#FFF0D1" stroke="#FF9900" strokeWidth="5" />
         <motion.path d="M67 55 L88 76" stroke="#0f172a" strokeWidth="7" strokeLinecap="round" animate={{ x: [0, 3, 0], y: [0, 3, 0] }} transition={{ duration: 2, repeat: Infinity }} />
-        <circle cx="52" cy="40" r="7" fill="#facc15" />
+        <circle cx="52" cy="40" r="7" fill="#FF9900" />
       </svg>
     );
   if (kind === "pick")
     return (
       <svg {...common}>
-        <rect x="20" y="12" width="80" height="66" rx="8" fill="#fff" stroke="#e2e8f0" strokeWidth="3" />
-        <rect x="20" y="12" width="80" height="18" rx="8" fill="#facc15" />
+        <rect x="20" y="12" width="80" height="66" rx="8" fill="#fff" stroke="#E2E2E2" strokeWidth="3" />
+        <rect x="20" y="12" width="80" height="18" rx="8" fill="#FF9900" />
         {[0, 1, 2].map((r) =>
           [0, 1, 2, 3].map((c) => (
-            <rect key={`${r}${c}`} x={28 + c * 18} y={38 + r * 12} width="12" height="8" rx="2" fill={r === 1 && c === 2 ? "#0f172a" : "#e2e8f0"} />
+            <rect key={`${r}${c}`} x={28 + c * 18} y={38 + r * 12} width="12" height="8" rx="2" fill={r === 1 && c === 2 ? "#0f172a" : "#E2E2E2"} />
           ))
         )}
         <motion.path d="M70 54 l5 5 l9 -11" stroke="#10b981" strokeWidth="4" fill="none" strokeLinecap="round" initial={{ pathLength: 0 }} animate={{ pathLength: [0, 1, 1, 0] }} transition={{ duration: 3, repeat: Infinity }} />
@@ -121,9 +121,9 @@ export function StepIllustration({ kind }: { kind: "search" | "pick" | "pack" | 
         <rect x="30" y="26" width="60" height="52" rx="12" fill="#0f172a" />
         <rect x="42" y="14" width="36" height="16" rx="8" fill="none" stroke="#0f172a" strokeWidth="5" />
         <rect x="38" y="44" width="44" height="22" rx="6" fill="#1e293b" />
-        <rect x="52" y="52" width="16" height="6" rx="3" fill="#facc15" />
+        <rect x="52" y="52" width="16" height="6" rx="3" fill="#FF9900" />
         <motion.circle cx="92" cy="22" r="7" fill="#ef4444" animate={{ y: [0, -4, 0] }} transition={{ duration: 1.6, repeat: Infinity }} />
-        <path d="M30 40 h-6 v26 h6M90 40 h6 v26 h-6" stroke="#facc15" strokeWidth="4" fill="none" strokeLinecap="round" />
+        <path d="M30 40 h-6 v26 h6M90 40 h6 v26 h-6" stroke="#FF9900" strokeWidth="4" fill="none" strokeLinecap="round" />
       </svg>
     );
   return (
@@ -131,7 +131,7 @@ export function StepIllustration({ kind }: { kind: "search" | "pick" | "pack" | 
       <path d="M0 74 Q60 56 120 74 V90 H0Z" fill="#cbd5e1" />
       <path d="M10 74 L40 36 L60 62 L80 44 L110 74Z" fill="#94a3b8" />
       <motion.g animate={{ x: [-10, 20, -10], y: [0, -6, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}>
-        <path d="M34 30 L78 22 L88 28 L78 34Z" fill="#facc15" stroke="#0f172a" strokeWidth="2.5" strokeLinejoin="round" />
+        <path d="M34 30 L78 22 L88 28 L78 34Z" fill="#FF9900" stroke="#0f172a" strokeWidth="2.5" strokeLinejoin="round" />
         <path d="M52 28 L46 14 L58 26Z M52 32 L46 44 L58 34Z" fill="#0f172a" />
       </motion.g>
     </svg>

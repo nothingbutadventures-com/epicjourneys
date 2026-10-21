@@ -50,7 +50,7 @@ export default function Navbar({
       elevation={0}
       sx={{
         backgroundColor: "#ffffff",
-        borderBottom: "1px solid #e2e8f0",
+        borderBottom: "1px solid #E2E2E2",
         borderRadius: 0,
         zIndex: 1000,
       }}
@@ -58,47 +58,19 @@ export default function Navbar({
       <Container maxWidth="lg">
         <Toolbar disableGutters sx={{ minHeight: "68px !important", height: 68, gap: 1.5 }}>
           {/* Brand Logo */}
-          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
-            <Box
-              sx={{
-                width: 38,
-                height: 38,
-                borderRadius: "6px",
-                backgroundColor: "#facc15",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#0f172a",
-                fontWeight: 800,
-                fontSize: "0.8rem",
-              }}
-            >
-              EJ
-            </Box>
-            <Box>
+          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }} aria-label="Epic Journeys">
+            <Box sx={{ lineHeight: 1, fontFamily: "var(--font-logo), var(--font-manrope), sans-serif" }}>
               <Typography
-                variant="subtitle1"
-                sx={{
-                  fontWeight: 800,
-                  color: "#0f172a",
-                  lineHeight: 1.15,
-                  fontSize: "1.1rem",
-                  letterSpacing: "-0.01em",
-                }}
+                component="span"
+                sx={{ display: "block", color: "#43149D", fontFamily: "inherit", fontSize: "0.68rem", letterSpacing: "0.08em", lineHeight: 1 }}
               >
-                EpicJourneys
+                ▸ EPIC
               </Typography>
               <Typography
-                variant="caption"
-                sx={{
-                  color: "#64748b",
-                  fontSize: "0.65rem",
-                  fontWeight: 500,
-                  display: "block",
-                  lineHeight: 1,
-                }}
+                component="span"
+                sx={{ display: "block", color: "#FF9900", fontFamily: "inherit", fontSize: "1.45rem", lineHeight: 1, mt: "1px" }}
               >
-                epicjourneys.in
+                journeys<Box component="span" sx={{ fontSize: "0.8rem" }}>.in</Box>
               </Typography>
             </Box>
           </Link>
@@ -106,21 +78,21 @@ export default function Navbar({
           {/* Location indicator button */}
           {userLocationName && (
             <Chip
-              icon={<LocationOnIcon sx={{ fontSize: "14px !important", color: "#ca8a04 !important" }} />}
+              icon={<LocationOnIcon sx={{ fontSize: "14px !important", color: "#E68A00 !important" }} />}
               label={`Near ${userLocationName}`}
               onClick={onLocationClick}
               size="small"
               sx={{
                 ml: { xs: 1, sm: 2 },
-                borderColor: "#e2e8f0",
-                backgroundColor: "#f8fafc",
+                borderColor: "#E2E2E2",
+                backgroundColor: "#F2F4F7",
                 fontWeight: 600,
                 color: "#1e293b",
                 fontSize: "0.75rem",
-                borderRadius: "6px",
+                borderRadius: "4px",
                 cursor: "pointer",
                 "&:hover": {
-                  backgroundColor: "#f1f5f9",
+                  backgroundColor: "#F2F4F7",
                   borderColor: "#cbd5e1",
                 },
               }}
@@ -141,12 +113,12 @@ export default function Navbar({
                 component={Link}
                 href={l.href}
                 variant="text"
-                sx={{ color: "#334155", fontWeight: 600, borderRadius: "6px", fontSize: "0.88rem", px: 1.75, "&:hover": { bgcolor: "#f1f5f9", color: "#0f172a" } }}
+                sx={{ color: "#334155", fontWeight: 600, borderRadius: "4px", fontSize: "0.88rem", px: 1.75, "&:hover": { bgcolor: "#F2F4F7", color: "#0f172a" } }}
               >
                 {l.label}
               </Button>
             ))}
-            <Box sx={{ width: "1px", height: 24, bgcolor: "#e2e8f0", mx: 1.5 }} />
+            <Box sx={{ width: "1px", height: 24, bgcolor: "#E2E2E2", mx: 1.5 }} />
             {account ? (
               <>
                 <Typography sx={{ fontWeight: 700, color: "#0f172a", fontSize: "0.88rem", px: 1.5 }}>
@@ -155,7 +127,7 @@ export default function Navbar({
                 <Button
                   onClick={logout}
                   variant="outlined"
-                  sx={{ borderRadius: "6px", fontSize: "0.88rem", fontWeight: 700, px: 2.25 }}
+                  sx={{ borderRadius: "4px", fontSize: "0.88rem", fontWeight: 700, px: 2.25 }}
                 >
                   Logout
                 </Button>
@@ -166,7 +138,7 @@ export default function Navbar({
                   component={Link}
                   href="/login"
                   variant="text"
-                  sx={{ color: "#0f172a", fontWeight: 700, borderRadius: "6px", fontSize: "0.88rem", px: 2 }}
+                  sx={{ color: "#0f172a", fontWeight: 700, borderRadius: "4px", fontSize: "0.88rem", px: 2 }}
                 >
                   Login
                 </Button>
@@ -175,14 +147,14 @@ export default function Navbar({
                   href="/register"
                   variant="contained"
                   sx={{
-                    bgcolor: "#facc15",
-                    color: "#0f172a",
-                    borderRadius: "6px",
+                    bgcolor: "#43149D",
+                    color: "#ffffff",
+                    borderRadius: "4px",
                     fontSize: "0.88rem",
                     fontWeight: 700,
                     px: 2.5,
                     py: 0.9,
-                    "&:hover": { bgcolor: "#eab308" },
+                    "&:hover": { bgcolor: "#360F7D" },
                   }}
                 >
                   Register
@@ -206,7 +178,7 @@ export default function Navbar({
               onClose={() => setMobileAnchor(null)}
               slotProps={{
                 paper: {
-                  sx: { width: 190, mt: 1, borderRadius: "6px", border: "1px solid #e2e8f0" },
+                  sx: { width: 190, mt: 1, borderRadius: "4px", border: "1px solid #E2E2E2" },
                 },
               }}
             >

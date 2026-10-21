@@ -46,8 +46,8 @@ const fmt = (d: string) => new Date(d).toLocaleDateString("en-IN", { day: "numer
 function statusOf(b: any) {
   const ended = b.travelEndDate ? new Date(b.travelEndDate).getTime() < Date.now() : new Date(b.travelDate).getTime() < Date.now();
   if (b.status === "cancelled") return { label: "Cancelled", bg: "#fee2e2", fg: "#b91c1c", past: true };
-  if (b.status === "pending") return { label: "Payment pending", bg: "#fef3c7", fg: "#b45309", past: false };
-  if (ended) return { label: "Completed", bg: "#e2e8f0", fg: "#334155", past: true };
+  if (b.status === "pending") return { label: "Payment pending", bg: "#FFF0D1", fg: "#B36B00", past: false };
+  if (ended) return { label: "Completed", bg: "#E2E2E2", fg: "#334155", past: true };
   return { label: "Confirmed", bg: "#dcfce7", fg: "#166534", past: false };
 }
 
@@ -59,29 +59,29 @@ function BookingCard({ b }: { b: any }) {
   return (
     <motion.div variants={rise} whileHover={{ y: -4 }}>
       <Paper elevation={0} sx={{ overflow: "hidden", display: "flex", flexDirection: { xs: "column", sm: "row" }, transition: "box-shadow .2s", "&:hover": { boxShadow: "0 16px 32px -18px rgba(15,23,42,0.3)" } }}>
-        <Box sx={{ position: "relative", width: { xs: "100%", sm: 200 }, height: { xs: 150, sm: "auto" }, flexShrink: 0, bgcolor: "#f1f5f9" }}>
+        <Box sx={{ position: "relative", width: { xs: "100%", sm: 200 }, height: { xs: 150, sm: "auto" }, flexShrink: 0, bgcolor: "#F2F4F7" }}>
           {t.coverImage && <Box component="img" src={t.coverImage} alt={b.tourTitle} sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
           <Chip label={st.label} size="small" sx={{ position: "absolute", top: 10, left: 10, bgcolor: st.bg, color: st.fg, fontWeight: 800 }} />
         </Box>
         <Box sx={{ p: 2.5, flex: 1, minWidth: 0 }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1, flexWrap: "wrap", mb: 1 }}>
             <Typography sx={{ fontWeight: 800, fontSize: "1.1rem", lineHeight: 1.3 }}>{b.tourTitle}</Typography>
-            <Chip label={b.bookingRef} size="small" sx={{ bgcolor: "#0f172a", color: "#facc15", fontWeight: 800 }} />
+            <Chip label={b.bookingRef} size="small" sx={{ bgcolor: "#43149D", color: "#FF9900", fontWeight: 800 }} />
           </Box>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 1.5, color: "#475569", fontSize: "0.85rem", fontWeight: 600 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}><EventRoundedIcon sx={{ fontSize: 17, color: "#ca8a04" }} />{fmt(b.travelDate)}{b.travelEndDate ? ` – ${fmt(b.travelEndDate)}` : ""}</Box>
-            {b.departureCity && <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}><LocationOnIcon sx={{ fontSize: 17, color: "#ca8a04" }} />{b.departureCity}</Box>}
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}><GroupsRoundedIcon sx={{ fontSize: 17, color: "#ca8a04" }} />{b.numberOfTravelers} traveller{b.numberOfTravelers > 1 ? "s" : ""}</Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}><EventRoundedIcon sx={{ fontSize: 17, color: "#E68A00" }} />{fmt(b.travelDate)}{b.travelEndDate ? ` – ${fmt(b.travelEndDate)}` : ""}</Box>
+            {b.departureCity && <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}><LocationOnIcon sx={{ fontSize: 17, color: "#E68A00" }} />{b.departureCity}</Box>}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}><GroupsRoundedIcon sx={{ fontSize: 17, color: "#E68A00" }} />{b.numberOfTravelers} traveller{b.numberOfTravelers > 1 ? "s" : ""}</Box>
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap", pt: 1.5, borderTop: "1px dashed #e2e8f0" }}>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap", pt: 1.5, borderTop: "1px dashed #E2E2E2" }}>
             <Box>
               <Typography sx={{ fontWeight: 800, fontSize: "1.1rem", lineHeight: 1 }}>{inr(b.totalAmountInr)}</Typography>
-              <Typography sx={{ fontSize: "0.75rem", color: remaining > 0 && b.status !== "cancelled" ? "#b45309" : "#059669", fontWeight: 700, mt: 0.5 }}>
+              <Typography sx={{ fontSize: "0.75rem", color: remaining > 0 && b.status !== "cancelled" ? "#B36B00" : "#059669", fontWeight: 700, mt: 0.5 }}>
                 {b.status === "cancelled" ? "Cancelled" : remaining > 0 ? `${inr(remaining)} ${nextDue ? `due by ${fmt(nextDue.dueDate)}` : "left"}` : "Fully paid"}
               </Typography>
             </Box>
             <Button component={Link} href={`/booking/${b.bookingRef}`} variant="contained" size="small" endIcon={<ArrowForwardRoundedIcon sx={{ fontSize: 16 }} />}
-              sx={{ bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#eab308" } }}>
+              sx={{ bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#E68A00" } }}>
               {remaining > 0 && b.status !== "cancelled" ? "Pay / details" : "View details"}
             </Button>
           </Box>
@@ -99,7 +99,7 @@ function EmptyState({ title, text }: { title: string; text: string }) {
       </motion.div>
       <Typography sx={{ fontWeight: 800, fontSize: "1.1rem", mt: 1 }}>{title}</Typography>
       <Typography sx={{ color: "#64748b", fontSize: "0.9rem", mb: 2.5 }}>{text}</Typography>
-      <Button component={Link} href="/tours" variant="contained" sx={{ bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#eab308" } }}>
+      <Button component={Link} href="/tours" variant="contained" sx={{ bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#E68A00" } }}>
         Explore tours
       </Button>
     </Paper>
@@ -199,7 +199,7 @@ function ProfileInner() {
   };
 
   const shell = (children: React.ReactNode) => (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: "#f8fafc" }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: "#FDF9EC" }}>
       <Navbar />
       {children}
       <Footer />
@@ -217,12 +217,12 @@ function ProfileInner() {
   if (user === null) {
     return shell(
       <Container maxWidth="sm" sx={{ py: 8, flexGrow: 1, textAlign: "center" }}>
-        <Paper elevation={0} sx={{ p: 4, borderTop: "4px solid #facc15", overflow: "hidden" }}>
+        <Paper elevation={0} sx={{ p: 4, borderTop: "4px solid #FF9900", overflow: "hidden" }}>
           <CompassRose size={84} />
           <Typography sx={{ fontWeight: 800, fontSize: "1.6rem", mt: 1.5 }}>Log in to see your bookings</Typography>
           <Typography sx={{ color: "#64748b", mt: 0.5, mb: 3 }}>Your trips, payments and profile live here.</Typography>
           <Button component={Link} href={withRedirect("/login", "/user/profile")} variant="contained" startIcon={<LoginRoundedIcon />}
-            sx={{ px: 4, bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#eab308" } }}>
+            sx={{ px: 4, bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#E68A00" } }}>
             Login
           </Button>
         </Paper>
@@ -232,7 +232,7 @@ function ProfileInner() {
 
   const initials = (user.name || "?").split(/\s+/).map((w: string) => w[0]).slice(0, 2).join("").toUpperCase();
   const statTiles = [
-    { icon: <LuggageRoundedIcon />, value: String(stats.trips), label: "Trips booked", color: "#facc15" },
+    { icon: <LuggageRoundedIcon />, value: String(stats.trips), label: "Trips booked", color: "#FF9900" },
     { icon: <RouteRoundedIcon />, value: String(stats.upcoming), label: "Upcoming", color: "#38bdf8" },
     { icon: <SavingsRoundedIcon />, value: inr(stats.spent), label: "Paid so far", color: "#34d399" },
     { icon: <AccountBalanceWalletRoundedIcon />, value: inr(stats.due), label: "Yet to pay", color: "#fb7185" },
@@ -253,13 +253,13 @@ function ProfileInner() {
     <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, flexGrow: 1 }}>
       {/* Profile header */}
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-        <Paper elevation={0} sx={{ position: "relative", overflow: "hidden", p: { xs: 2.5, md: 4 }, mb: 3, borderTop: "4px solid #facc15", bgcolor: "#fffbeb", borderColor: "#fde68a" }}>
+        <Paper elevation={0} sx={{ position: "relative", overflow: "hidden", p: { xs: 2.5, md: 4 }, mb: 3, borderTop: "4px solid #FF9900", bgcolor: "#FFF6E5", borderColor: "#FFD699" }}>
           <Box sx={{ position: "absolute", right: 0, bottom: 0, left: { md: "55%" }, lineHeight: 0, opacity: 0.85, display: { xs: "none", md: "block" } }}>
             <MountainScene height={150} />
           </Box>
           <Box sx={{ position: "relative", display: "flex", alignItems: "center", gap: 2.5, flexWrap: "wrap" }}>
             <motion.div whileHover={{ rotate: -6, scale: 1.05 }}>
-              <Box sx={{ width: 84, height: 84, borderRadius: "16px", background: "linear-gradient(135deg, #fde047, #facc15 55%, #f59e0b)", color: "#0f172a", fontSize: "1.9rem", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 12px 24px -10px rgba(250,204,21,0.9)" }}>
+              <Box sx={{ width: 84, height: 84, borderRadius: "16px", background: "linear-gradient(135deg, #FFB340, #FF9900 55%, #FF9900)", color: "#0f172a", fontSize: "1.9rem", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 12px 24px -10px rgba(250,204,21,0.9)" }}>
                 {initials}
               </Box>
             </motion.div>
@@ -306,15 +306,15 @@ function ProfileInner() {
               tabIndex={0}
               onClick={() => setTab(t.key)}
               onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setTab(t.key))}
-              sx={{ position: "relative", flex: { md: 1 }, flexShrink: 0, px: 2, py: 1.25, display: "flex", alignItems: "center", justifyContent: "center", gap: 1, cursor: "pointer", borderRadius: "6px", fontWeight: 800, fontSize: "0.9rem", whiteSpace: "nowrap", color: active ? "#0f172a" : "#64748b", outline: "none", "&:hover": { bgcolor: active ? "transparent" : "#f8fafc" } }}
+              sx={{ position: "relative", flex: { md: 1 }, flexShrink: 0, px: 2, py: 1.25, display: "flex", alignItems: "center", justifyContent: "center", gap: 1, cursor: "pointer", borderRadius: "4px", fontWeight: 800, fontSize: "0.9rem", whiteSpace: "nowrap", color: active ? "#0f172a" : "#64748b", outline: "none", "&:hover": { bgcolor: active ? "transparent" : "#FDF9EC" } }}
             >
               {active && (
-                <motion.div layoutId="user-tab" transition={{ type: "spring", stiffness: 400, damping: 32 }} style={{ position: "absolute", inset: 0, borderRadius: 6, background: "#facc15" }} />
+                <motion.div layoutId="user-tab" transition={{ type: "spring", stiffness: 400, damping: 32 }} style={{ position: "absolute", inset: 0, borderRadius: 6, background: "#FF9900" }} />
               )}
               <Box sx={{ position: "relative", display: "flex", alignItems: "center", gap: 1 }}>
                 {React.cloneElement(t.icon as React.ReactElement<any>, { sx: { fontSize: 20 } })}
                 {t.label}
-                {count ? <Chip label={count} size="small" sx={{ height: 20, bgcolor: active ? "#0f172a" : "#e2e8f0", color: active ? "#facc15" : "#475569", fontWeight: 800 }} /> : null}
+                {count ? <Chip label={count} size="small" sx={{ height: 20, bgcolor: active ? "#0f172a" : "#E2E2E2", color: active ? "#FF9900" : "#475569", fontWeight: 800 }} /> : null}
               </Box>
             </Box>
           );
@@ -338,8 +338,8 @@ function ProfileInner() {
                   const paid = i.status === "paid";
                   const overdue = !paid && i.index > 0 && new Date(i.dueDate).getTime() < Date.now();
                   return (
-                    <Box key={`${i.bookingRef}-${i.index}`} sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1.5, borderRadius: "6px", border: "1px solid", borderColor: paid ? "#bbf7d0" : overdue ? "#fecaca" : "#e2e8f0", bgcolor: paid ? "#f0fdf4" : overdue ? "#fef2f2" : "#fff", flexWrap: "wrap" }}>
-                      <Box sx={{ width: 36, height: 36, borderRadius: "50%", bgcolor: paid ? "#10b981" : "#f1f5f9", color: paid ? "#fff" : "#64748b", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Box key={`${i.bookingRef}-${i.index}`} sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1.5, borderRadius: "4px", border: "1px solid", borderColor: paid ? "#bbf7d0" : overdue ? "#fecaca" : "#E2E2E2", bgcolor: paid ? "#f0fdf4" : overdue ? "#fef2f2" : "#fff", flexWrap: "wrap" }}>
+                      <Box sx={{ width: 36, height: 36, borderRadius: "50%", bgcolor: paid ? "#10b981" : "#F2F4F7", color: paid ? "#fff" : "#64748b", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         {paid ? <CheckCircleRoundedIcon sx={{ fontSize: 20 }} /> : <PaymentsRoundedIcon sx={{ fontSize: 19 }} />}
                       </Box>
                       <Box sx={{ flex: 1, minWidth: 180 }}>
@@ -349,7 +349,7 @@ function ProfileInner() {
                         </Typography>
                       </Box>
                       <Typography sx={{ fontWeight: 800 }}>{inr(i.amountInr)}</Typography>
-                      {!paid && <Button component={Link} href={`/booking/${i.bookingRef}`} size="small" variant="contained" sx={{ bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#eab308" } }}>Pay</Button>}
+                      {!paid && <Button component={Link} href={`/booking/${i.bookingRef}`} size="small" variant="contained" sx={{ bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#E68A00" } }}>Pay</Button>}
                     </Box>
                   );
                 })}
@@ -377,7 +377,7 @@ function ProfileInner() {
                 />
                 <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
                   <Button type="submit" variant="contained" disabled={saving} startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveRoundedIcon />}
-                    sx={{ px: 3, py: 1, bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#eab308" } }}>
+                    sx={{ px: 3, py: 1, bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#E68A00" } }}>
                     Save changes
                   </Button>
                   <Button onClick={logout} variant="outlined" startIcon={<LogoutRoundedIcon />} sx={{ color: "#b91c1c", borderColor: "#fecaca" }}>Logout</Button>
@@ -399,7 +399,7 @@ function ProfileInner() {
               Send us a question and our team will get back to you. Keep your booking reference handy.
             </Typography>
             <Button component={Link} href="/help" variant="contained" endIcon={<ArrowForwardRoundedIcon />}
-              sx={{ px: 4, py: 1.2, bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#eab308" } }}>
+              sx={{ px: 4, py: 1.2, bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#E68A00" } }}>
               Open Help & Support
             </Button>
           </Paper>

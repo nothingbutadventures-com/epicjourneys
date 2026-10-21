@@ -56,7 +56,7 @@ function LoginForm() {
       footer={
         <>
           New to EpicJourneys?{" "}
-          <Link href={withRedirect("/register", redirect)} style={{ color: "#ca8a04", fontWeight: 700 }}>
+          <Link href={withRedirect("/register", redirect)} style={{ color: "#E68A00", fontWeight: 700 }}>
             Create an account
           </Link>
         </>

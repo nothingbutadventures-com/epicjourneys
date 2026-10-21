@@ -65,7 +65,7 @@ function Month({
           const isTourDate = Boolean(dep);
           return (
             <Box key={k} sx={{ position: "relative", display: "flex", justifyContent: "center" }}>
-              {inRange && !isSelected && <Box sx={{ position: "absolute", inset: "4px 0", bgcolor: "#fef9c3", zIndex: 0 }} />}
+              {inRange && !isSelected && <Box sx={{ position: "absolute", inset: "4px 0", bgcolor: "#FFF0D1", zIndex: 0 }} />}
               <Box sx={{ position: "relative", zIndex: 1 }}>
                 <Box
                   role={isTourDate ? "button" : undefined}
@@ -86,10 +86,10 @@ function Month({
                     fontWeight: isTourDate ? 800 : 500,
                     outline: "none",
                     cursor: isTourDate && !soldOut ? "pointer" : "default",
-                    color: isSelected ? "#facc15" : soldOut ? "#cbd5e1" : isTourDate ? "#0f172a" : inRange ? "#854d0e" : "#94a3b8",
-                    bgcolor: isSelected ? "#0f172a" : isTourDate && !soldOut ? "#facc15" : "transparent",
+                    color: isSelected ? "#FF9900" : soldOut ? "#cbd5e1" : isTourDate ? "#0f172a" : inRange ? "#8A5200" : "#94a3b8",
+                    bgcolor: isSelected ? "#0f172a" : isTourDate && !soldOut ? "#FF9900" : "transparent",
                     textDecoration: soldOut ? "line-through" : "none",
-                    border: isTourDate && !isSelected && !soldOut ? "1px solid #eab308" : "1px solid transparent",
+                    border: isTourDate && !isSelected && !soldOut ? "1px solid #E68A00" : "1px solid transparent",
                     boxShadow: "none",
                     "&:focus-visible": { boxShadow: "0 0 0 3px rgba(15,23,42,0.25)" },
                   }}
@@ -146,15 +146,15 @@ export default function DepartureCalendar({
         <Typography sx={{ color: "#64748b", fontSize: "0.9rem", mt: 0.5 }}>Tour dates from {cityName} are highlighted — tap one to switch.</Typography>
       </Box>
 
-      <Box sx={{ p: { xs: 1.5, md: 2.5 }, borderRadius: "6px", border: "1px solid #e5e7eb", bgcolor: "#fff" }}>
+      <Box sx={{ p: { xs: 1.5, md: 2.5 }, borderRadius: "4px", border: "1px solid #E2E2E2", bgcolor: "#fff" }}>
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.5 }}>
-          <IconButton aria-label="Previous month" onClick={() => shift(-1)} size="small" sx={{ border: "1px solid #e2e8f0" }}><ChevronLeftRoundedIcon /></IconButton>
+          <IconButton aria-label="Previous month" onClick={() => shift(-1)} size="small" sx={{ border: "1px solid #E2E2E2" }}><ChevronLeftRoundedIcon /></IconButton>
           <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", justifyContent: "center", fontSize: "0.72rem", fontWeight: 700, color: "#475569" }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}><Box sx={{ width: 12, height: 12, borderRadius: "4px", bgcolor: "#facc15", border: "1px solid #eab308" }} />Tour date</Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}><Box sx={{ width: 12, height: 12, borderRadius: "4px", bgcolor: "#0f172a" }} />Selected</Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}><Box sx={{ width: 12, height: 12, borderRadius: "4px", bgcolor: "#fef9c3" }} />Trip days</Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}><Box sx={{ width: 12, height: 12, borderRadius: "4px", bgcolor: "#FF9900", border: "1px solid #E68A00" }} />Tour date</Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}><Box sx={{ width: 12, height: 12, borderRadius: "4px", bgcolor: "#43149D" }} />Selected</Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}><Box sx={{ width: 12, height: 12, borderRadius: "4px", bgcolor: "#FFF0D1" }} />Trip days</Box>
           </Box>
-          <IconButton aria-label="Next month" onClick={() => shift(1)} size="small" sx={{ border: "1px solid #e2e8f0" }}><ChevronRightRoundedIcon /></IconButton>
+          <IconButton aria-label="Next month" onClick={() => shift(1)} size="small" sx={{ border: "1px solid #E2E2E2" }}><ChevronRightRoundedIcon /></IconButton>
         </Box>
         <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: { xs: 3, md: 4 }, mt: 1.5 }}>
           <Month year={base.y} month={base.m} startMap={startMap} selected={selected} travellers={travellers} onSelect={onSelect} />
@@ -178,11 +178,11 @@ export default function DepartureCalendar({
                 sx={{
                   position: "relative",
                   p: 1.75,
-                  borderRadius: "6px",
+                  borderRadius: "4px",
                   border: "2px solid",
                   outline: "none",
-                  borderColor: isSel ? "#facc15" : "#e5e7eb",
-                  bgcolor: isSel ? "#fffbeb" : notEnough ? "#f8fafc" : "#fff",
+                  borderColor: isSel ? "#FF9900" : "#E2E2E2",
+                  bgcolor: isSel ? "#FFF6E5" : notEnough ? "#FDF9EC" : "#fff",
                   opacity: notEnough ? 0.6 : 1,
                   cursor: notEnough ? "not-allowed" : "pointer",
                   transition: "all .2s",

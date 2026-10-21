@@ -128,7 +128,7 @@ function VerifyForm() {
                 fontFamily: "inherit",
                 color: "#0f172a",
                 border: "1px solid #cbd5e1",
-                borderRadius: "6px",
+                borderRadius: "4px",
                 outline: "none",
                 bgcolor: "#fff",
                 "&:focus": { borderColor: "#0f172a", boxShadow: "0 0 0 3px rgba(15,23,42,0.1)" },
@@ -146,7 +146,7 @@ function VerifyForm() {
             type="button"
             onClick={resend}
             disabled={cooldown > 0}
-            sx={{ border: 0, bgcolor: "transparent", p: 0, font: "inherit", fontWeight: 700, color: cooldown > 0 ? "#94a3b8" : "#ca8a04", cursor: cooldown > 0 ? "default" : "pointer" }}
+            sx={{ border: 0, bgcolor: "transparent", p: 0, font: "inherit", fontWeight: 700, color: cooldown > 0 ? "#94a3b8" : "#E68A00", cursor: cooldown > 0 ? "default" : "pointer" }}
           >
             {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
           </Box>
@@ -172,7 +172,7 @@ function VerifyShell() {
     <AuthShell
       title="Verify your email"
       subtitle={`Enter the 6-digit code we sent to ${email}. It expires in 10 minutes.`}
-      footer={<Link href={withRedirect("/register", redirect)} style={{ color: "#ca8a04", fontWeight: 700 }}>Use a different email</Link>}
+      footer={<Link href={withRedirect("/register", redirect)} style={{ color: "#E68A00", fontWeight: 700 }}>Use a different email</Link>}
     >
       <VerifyForm />
     </AuthShell>

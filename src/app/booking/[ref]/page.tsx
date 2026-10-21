@@ -76,7 +76,7 @@ function BookingInner() {
   };
 
   const shell = (children: React.ReactNode) => (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: "#f8fafc" }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: "#FDF9EC" }}>
       <Navbar />
       {children}
       <Footer />
@@ -94,12 +94,12 @@ function BookingInner() {
   if (needsLogin) {
     return shell(
       <Container maxWidth="sm" sx={{ py: 8, flexGrow: 1, textAlign: "center" }}>
-        <Paper elevation={0} sx={{ p: 4, borderTop: "4px solid #facc15" }}>
+        <Paper elevation={0} sx={{ p: 4, borderTop: "4px solid #FF9900" }}>
           <CompassRose size={80} />
           <Typography sx={{ fontWeight: 800, fontSize: "1.5rem", mt: 1.5 }}>Log in to view your booking</Typography>
           <Typography sx={{ color: "#64748b", mt: 0.5, mb: 3 }}>Booking {ref} is tied to your account.</Typography>
           <Button component={Link} href={withRedirect("/login", `/booking/${ref}`)} variant="contained" startIcon={<LoginRoundedIcon />}
-            sx={{ px: 4, bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#eab308" } }}>
+            sx={{ px: 4, bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#E68A00" } }}>
             Login
           </Button>
         </Paper>
@@ -130,14 +130,14 @@ function BookingInner() {
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
         <Paper
           elevation={0}
-          sx={{ position: "relative", overflow: "hidden", mb: 3, p: { xs: 3, md: 4 }, bgcolor: confirmed ? "#f0fdf4" : cancelled ? "#fef2f2" : "#fffbeb", borderColor: confirmed ? "#bbf7d0" : cancelled ? "#fecaca" : "#fde68a" }}
+          sx={{ position: "relative", overflow: "hidden", mb: 3, p: { xs: 3, md: 4 }, bgcolor: confirmed ? "#f0fdf4" : cancelled ? "#fef2f2" : "#FFF6E5", borderColor: confirmed ? "#bbf7d0" : cancelled ? "#fecaca" : "#FFD699" }}
         >
           <Box sx={{ position: "absolute", right: 0, bottom: 0, left: { md: "55%" }, lineHeight: 0, opacity: 0.8, display: { xs: "none", md: "block" } }}>
             <MountainScene height={130} />
           </Box>
           <Box sx={{ position: "relative", display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
             <motion.div initial={{ scale: 0 }} animate={{ scale: [0, 1.2, 1] }} transition={{ duration: 0.6 }}>
-              {confirmed ? <CheckCircleRoundedIcon sx={{ fontSize: 64, color: "#10b981" }} /> : <HourglassTopRoundedIcon sx={{ fontSize: 64, color: cancelled ? "#ef4444" : "#f59e0b" }} />}
+              {confirmed ? <CheckCircleRoundedIcon sx={{ fontSize: 64, color: "#10b981" }} /> : <HourglassTopRoundedIcon sx={{ fontSize: 64, color: cancelled ? "#ef4444" : "#FF9900" }} />}
             </motion.div>
             <Box>
               <Typography sx={{ fontSize: { xs: "1.5rem", md: "2.1rem" }, fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.15 }}>
@@ -154,7 +154,7 @@ function BookingInner() {
                   ? `Your seats are held for about ${holdLeftMin} more minute${holdLeftMin === 1 ? "" : "s"}. Complete the payment to confirm them.`
                   : "Your hold has expired — resume payment and we'll re-check seat availability."}
               </Typography>
-              <Chip icon={<ConfirmationNumberRoundedIcon sx={{ fontSize: "16px !important" }} />} label={b.bookingRef} sx={{ mt: 1.5, bgcolor: "#0f172a", color: "#facc15", fontWeight: 800, letterSpacing: "0.05em" }} />
+              <Chip icon={<ConfirmationNumberRoundedIcon sx={{ fontSize: "16px !important" }} />} label={b.bookingRef} sx={{ mt: 1.5, bgcolor: "#43149D", color: "#FF9900", fontWeight: 800, letterSpacing: "0.05em" }} />
             </Box>
           </Box>
         </Paper>
@@ -166,7 +166,7 @@ function BookingInner() {
         <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           {/* Trip */}
           <motion.div variants={rise}>
-            <Paper elevation={0} sx={{ overflow: "hidden", borderTop: "4px solid #facc15" }}>
+            <Paper elevation={0} sx={{ overflow: "hidden", borderTop: "4px solid #FF9900" }}>
               <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" } }}>
                 {b.tour?.coverImage && <Box component="img" src={b.tour.coverImage} alt={b.tourTitle} sx={{ width: { xs: "100%", sm: 220 }, height: { xs: 160, sm: "auto" }, objectFit: "cover" }} />}
                 <Box sx={{ p: 2.5, flex: 1 }}>
@@ -177,7 +177,7 @@ function BookingInner() {
                     { icon: <GroupsRoundedIcon />, text: `${b.numberOfTravelers} traveller${b.numberOfTravelers > 1 ? "s" : ""}` },
                   ].map((r, i) => (
                     <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1.25, mb: 1, color: "#334155" }}>
-                      <Box sx={{ color: "#ca8a04", display: "flex" }}>{React.cloneElement(r.icon as React.ReactElement<any>, { sx: { fontSize: 19 } })}</Box>
+                      <Box sx={{ color: "#E68A00", display: "flex" }}>{React.cloneElement(r.icon as React.ReactElement<any>, { sx: { fontSize: 19 } })}</Box>
                       <Typography sx={{ fontSize: "0.9rem", fontWeight: 600 }}>{r.text}</Typography>
                     </Box>
                   ))}
@@ -192,7 +192,7 @@ function BookingInner() {
             <motion.div variants={rise}>
               <Paper elevation={0} sx={{ p: 2.5 }}>
                 <Typography sx={{ fontWeight: 800, fontSize: "1.1rem", mb: 0.5, display: "flex", alignItems: "center", gap: 1 }}>
-                  <LocationOnIcon sx={{ color: "#ca8a04" }} /> Where to report
+                  <LocationOnIcon sx={{ color: "#E68A00" }} /> Where to report
                 </Typography>
                 <Typography sx={{ color: "#64748b", fontSize: "0.85rem", mb: 2 }}>
                   Starting point in {b.startAddress.city} for {fmt(b.travelDate)}.
@@ -233,12 +233,12 @@ function BookingInner() {
             <motion.div variants={rise}>
               <Paper elevation={0} sx={{ p: 2.5 }}>
                 <Typography sx={{ fontWeight: 800, fontSize: "1.1rem", mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
-                  <GroupsRoundedIcon sx={{ color: "#ca8a04" }} /> Travellers
+                  <GroupsRoundedIcon sx={{ color: "#E68A00" }} /> Travellers
                 </Typography>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
                   {b.travellers.map((t: any, i: number) => (
-                    <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1.5, borderRadius: "6px", border: "1px solid #e2e8f0", flexWrap: "wrap" }}>
-                      <Box sx={{ width: 36, height: 36, borderRadius: "50%", bgcolor: i === 0 ? "#facc15" : "#e0f2fe", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>
+                    <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1.5, borderRadius: "4px", border: "1px solid #E2E2E2", flexWrap: "wrap" }}>
+                      <Box sx={{ width: 36, height: 36, borderRadius: "50%", bgcolor: i === 0 ? "#FF9900" : "#e0f2fe", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>
                         {t.firstName[0]?.toUpperCase()}
                       </Box>
                       <Box sx={{ flex: 1, minWidth: 160 }}>
@@ -262,7 +262,7 @@ function BookingInner() {
           <motion.div variants={rise}>
             <Paper elevation={0} sx={{ p: 2.5 }}>
               <Typography sx={{ fontWeight: 800, fontSize: "1.1rem", mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
-                <PaymentsRoundedIcon sx={{ color: "#ca8a04" }} /> {b.paymentStrategy === "full" ? "Payment" : "Payment schedule"}
+                <PaymentsRoundedIcon sx={{ color: "#E68A00" }} /> {b.paymentStrategy === "full" ? "Payment" : "Payment schedule"}
               </Typography>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
                 {b.installments.map((inst: any) => {
@@ -270,8 +270,8 @@ function BookingInner() {
                   const isNext = nextDue?.index === inst.index && !cancelled;
                   const overdue = !paid && inst.index > 0 && new Date(inst.dueDate).getTime() < Date.now();
                   return (
-                    <Box key={inst.index} sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1.5, borderRadius: "6px", border: "1px solid", borderColor: paid ? "#bbf7d0" : isNext ? "#fde047" : "#e2e8f0", bgcolor: paid ? "#f0fdf4" : isNext ? "#fffbeb" : "#fff", flexWrap: "wrap" }}>
-                      <Box sx={{ width: 34, height: 34, borderRadius: "50%", bgcolor: paid ? "#10b981" : "#f1f5f9", color: paid ? "#fff" : "#64748b", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.85rem" }}>
+                    <Box key={inst.index} sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1.5, borderRadius: "4px", border: "1px solid", borderColor: paid ? "#bbf7d0" : isNext ? "#FFB340" : "#E2E2E2", bgcolor: paid ? "#f0fdf4" : isNext ? "#FFF6E5" : "#fff", flexWrap: "wrap" }}>
+                      <Box sx={{ width: 34, height: 34, borderRadius: "50%", bgcolor: paid ? "#10b981" : "#F2F4F7", color: paid ? "#fff" : "#64748b", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.85rem" }}>
                         {paid ? <CheckCircleRoundedIcon sx={{ fontSize: 20 }} /> : inst.index + 1}
                       </Box>
                       <Box sx={{ flex: 1, minWidth: 140 }}>
@@ -287,7 +287,7 @@ function BookingInner() {
                           size="small"
                           disabled={startingIndex !== null}
                           onClick={() => payInstalment(inst.index)}
-                          sx={{ bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#eab308" } }}
+                          sx={{ bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#E68A00" } }}
                         >
                           {startingIndex === inst.index ? <CircularProgress size={16} color="inherit" /> : confirmed ? "Pay now" : "Complete payment"}
                         </Button>
@@ -302,8 +302,8 @@ function BookingInner() {
 
         {/* Totals */}
         <Box sx={{ position: { md: "sticky" }, top: 92 }}>
-          <Paper elevation={0} sx={{ p: 2.5, position: "relative", overflow: "hidden", borderTop: "4px solid #facc15" }}>
-            <Box sx={{ position: "absolute", right: -30, top: -30, width: 110, height: 110, borderRadius: "50%", bgcolor: "#facc15", opacity: 0.18 }} />
+          <Paper elevation={0} sx={{ p: 2.5, position: "relative", overflow: "hidden", borderTop: "4px solid #FF9900" }}>
+            <Box sx={{ position: "absolute", right: -30, top: -30, width: 110, height: 110, borderRadius: "50%", bgcolor: "#FF9900", opacity: 0.18 }} />
             <Typography sx={{ fontWeight: 800, mb: 2, position: "relative" }}>Payment summary</Typography>
             {[
               { l: `${inr(b.pricePerPerson)} × ${b.numberOfTravelers}`, v: inr(b.pricePerPerson * b.numberOfTravelers) },
@@ -313,16 +313,16 @@ function BookingInner() {
                 <span>{r.l}</span><strong>{r.v}</strong>
               </Box>
             ))}
-            <Box sx={{ mt: 1.5, p: 1.75, borderRadius: "6px", bgcolor: "#0f172a", color: "#fff", display: "flex", justifyContent: "space-between", position: "relative" }}>
+            <Box sx={{ mt: 1.5, p: 1.75, borderRadius: "4px", bgcolor: "#43149D", color: "#fff", display: "flex", justifyContent: "space-between", position: "relative" }}>
               <Typography sx={{ fontWeight: 700 }}>Total</Typography>
-              <Typography sx={{ fontWeight: 800, color: "#facc15" }}>{inr(b.totalAmountInr)}</Typography>
+              <Typography sx={{ fontWeight: 800, color: "#FF9900" }}>{inr(b.totalAmountInr)}</Typography>
             </Box>
             <Box sx={{ mt: 2, position: "relative" }}>
               <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", mb: 0.75 }}>
                 <span style={{ color: "#059669", fontWeight: 700 }}>Paid {inr(b.amountPaidInr)}</span>
                 <span style={{ color: "#64748b" }}>{remaining > 0 ? `${inr(remaining)} left` : "Fully paid"}</span>
               </Box>
-              <Box sx={{ height: 8, borderRadius: 4, bgcolor: "#e2e8f0", overflow: "hidden" }}>
+              <Box sx={{ height: 8, borderRadius: 4, bgcolor: "#E2E2E2", overflow: "hidden" }}>
                 <motion.div initial={{ width: 0 }} animate={{ width: `${paidPct}%` }} transition={{ duration: 0.9, delay: 0.3 }} style={{ height: "100%", background: "#10b981" }} />
               </Box>
             </Box>

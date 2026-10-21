@@ -47,8 +47,8 @@ export default function TourCard({ tour, fromCityId, hideDescription }: TourCard
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        borderRadius: "6px",
-        border: "1px solid #e2e8f0",
+        borderRadius: "4px",
+        border: "1px solid #E2E2E2",
         bgcolor: "#ffffff",
         overflow: "hidden",
         transition: "box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease",
@@ -60,7 +60,7 @@ export default function TourCard({ tour, fromCityId, hideDescription }: TourCard
       }}
     >
       {/* Cover Image & Badges */}
-      <Box sx={{ position: "relative", bgcolor: "#f1f5f9", overflow: "hidden" }}>
+      <Box sx={{ position: "relative", bgcolor: "#F2F4F7", overflow: "hidden" }}>
         <CardMedia
           component="img"
           height="215"
@@ -91,7 +91,7 @@ export default function TourCard({ tour, fromCityId, hideDescription }: TourCard
               color: "#ffffff",
               fontWeight: 700,
               fontSize: "0.7rem",
-              borderRadius: "6px",
+              borderRadius: "4px",
               height: 24,
             }}
           />
@@ -99,7 +99,7 @@ export default function TourCard({ tour, fromCityId, hideDescription }: TourCard
 
         {/* Duration Chip */}
         <Chip
-          icon={<AccessTimeIcon sx={{ fontSize: "13px !important", color: "#ca8a04 !important" }} />}
+          icon={<AccessTimeIcon sx={{ fontSize: "13px !important", color: "#E68A00 !important" }} />}
           label={`${tour.durationDays}D / ${tour.durationNights}N`}
           size="small"
           sx={{
@@ -110,7 +110,7 @@ export default function TourCard({ tour, fromCityId, hideDescription }: TourCard
             color: "#0f172a",
             fontWeight: 700,
             fontSize: "0.72rem",
-            borderRadius: "6px",
+            borderRadius: "4px",
             height: 24,
           }}
         />
@@ -128,7 +128,7 @@ export default function TourCard({ tour, fromCityId, hideDescription }: TourCard
               color: "#ffffff",
               fontWeight: 700,
               fontSize: "0.68rem",
-              borderRadius: "6px",
+              borderRadius: "4px",
               height: 22,
             }}
           />
@@ -140,7 +140,7 @@ export default function TourCard({ tour, fromCityId, hideDescription }: TourCard
         {/* Departure Location & Category */}
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1, gap: 1 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: 0 }}>
-            <LocationOnIcon sx={{ fontSize: 14, color: "#ca8a04", flexShrink: 0 }} />
+            <LocationOnIcon sx={{ fontSize: 14, color: "#E68A00", flexShrink: 0 }} />
             <Typography
               noWrap
               variant="caption"
@@ -199,11 +199,11 @@ export default function TourCard({ tour, fromCityId, hideDescription }: TourCard
                 label={style}
                 size="small"
                 sx={{
-                  bgcolor: "#f8fafc",
-                  border: "1px solid #e2e8f0",
+                  bgcolor: "#FDF9EC",
+                  border: "1px solid #E2E2E2",
                   color: "#475569",
                   fontSize: "0.65rem",
-                  borderRadius: "6px",
+                  borderRadius: "4px",
                   height: 19,
                 }}
               />
@@ -216,7 +216,7 @@ export default function TourCard({ tour, fromCityId, hideDescription }: TourCard
           sx={{
             mt: "auto",
             pt: 1.5,
-            borderTop: "1px solid #f1f5f9",
+            borderTop: "1px solid #F2F4F7",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -266,14 +266,14 @@ export default function TourCard({ tour, fromCityId, hideDescription }: TourCard
             size="small"
             endIcon={<ArrowForwardRoundedIcon sx={{ fontSize: 16 }} />}
             sx={{
-              backgroundColor: "#facc15",
+              backgroundColor: "#FF9900",
               color: "#0f172a",
-              borderRadius: "6px",
+              borderRadius: "4px",
               fontSize: "0.85rem",
               px: 2,
               py: 0.8,
               fontWeight: 700,
-              "&:hover": { backgroundColor: "#eab308" },
+              "&:hover": { backgroundColor: "#E68A00" },
             }}
           >
             Explore

@@ -315,7 +315,7 @@ export default function HomePage() {
   ];
 
   const searchFields = [
-    { label: "From", placeholder: "Select starting point", value: fromCity, options: fromOptions, icon: <MyLocationRoundedIcon sx={{ color: "#ca8a04" }} />, onChange: selectFromCity },
+    { label: "From", placeholder: "Select starting point", value: fromCity, options: fromOptions, icon: <MyLocationRoundedIcon sx={{ color: "#E68A00" }} />, onChange: selectFromCity },
     { label: "To", placeholder: "Select destination", value: toCity, options: toOptions, icon: <LocationOnIcon sx={{ color: "#ef4444" }} />, onChange: setToCity },
   ];
 
@@ -346,13 +346,13 @@ export default function HomePage() {
       />
 
       {/* Hero */}
-      <Box sx={{ bgcolor: "#fff8dc", borderBottom: "1px solid #fde68a" }}>
+      <Box sx={{ bgcolor: "#FFF3DB", borderBottom: "1px solid #FFD699" }}>
         <Container maxWidth="lg" sx={{ py: { xs: 4, md: 7 } }}>
           <Grid container spacing={{ xs: 4, md: 6 }} sx={{ alignItems: "center" }}>
             <Grid size={{ xs: 12, md: heroPhotos.length >= 2 ? 7 : 12 }}>
-              <Typography component="h1" sx={{ fontSize: { xs: "2.1rem", md: "3.2rem" }, fontWeight: 800, color: "#0f172a", lineHeight: 1.1, letterSpacing: "-0.03em" }}>
+              <Typography component="h1" sx={{ fontSize: { xs: "2.1rem", md: "3.2rem" }, fontWeight: 500, color: "#0f172a", lineHeight: 1.1, letterSpacing: "-0.03em" }}>
                 Group tours across India, starting{" "}
-                <Box component="span" sx={{ bgcolor: "#facc15", px: 1, boxDecorationBreak: "clone", WebkitBoxDecorationBreak: "clone" }}>
+                <Box component="span" sx={{ bgcolor: "#FF9900", px: 1, boxDecorationBreak: "clone", WebkitBoxDecorationBreak: "clone" }}>
                   {userLocation ? `near ${userLocation.name.split(",")[0]}` : "near you"}
                 </Box>
               </Typography>
@@ -363,10 +363,10 @@ export default function HomePage() {
               <Paper
                 elevation={0}
                 id="journey-search"
-                sx={{ mt: 4, p: { xs: 1.5, md: 1 }, borderRadius: "6px", border: "1px solid #e5e7eb", display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: "stretch", gap: { xs: 2, md: 0 } }}
+                sx={{ mt: 4, p: { xs: 1.5, md: 1 }, borderRadius: "4px", border: "1px solid #E2E2E2", display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: "stretch", gap: { xs: 2, md: 0 } }}
               >
                 {searchFields.map((f, i) => (
-                  <Box key={f.label} sx={{ flex: 1, display: "flex", alignItems: "center", gap: 1.5, px: { md: 2 }, borderLeft: { md: i ? "1px solid #e5e7eb" : "none" }, minWidth: 0 }}>
+                  <Box key={f.label} sx={{ flex: 1, display: "flex", alignItems: "center", gap: 1.5, px: { md: 2 }, borderLeft: { md: i ? "1px solid #E2E2E2" : "none" }, minWidth: 0 }}>
                     {f.icon}
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>{f.label}</Typography>
@@ -397,7 +397,7 @@ export default function HomePage() {
                     fetchTours();
                     scrollToResults();
                   }}
-                  sx={{ minWidth: { md: 150 }, py: 1.2, bgcolor: "#facc15", color: "#0f172a", fontSize: "0.95rem", fontWeight: 700, borderRadius: "6px", boxShadow: "none", "&:hover": { bgcolor: "#eab308" } }}
+                  sx={{ minWidth: { md: 150 }, py: 1.2, bgcolor: "#FF9900", color: "#0f172a", fontSize: "0.95rem", fontWeight: 700, borderRadius: "4px", boxShadow: "none", "&:hover": { bgcolor: "#E68A00" } }}
                 >
                   Search
                 </Button>
@@ -419,7 +419,7 @@ export default function HomePage() {
                       component="img"
                       src={src}
                       alt=""
-                      sx={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "6px", gridRow: i === 0 ? "1 / span 2" : "auto" }}
+                      sx={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "4px", gridRow: i === 0 ? "1 / span 2" : "auto" }}
                     />
                   ))}
                 </Box>
@@ -458,14 +458,14 @@ export default function HomePage() {
                     p: 2,
                     height: "100%",
                     bgcolor: "#fff",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "6px",
+                    border: "1px solid #E2E2E2",
+                    borderRadius: "4px",
                     transition: "border-color .2s, box-shadow .2s",
-                    "&:hover": { borderColor: "#facc15", boxShadow: "0 6px 16px -10px rgba(15,23,42,0.25)" },
+                    "&:hover": { borderColor: "#FF9900", boxShadow: "0 6px 16px -10px rgba(15,23,42,0.25)" },
                     "&:hover .city-arrow": { transform: "translateX(3px)", color: "#0f172a" },
                   }}
                 >
-                  <Box sx={{ width: 46, height: 46, borderRadius: "6px", bgcolor: "#fef3c7", color: "#a16207", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Box sx={{ width: 46, height: 46, borderRadius: "4px", bgcolor: "#FFF0D1", color: "#B36B00", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <LocationCityRoundedIcon />
                   </Box>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -493,11 +493,11 @@ export default function HomePage() {
           </Button>
         )}
 
-        <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, justifyContent: "space-between", gap: 2, mb: 3, pb: 3, borderBottom: "1px solid #e5e7eb" }}>
+        <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, justifyContent: "space-between", gap: 2, mb: 3, pb: 3, borderBottom: "1px solid #E2E2E2" }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-            <LocationOnIcon sx={{ fontSize: 18, color: "#ca8a04" }} />
+            <LocationOnIcon sx={{ fontSize: 18, color: "#E68A00" }} />
             <Typography sx={{ fontWeight: 700, fontSize: "0.88rem" }}>{userLocation?.name || "Detecting location…"}</Typography>
-            <Box component="span" onClick={() => setLocationDialogOpen(true)} sx={{ color: "#a16207", fontWeight: 700, cursor: "pointer", fontSize: "0.85rem", textDecoration: "underline" }}>
+            <Box component="span" onClick={() => setLocationDialogOpen(true)} sx={{ color: "#B36B00", fontWeight: 700, cursor: "pointer", fontSize: "0.85rem", textDecoration: "underline" }}>
               Change city
             </Box>
           </Box>
@@ -510,7 +510,7 @@ export default function HomePage() {
                   label={opt.label}
                   onClick={() => setSelectedRadius(opt.value)}
                   size="small"
-                  sx={{ fontWeight: 600, bgcolor: active ? "#facc15" : "#fff", color: "#0f172a", border: "1px solid", borderColor: active ? "#facc15" : "#e5e7eb", "&:hover": { bgcolor: active ? "#eab308" : "#f9fafb" } }}
+                  sx={{ fontWeight: 600, bgcolor: active ? "#FF9900" : "#fff", color: "#0f172a", border: "1px solid", borderColor: active ? "#FF9900" : "#E2E2E2", "&:hover": { bgcolor: active ? "#E68A00" : "#FDF9EC" } }}
                 />
               );
             })}
@@ -525,7 +525,7 @@ export default function HomePage() {
                 key={st}
                 label={st === "All" ? "All states" : st}
                 onClick={() => setSelectedState(st)}
-                sx={{ fontWeight: 600, bgcolor: active ? "#0f172a" : "#fff", color: active ? "#fff" : "#334155", border: "1px solid", borderColor: active ? "#0f172a" : "#e5e7eb", "&:hover": { bgcolor: active ? "#1e293b" : "#f9fafb" } }}
+                sx={{ fontWeight: 600, bgcolor: active ? "#0f172a" : "#fff", color: active ? "#fff" : "#334155", border: "1px solid", borderColor: active ? "#0f172a" : "#E2E2E2", "&:hover": { bgcolor: active ? "#1e293b" : "#FDF9EC" } }}
               />
             );
           })}
@@ -558,7 +558,7 @@ export default function HomePage() {
             </Typography>
             <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
               <Button variant="outlined" onClick={() => setSelectedRadius("250")}>Try 250 km</Button>
-              <Button variant="contained" onClick={() => setSelectedRadius("all")} sx={{ bgcolor: "#facc15", color: "#0f172a", "&:hover": { bgcolor: "#eab308" } }}>
+              <Button variant="contained" onClick={() => setSelectedRadius("all")} sx={{ bgcolor: "#FF9900", color: "#0f172a", "&:hover": { bgcolor: "#E68A00" } }}>
                 View all India
               </Button>
             </Box>
@@ -575,13 +575,13 @@ export default function HomePage() {
       </Container>
 
       {/* Why us */}
-      <Box sx={{ bgcolor: "#fffbeb", borderTop: "1px solid #fde68a" }}>
+      <Box sx={{ bgcolor: "#FFF6E5", borderTop: "1px solid #FFD699" }}>
         <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
           {sectionTitle("Why travel with EpicJourneys")}
           <Grid container spacing={4}>
             {reasons.map(({ icon: Icon, title, text }) => (
               <Grid size={{ xs: 12, sm: 6, md: 3 }} key={title}>
-                <Icon sx={{ fontSize: 34, color: "#a16207", mb: 1.25 }} />
+                <Icon sx={{ fontSize: 34, color: "#B36B00", mb: 1.25 }} />
                 <Typography sx={{ fontWeight: 800, fontSize: "1.05rem", mb: 0.5 }}>{title}</Typography>
                 <Typography sx={{ color: "#475569", fontSize: "0.92rem", lineHeight: 1.65 }}>{text}</Typography>
               </Grid>
@@ -596,7 +596,7 @@ export default function HomePage() {
         onClose={() => setLocationDialogOpen(false)}
         maxWidth="xs"
         fullWidth
-        slotProps={{ paper: { sx: { borderRadius: "6px", p: 1 } } }}
+        slotProps={{ paper: { sx: { borderRadius: "4px", p: 1 } } }}
       >
         <DialogTitle sx={{ fontWeight: 800, color: "#0f172a", pb: 1, fontSize: "1rem" }}>
           Select Starting City
@@ -618,8 +618,8 @@ export default function HomePage() {
             sx={{
               mb: 2.5,
               borderColor: "#cbd5e1",
-              color: "#ca8a04",
-              borderRadius: "6px",
+              color: "#E68A00",
+              borderRadius: "4px",
               fontWeight: 600,
               fontSize: "0.78rem",
             }}
@@ -649,14 +649,14 @@ export default function HomePage() {
                 onClick={() => handleSelectKnownCity(city)}
                 size="small"
                 sx={{
-                  bgcolor: "#f1f5f9",
-                  border: "1px solid #e2e8f0",
+                  bgcolor: "#F2F4F7",
+                  border: "1px solid #E2E2E2",
                   color: "#334155",
                   fontWeight: 600,
                   fontSize: "0.72rem",
-                  borderRadius: "6px",
+                  borderRadius: "4px",
                   cursor: "pointer",
-                  "&:hover": { bgcolor: "#e2e8f0" },
+                  "&:hover": { bgcolor: "#E2E2E2" },
                 }}
               />
             ))}
@@ -666,7 +666,7 @@ export default function HomePage() {
           <Button
             size="small"
             onClick={() => setLocationDialogOpen(false)}
-            sx={{ color: "#64748b", borderRadius: "6px" }}
+            sx={{ color: "#64748b", borderRadius: "4px" }}
           >
             Close
           </Button>

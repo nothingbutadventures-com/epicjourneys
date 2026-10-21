@@ -129,7 +129,7 @@ export default function InlineAuth({ onAuthed, tourTitle }: { onAuthed: () => vo
     } else setError(data.error || "Could not resend code");
   };
 
-  const submitBtnSx = { py: 1.3, bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#eab308" } };
+  const submitBtnSx = { py: 1.3, bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#E68A00" } };
   const pwAdornment = {
     endAdornment: (
       <InputAdornment position="end">
@@ -154,7 +154,7 @@ export default function InlineAuth({ onAuthed, tourTitle }: { onAuthed: () => vo
       </Box>
 
       {!verifyEmail && (
-        <Box sx={{ display: "flex", mb: 3, borderBottom: "1px solid #e5e7eb" }}>
+        <Box sx={{ display: "flex", mb: 3, borderBottom: "1px solid #E2E2E2" }}>
           {([
             { key: "login" as Mode, label: "Login" },
             { key: "register" as Mode, label: "Register" },
@@ -166,7 +166,7 @@ export default function InlineAuth({ onAuthed, tourTitle }: { onAuthed: () => vo
               tabIndex={0}
               onClick={() => switchMode(t.key)}
               onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), switchMode(t.key))}
-              sx={{ flex: 1, py: 1.25, textAlign: "center", cursor: "pointer", fontWeight: 800, fontSize: "0.95rem", color: mode === t.key ? "#0f172a" : "#6b7280", borderBottom: "3px solid", borderColor: mode === t.key ? "#facc15" : "transparent", mb: "-1px", outline: "none" }}
+              sx={{ flex: 1, py: 1.25, textAlign: "center", cursor: "pointer", fontWeight: 800, fontSize: "0.95rem", color: mode === t.key ? "#0f172a" : "#6b7280", borderBottom: "3px solid", borderColor: mode === t.key ? "#FF9900" : "transparent", mb: "-1px", outline: "none" }}
             >
               {t.label}
             </Box>
@@ -180,7 +180,7 @@ export default function InlineAuth({ onAuthed, tourTitle }: { onAuthed: () => vo
               <Stack spacing={2.5}>
                 {error && <Alert severity="error">{error}</Alert>}
                 {info && <Alert severity="success">{info}</Alert>}
-                <Box sx={{ display: "flex", justifyContent: "center", color: "#ca8a04" }}><MarkEmailReadRoundedIcon sx={{ fontSize: 40 }} /></Box>
+                <Box sx={{ display: "flex", justifyContent: "center", color: "#E68A00" }}><MarkEmailReadRoundedIcon sx={{ fontSize: 40 }} /></Box>
                 <Box sx={{ display: "flex", gap: 1.25 }}>
                   {digits.map((d, i) => (
                     <Box
@@ -196,7 +196,7 @@ export default function InlineAuth({ onAuthed, tourTitle }: { onAuthed: () => vo
                       onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                         if (e.key === "Backspace" && !digits[i] && i > 0) refs.current[i - 1]?.focus();
                       }}
-                      sx={{ width: "100%", minWidth: 0, height: 54, textAlign: "center", fontSize: "1.4rem", fontWeight: 700, fontFamily: "inherit", color: "#0f172a", border: "1px solid #cbd5e1", borderRadius: "6px", outline: "none", bgcolor: "#fff", "&:focus": { borderColor: "#0f172a", boxShadow: "0 0 0 3px rgba(15,23,42,0.1)" } }}
+                      sx={{ width: "100%", minWidth: 0, height: 54, textAlign: "center", fontSize: "1.4rem", fontWeight: 700, fontFamily: "inherit", color: "#0f172a", border: "1px solid #cbd5e1", borderRadius: "4px", outline: "none", bgcolor: "#fff", "&:focus": { borderColor: "#0f172a", boxShadow: "0 0 0 3px rgba(15,23,42,0.1)" } }}
                     />
                   ))}
                 </Box>
@@ -206,7 +206,7 @@ export default function InlineAuth({ onAuthed, tourTitle }: { onAuthed: () => vo
                 <Typography sx={{ textAlign: "center", fontSize: "0.9rem", color: "#64748b" }}>
                   Didn&apos;t get it?{" "}
                   <Box component="button" type="button" onClick={resend} disabled={cooldown > 0}
-                    sx={{ border: 0, bgcolor: "transparent", p: 0, font: "inherit", fontWeight: 700, color: cooldown > 0 ? "#94a3b8" : "#ca8a04", cursor: cooldown > 0 ? "default" : "pointer" }}>
+                    sx={{ border: 0, bgcolor: "transparent", p: 0, font: "inherit", fontWeight: 700, color: cooldown > 0 ? "#94a3b8" : "#E68A00", cursor: cooldown > 0 ? "default" : "pointer" }}>
                     {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
                   </Box>
                   {" · "}
@@ -228,7 +228,7 @@ export default function InlineAuth({ onAuthed, tourTitle }: { onAuthed: () => vo
                 </Button>
                 <Typography sx={{ textAlign: "center", fontSize: "0.88rem", color: "#64748b" }}>
                   New here?{" "}
-                  <Box component="button" type="button" onClick={() => switchMode("register")} sx={{ border: 0, bgcolor: "transparent", p: 0, font: "inherit", fontWeight: 700, color: "#ca8a04", cursor: "pointer" }}>
+                  <Box component="button" type="button" onClick={() => switchMode("register")} sx={{ border: 0, bgcolor: "transparent", p: 0, font: "inherit", fontWeight: 700, color: "#E68A00", cursor: "pointer" }}>
                     Create an account
                   </Box>
                 </Typography>
@@ -256,7 +256,7 @@ export default function InlineAuth({ onAuthed, tourTitle }: { onAuthed: () => vo
                 </Button>
                 <Typography sx={{ textAlign: "center", fontSize: "0.88rem", color: "#64748b" }}>
                   Already registered?{" "}
-                  <Box component="button" type="button" onClick={() => switchMode("login")} sx={{ border: 0, bgcolor: "transparent", p: 0, font: "inherit", fontWeight: 700, color: "#ca8a04", cursor: "pointer" }}>
+                  <Box component="button" type="button" onClick={() => switchMode("login")} sx={{ border: 0, bgcolor: "transparent", p: 0, font: "inherit", fontWeight: 700, color: "#E68A00", cursor: "pointer" }}>
                     Log in
                   </Box>
                 </Typography>

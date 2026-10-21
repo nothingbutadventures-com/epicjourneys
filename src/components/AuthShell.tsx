@@ -16,7 +16,7 @@ export default function AuthShell({
   footer?: React.ReactNode;
 }) {
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "#f8fafc" }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "#FDF9EC" }}>
       {/* Visual panel */}
       <Box
         sx={{
@@ -34,7 +34,7 @@ export default function AuthShell({
         <Box sx={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(8,13,26,0.9) 0%, rgba(8,13,26,0.2) 70%)" }} />
         <Box sx={{ position: "relative", maxWidth: 460 }}>
           <Typography sx={{ fontSize: "2.2rem", fontWeight: 800, lineHeight: 1.15, letterSpacing: "-0.02em", mb: 1.5 }}>
-            Journeys that begin <Box component="span" sx={{ color: "#facc15" }}>near you.</Box>
+            Journeys that begin <Box component="span" sx={{ color: "#FF9900" }}>near you.</Box>
           </Typography>
           <Typography sx={{ color: "rgba(255,255,255,0.8)", lineHeight: 1.6 }}>
             Curated Indian tours with verified local partners and transparent pricing in ₹.
@@ -46,7 +46,7 @@ export default function AuthShell({
       <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", p: { xs: 2.5, sm: 4 } }}>
         <Box sx={{ width: "100%", maxWidth: 440 }}>
           <Link href="/" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
-            <Box sx={{ width: 38, height: 38, borderRadius: "6px", bgcolor: "#facc15", color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.85rem" }}>
+            <Box sx={{ width: 38, height: 38, borderRadius: "4px", bgcolor: "#FF9900", color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.85rem" }}>
               EJ
             </Box>
             <Typography sx={{ fontWeight: 800, fontSize: "1.15rem", color: "#0f172a" }}>EpicJourneys</Typography>
@@ -64,14 +64,14 @@ export default function AuthShell({
 }
 
 export const fieldSx = {
-  "& .MuiOutlinedInput-root": { borderRadius: "6px", bgcolor: "#fff", fontSize: "0.95rem" },
+  "& .MuiOutlinedInput-root": { borderRadius: "4px", bgcolor: "#fff", fontSize: "0.95rem" },
 };
 export const submitSx = {
   py: 1.4,
   fontSize: "1rem",
   fontWeight: 700,
-  borderRadius: "6px",
-  bgcolor: "#facc15",
+  borderRadius: "4px",
+  bgcolor: "#FF9900",
   color: "#0f172a",
-  "&:hover": { bgcolor: "#eab308" },
+  "&:hover": { bgcolor: "#E68A00" },
 } as const;

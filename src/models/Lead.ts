@@ -8,6 +8,8 @@ export interface ILeadActivity {
   dueDate?: Date | null;
   completed?: boolean;
   createdBy: string;
+  /** Provider message id (e.g. WhatsApp wamid) used to dedupe webhook retries. */
+  externalId?: string;
   createdAt?: Date;
 }
 
@@ -73,6 +75,7 @@ const ActivitySchema = new Schema<ILeadActivity>(
     dueDate: { type: Date, default: null },
     completed: { type: Boolean, default: false },
     createdBy: { type: String, default: "System" },
+    externalId: { type: String, default: undefined },
     createdAt: { type: Date, default: Date.now },
   },
   { _id: true }

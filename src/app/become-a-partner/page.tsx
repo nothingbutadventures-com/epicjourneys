@@ -93,11 +93,11 @@ export default function BecomePartnerPage() {
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: "#ffffff" }}>
       <Navbar />
 
-      <Box sx={{ bgcolor: "#fff8dc", borderBottom: "1px solid #fde68a" }}>
+      <Box sx={{ bgcolor: "#FFF3DB", borderBottom: "1px solid #FFD699" }}>
         <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
           <Typography component="h1" sx={{ fontSize: { xs: "2rem", md: "2.8rem" }, fontWeight: 800, color: "#0f172a", lineHeight: 1.1, letterSpacing: "-0.03em" }}>
             Become our partner in{" "}
-            <Box component="span" sx={{ bgcolor: "#facc15", px: 1 }}>your city</Box>
+            <Box component="span" sx={{ bgcolor: "#FF9900", px: 1 }}>your city</Box>
           </Typography>
           <Typography sx={{ mt: 2, color: "#475569", fontSize: "1.05rem", maxWidth: 620, lineHeight: 1.6 }}>
             EpicJourneys works with local partners who welcome travellers at the starting point and support them through the trip.
@@ -110,7 +110,7 @@ export default function BecomePartnerPage() {
         <Grid container spacing={{ xs: 4, md: 6 }}>
           <Grid size={{ xs: 12, md: 7 }}>
             {done ? (
-              <Paper elevation={0} sx={{ p: { xs: 3, md: 5 }, textAlign: "center", border: "1px solid #e5e7eb" }}>
+              <Paper elevation={0} sx={{ p: { xs: 3, md: 5 }, textAlign: "center", border: "1px solid #E2E2E2" }}>
                 <CheckCircleRoundedIcon sx={{ fontSize: 56, color: "#16a34a" }} />
                 <Typography sx={{ fontWeight: 800, fontSize: "1.5rem", mt: 1 }}>Request received</Typography>
                 <Typography sx={{ color: "#64748b", mt: 1, maxWidth: 420, mx: "auto" }}>
@@ -130,7 +130,7 @@ export default function BecomePartnerPage() {
                 </Button>
               </Paper>
             ) : (
-              <Paper elevation={0} sx={{ p: { xs: 2.5, md: 4 }, border: "1px solid #e5e7eb" }}>
+              <Paper elevation={0} sx={{ p: { xs: 2.5, md: 4 }, border: "1px solid #E2E2E2" }}>
                 <Typography component="h2" sx={{ fontWeight: 800, fontSize: "1.4rem", mb: 0.5 }}>Request a location</Typography>
                 <Typography sx={{ color: "#64748b", fontSize: "0.9rem", mb: 3 }}>Fields marked * are required.</Typography>
                 <form onSubmit={submit}>
@@ -213,7 +213,7 @@ export default function BecomePartnerPage() {
                     size="large"
                     disabled={loading}
                     startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <SendRoundedIcon />}
-                    sx={{ mt: 3, px: 4, py: 1.2, bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, boxShadow: "none", "&:hover": { bgcolor: "#eab308" } }}
+                    sx={{ mt: 3, px: 4, py: 1.2, bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, boxShadow: "none", "&:hover": { bgcolor: "#E68A00" } }}
                   >
                     Send request
                   </Button>
@@ -227,7 +227,7 @@ export default function BecomePartnerPage() {
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
               {steps.map((s) => (
                 <Box key={s.n} sx={{ display: "flex", gap: 2 }}>
-                  <Box sx={{ width: 34, height: 34, borderRadius: "50%", bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Box sx={{ width: 34, height: 34, borderRadius: "50%", bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     {s.n}
                   </Box>
                   <Box>
@@ -237,7 +237,7 @@ export default function BecomePartnerPage() {
                 </Box>
               ))}
             </Box>
-            <Box sx={{ mt: 4, p: 2.5, bgcolor: "#fffbeb", border: "1px solid #fde68a", borderRadius: "6px" }}>
+            <Box sx={{ mt: 4, p: 2.5, bgcolor: "#FFF6E5", border: "1px solid #FFD699", borderRadius: "4px" }}>
               <Typography sx={{ fontWeight: 800, mb: 0.5 }}>What partners do</Typography>
               <Typography sx={{ color: "#475569", fontSize: "0.9rem", lineHeight: 1.65 }}>
                 Receive travellers at the starting address, be the local contact on departure days, and manage bookings for your city from the partner portal.

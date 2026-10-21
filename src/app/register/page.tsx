@@ -54,7 +54,7 @@ function RegisterForm() {
       footer={
         <>
           Already have an account?{" "}
-          <Link href={withRedirect("/login", redirect)} style={{ color: "#ca8a04", fontWeight: 700 }}>
+          <Link href={withRedirect("/login", redirect)} style={{ color: "#E68A00", fontWeight: 700 }}>
             Log in
           </Link>
         </>

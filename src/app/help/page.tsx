@@ -71,14 +71,14 @@ export default function HelpAndSupportPage() {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f8fafc", pb: 8 }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "#FDF9EC", pb: 8 }}>
       {/* Top Bar */}
       <Box
         component="header"
         sx={{
           height: 56,
           bgcolor: "#ffffff",
-          borderBottom: "1px solid #e2e8f0",
+          borderBottom: "1px solid #E2E2E2",
           px: { xs: 2, sm: 4 },
           display: "flex",
           alignItems: "center",
@@ -91,7 +91,7 @@ export default function HelpAndSupportPage() {
               width: 30,
               height: 30,
               borderRadius: "4px",
-              bgcolor: "#0f172a",
+              bgcolor: "#43149D",
               color: "#ffffff",
               display: "flex",
               alignItems: "center",
@@ -127,7 +127,7 @@ export default function HelpAndSupportPage() {
             size="small"
             sx={{
               bgcolor: "#ffffff",
-              border: "1px solid #e2e8f0",
+              border: "1px solid #E2E2E2",
               fontWeight: 600,
               fontSize: "0.75rem",
               borderRadius: "4px",
@@ -151,7 +151,7 @@ export default function HelpAndSupportPage() {
                 sx={{
                   p: 2.5,
                   borderRadius: "4px",
-                  border: "1px solid #e2e8f0",
+                  border: "1px solid #E2E2E2",
                   bgcolor: "#ffffff",
                 }}
               >
@@ -177,7 +177,7 @@ export default function HelpAndSupportPage() {
                 sx={{
                   p: 2.5,
                   borderRadius: "4px",
-                  border: "1px solid #e2e8f0",
+                  border: "1px solid #E2E2E2",
                   bgcolor: "#ffffff",
                 }}
               >
@@ -198,7 +198,7 @@ export default function HelpAndSupportPage() {
               sx={{
                 p: { xs: 2.5, sm: 3.5 },
                 borderRadius: "4px",
-                border: "1px solid #e2e8f0",
+                border: "1px solid #E2E2E2",
                 bgcolor: "#ffffff",
               }}
             >
@@ -218,7 +218,7 @@ export default function HelpAndSupportPage() {
                       setSubject("");
                       setMessage("");
                     }}
-                    sx={{ borderRadius: "4px", borderColor: "#e2e8f0" }}
+                    sx={{ borderRadius: "4px", borderColor: "#E2E2E2" }}
                   >
                     Send Another Query
                   </Button>
@@ -323,13 +323,13 @@ export default function HelpAndSupportPage() {
                         disabled={loading || !name || !email || !subject || !message}
                         startIcon={loading ? <CircularProgress size={16} sx={{ color: "#fff" }} /> : <SendRoundedIcon sx={{ fontSize: 16 }} />}
                         sx={{
-                          bgcolor: "#0f172a",
+                          bgcolor: "#43149D",
                           color: "#ffffff",
                           borderRadius: "4px",
                           px: 3,
                           py: 1,
                           fontWeight: 600,
-                          "&:hover": { bgcolor: "#1e293b" },
+                          "&:hover": { bgcolor: "#360F7D" },
                         }}
                       >
                         {loading ? "Submitting..." : "Send Inquiry"}

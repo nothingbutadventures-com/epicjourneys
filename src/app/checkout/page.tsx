@@ -298,7 +298,7 @@ function CheckoutInner() {
   const stepBack = () => updateParams({ step: STEPS[Math.max(0, stepIndex - 1)].key }, "push");
 
   const stepper = (
-    <Box sx={{ display: "flex", alignItems: "center", mb: 3.5, pb: 3, borderBottom: "1px solid #e5e7eb" }}>
+    <Box sx={{ display: "flex", alignItems: "center", mb: 3.5, pb: 3, borderBottom: "1px solid #E2E2E2" }}>
       {STEPS.map((st, i) => {
         const done = i < stepIndex;
         const active = i === stepIndex;
@@ -308,7 +308,7 @@ function CheckoutInner() {
               <Box
                 sx={{
                   width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.9rem",
-                  bgcolor: done ? "#16a34a" : active ? "#facc15" : "#f3f4f6",
+                  bgcolor: done ? "#16a34a" : active ? "#FF9900" : "#F2F4F7",
                   color: done ? "#fff" : active ? "#0f172a" : "#9ca3af",
                 }}
               >
@@ -319,7 +319,7 @@ function CheckoutInner() {
                 <Typography sx={{ fontSize: "0.75rem", color: "#9ca3af" }}>{st.hint}</Typography>
               </Box>
             </Box>
-            {i < STEPS.length - 1 && <Box sx={{ flex: 1, mx: { xs: 1.5, md: 2.5 }, height: 2, bgcolor: i < stepIndex ? "#16a34a" : "#e5e7eb" }} />}
+            {i < STEPS.length - 1 && <Box sx={{ flex: 1, mx: { xs: 1.5, md: 2.5 }, height: 2, bgcolor: i < stepIndex ? "#16a34a" : "#E2E2E2" }} />}
           </React.Fragment>
         );
       })}
@@ -336,7 +336,7 @@ function CheckoutInner() {
   const travellersStep = (
     <>
       {stepTitle(<GroupsRoundedIcon />, "Traveller details", "Enter details exactly as on each traveller's ID.")}
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", p: 1.5, mb: 2.5, borderRadius: "6px", bgcolor: "#fffbeb", border: "1px solid #fde68a" }}>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", p: 1.5, mb: 2.5, borderRadius: "4px", bgcolor: "#FFF6E5", border: "1px solid #FFD699" }}>
         <Typography sx={{ fontWeight: 700, fontSize: "0.9rem" }}>Number of travellers</Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Button size="small" variant="outlined" disabled={n <= 1} onClick={() => updateParams({ travellers: String(n - 1), rooms: null })} sx={{ minWidth: 36, px: 0 }}><RemoveRoundedIcon fontSize="small" /></Button>
@@ -349,13 +349,13 @@ function CheckoutInner() {
           const valid = personValid(p);
           return (
             <Box key={i}>
-              <Box sx={{ p: 2.5, borderRadius: "6px", border: "1px solid", borderColor: valid ? "#86efac" : "#e5e7eb", bgcolor: "#fff" }}>
+              <Box sx={{ p: 2.5, borderRadius: "4px", border: "1px solid", borderColor: valid ? "#86efac" : "#E2E2E2", bgcolor: "#fff" }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, mb: 2 }}>
-                  <Box sx={{ width: 30, height: 30, borderRadius: "50%", bgcolor: valid ? "#16a34a" : "#f3f4f6", color: valid ? "#fff" : "#6b7280", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Box sx={{ width: 30, height: 30, borderRadius: "50%", bgcolor: valid ? "#16a34a" : "#F2F4F7", color: valid ? "#fff" : "#6b7280", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     {valid ? <CheckRoundedIcon sx={{ fontSize: 18 }} /> : <PersonRoundedIcon sx={{ fontSize: 18 }} />}
                   </Box>
                   <Typography sx={{ fontWeight: 800 }}>Traveller {i + 1}</Typography>
-                  {i === 0 && <Chip label="Primary" size="small" sx={{ bgcolor: "#fef9c3", color: "#854d0e", fontWeight: 700 }} />}
+                  {i === 0 && <Chip label="Primary" size="small" sx={{ bgcolor: "#FFF0D1", color: "#8A5200", fontWeight: 700 }} />}
                 </Box>
                 <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
                   <TextField label="First name" value={p.firstName} onChange={(e) => setPerson(i, { firstName: e.target.value })} sx={fieldSx} required />
@@ -407,7 +407,7 @@ function CheckoutInner() {
           disabled={!allValid}
           endIcon={<ArrowForwardRoundedIcon />}
           onClick={() => updateParams({ step: "rooms" }, "push")}
-          sx={{ px: 4, py: 1.2, bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#eab308" }, "&.Mui-disabled": { bgcolor: "#f1f5f9", color: "#94a3b8" } }}
+          sx={{ px: 4, py: 1.2, bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#E68A00" }, "&.Mui-disabled": { bgcolor: "#F2F4F7", color: "#94a3b8" } }}
         >
           Continue to rooms
         </Button>
@@ -442,9 +442,9 @@ function CheckoutInner() {
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1.75 }}>
         {people.map((p, i) => (
           <Box key={i}>
-            <Box sx={{ p: 2, borderRadius: "6px", border: "1px solid #e5e7eb", bgcolor: "#fff", display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap", justifyContent: "space-between" }}>
+            <Box sx={{ p: 2, borderRadius: "4px", border: "1px solid #E2E2E2", bgcolor: "#fff", display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap", justifyContent: "space-between" }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 160 }}>
-                <Box sx={{ width: 36, height: 36, borderRadius: "50%", bgcolor: "#fef9c3", color: "#854d0e", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>
+                <Box sx={{ width: 36, height: 36, borderRadius: "50%", bgcolor: "#FFF0D1", color: "#8A5200", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>
                   {(p.firstName[0] || "?").toUpperCase()}
                 </Box>
                 <Box>
@@ -468,8 +468,8 @@ function CheckoutInner() {
                         onClick={() => !disabled && setRooms(rooms.map((r, j) => (j === i ? opt.type : r)))}
                         onKeyDown={(e) => !disabled && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setRooms(rooms.map((r, j) => (j === i ? opt.type : r))))}
                         sx={{
-                          p: 1.5, height: "100%", borderRadius: "6px", border: "2px solid", textAlign: "center", position: "relative", outline: "none",
-                          borderColor: selected ? "#facc15" : "#e5e7eb", bgcolor: selected ? "#fffbeb" : disabled ? "#f9fafb" : "#fff",
+                          p: 1.5, height: "100%", borderRadius: "4px", border: "2px solid", textAlign: "center", position: "relative", outline: "none",
+                          borderColor: selected ? "#FF9900" : "#E2E2E2", bgcolor: selected ? "#FFF6E5" : disabled ? "#FDF9EC" : "#fff",
                           opacity: disabled ? 0.5 : 1, cursor: disabled ? "not-allowed" : "pointer", transition: "all .2s",
                         }}
                       >
@@ -478,9 +478,9 @@ function CheckoutInner() {
                             <CheckRoundedIcon sx={{ fontSize: 14 }} />
                           </Box>
                         )}
-                        <Box sx={{ color: selected ? "#ca8a04" : "#94a3b8" }}>{opt.icon}</Box>
+                        <Box sx={{ color: selected ? "#E68A00" : "#94a3b8" }}>{opt.icon}</Box>
                         <Typography sx={{ fontWeight: 800, fontSize: "0.85rem" }}>{opt.title}</Typography>
-                        <Typography sx={{ fontSize: "0.75rem", color: opt.type === "single" && singleOffered ? "#b45309" : "#059669", fontWeight: 700 }}>{opt.sub}</Typography>
+                        <Typography sx={{ fontSize: "0.75rem", color: opt.type === "single" && singleOffered ? "#B36B00" : "#059669", fontWeight: 700 }}>{opt.sub}</Typography>
                       </Box>
                     </Box>
                   );
@@ -497,7 +497,7 @@ function CheckoutInner() {
           size="large"
           endIcon={<ArrowForwardRoundedIcon />}
           onClick={() => updateParams({ step: "payment" }, "push")}
-          sx={{ px: 4, py: 1.2, bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#eab308" } }}
+          sx={{ px: 4, py: 1.2, bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#E68A00" } }}
         >
           Continue to payment
         </Button>
@@ -523,18 +523,18 @@ function CheckoutInner() {
         onClick={() => !disabled && updateParams({ pay: key })}
         onKeyDown={(e) => !disabled && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), updateParams({ pay: key }))}
         sx={{
-          p: 2.5, borderRadius: "6px", border: "2px solid", outline: "none", height: "100%",
-          borderColor: selected ? "#facc15" : "#e5e7eb", bgcolor: selected ? "#fffbeb" : disabled ? "#f9fafb" : "#fff",
+          p: 2.5, borderRadius: "4px", border: "2px solid", outline: "none", height: "100%",
+          borderColor: selected ? "#FF9900" : "#E2E2E2", bgcolor: selected ? "#FFF6E5" : disabled ? "#FDF9EC" : "#fff",
           opacity: disabled ? 0.65 : 1, cursor: disabled ? "not-allowed" : "pointer", transition: "border-color .2s, background-color .2s",
-          "&:hover": disabled ? {} : { borderColor: selected ? "#facc15" : "#d1d5db" },
+          "&:hover": disabled ? {} : { borderColor: selected ? "#FF9900" : "#d1d5db" },
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, mb: 1 }}>
           <Box sx={{ width: 20, height: 20, borderRadius: "50%", border: "2px solid", borderColor: selected ? "#0f172a" : "#9ca3af", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            {selected && <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: "#0f172a" }} />}
+            {selected && <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: "#43149D" }} />}
           </Box>
           <Typography sx={{ fontWeight: 800, fontSize: "1.05rem", flex: 1 }}>{title}</Typography>
-          <Chip label={badge} size="small" sx={{ bgcolor: "#fef9c3", color: "#854d0e", fontWeight: 700, height: 22 }} />
+          <Chip label={badge} size="small" sx={{ bgcolor: "#FFF0D1", color: "#8A5200", fontWeight: 700, height: 22 }} />
         </Box>
         <Typography sx={{ color: "#475569", fontSize: "0.88rem", lineHeight: 1.6, pl: 4 }}>{disabled ? disabledReason : desc}</Typography>
       </Box>
@@ -557,13 +557,13 @@ function CheckoutInner() {
         )}
       </Box>
 
-      <Box sx={{ mb: 3, borderRadius: "6px", border: "1px solid #e5e7eb", overflow: "hidden", bgcolor: "#fff" }}>
-        <Box sx={{ px: 2, py: 1.25, bgcolor: "#f9fafb", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: 1 }}>
-          <CalendarMonthRoundedIcon sx={{ fontSize: 18, color: "#ca8a04" }} />
+      <Box sx={{ mb: 3, borderRadius: "4px", border: "1px solid #E2E2E2", overflow: "hidden", bgcolor: "#fff" }}>
+        <Box sx={{ px: 2, py: 1.25, bgcolor: "#FDF9EC", borderBottom: "1px solid #E2E2E2", display: "flex", alignItems: "center", gap: 1 }}>
+          <CalendarMonthRoundedIcon sx={{ fontSize: 18, color: "#E68A00" }} />
           <Typography sx={{ fontWeight: 800, fontSize: "0.9rem" }}>Payment schedule</Typography>
         </Box>
         {schedule.map((s, i) => (
-          <Box key={s.index} sx={{ px: 2, py: 1.5, display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: i < schedule.length - 1 ? "1px dashed #e2e8f0" : "none", bgcolor: i === 0 ? "#fffbeb" : "#fff" }}>
+          <Box key={s.index} sx={{ px: 2, py: 1.5, display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: i < schedule.length - 1 ? "1px dashed #E2E2E2" : "none", bgcolor: i === 0 ? "#FFF6E5" : "#fff" }}>
             <Box>
               <Typography sx={{ fontWeight: 700, fontSize: "0.9rem" }}>{s.label}</Typography>
               <Typography sx={{ fontSize: "0.75rem", color: "#64748b" }}>{i === 0 ? "Due today" : `Due ${fmtDate(s.dueDate.toISOString())}`}</Typography>
@@ -590,7 +590,7 @@ function CheckoutInner() {
             disabled={submitting}
             startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <LockRoundedIcon />}
             onClick={startPayment}
-            sx={{ px: 4, py: 1.3, bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, fontSize: "1rem", boxShadow: "none", "&:hover": { bgcolor: "#eab308" } }}
+            sx={{ px: 4, py: 1.3, bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, fontSize: "1rem", boxShadow: "none", "&:hover": { bgcolor: "#E68A00" } }}
           >
             Pay {inr(payableNow)} now
           </Button>
@@ -600,7 +600,7 @@ function CheckoutInner() {
   );
 
   const summary = (
-    <Paper elevation={0} sx={{ overflow: "hidden", border: "1px solid #e5e7eb" }}>
+    <Paper elevation={0} sx={{ overflow: "hidden", border: "1px solid #E2E2E2" }}>
       <Box component="img" src={tour.coverImage} alt={tour.title} sx={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
       <Box sx={{ p: 2.5 }}>
         <Typography sx={{ fontWeight: 800, lineHeight: 1.3, mb: 1.5 }}>{tour.title}</Typography>
@@ -610,11 +610,11 @@ function CheckoutInner() {
           { icon: <GroupsRoundedIcon />, text: `${n} traveller${n > 1 ? "s" : ""}` },
         ].map((r, i) => (
           <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1.25, mb: 1, color: "#334155" }}>
-            <Box sx={{ color: "#a16207", display: "flex" }}>{React.cloneElement(r.icon as React.ReactElement<any>, { sx: { fontSize: 18 } })}</Box>
+            <Box sx={{ color: "#B36B00", display: "flex" }}>{React.cloneElement(r.icon as React.ReactElement<any>, { sx: { fontSize: 18 } })}</Box>
             <Typography sx={{ fontSize: "0.88rem", fontWeight: 600 }}>{r.text}</Typography>
           </Box>
         ))}
-        <Box sx={{ my: 2, borderTop: "1px solid #e5e7eb" }} />
+        <Box sx={{ my: 2, borderTop: "1px solid #E2E2E2" }} />
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.75, fontSize: "0.9rem", color: "#475569" }}>
           <span>{inr(quote!.unitPrice)} × {n}</span>
           <strong>{inr(quote!.baseTotal)}</strong>
@@ -625,7 +625,7 @@ function CheckoutInner() {
             <strong>+{inr(quote!.roomSupplement)}</strong>
           </Box>
         )}
-        <Box sx={{ mt: 1.5, pt: 1.5, borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+        <Box sx={{ mt: 1.5, pt: 1.5, borderTop: "1px solid #E2E2E2", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
           <Typography sx={{ fontWeight: 700 }}>Total</Typography>
           <Typography sx={{ fontSize: "1.45rem", fontWeight: 800 }}>{inr(quote!.total)}</Typography>
         </Box>
@@ -640,7 +640,7 @@ function CheckoutInner() {
             { icon: <VerifiedRoundedIcon />, text: "Verified local partner" },
           ].map((r) => (
             <Box key={r.text} sx={{ display: "flex", alignItems: "center", gap: 1, color: "#475569", fontSize: "0.82rem", fontWeight: 600 }}>
-              {React.cloneElement(r.icon as React.ReactElement<any>, { sx: { fontSize: 17, color: "#a16207" } })}
+              {React.cloneElement(r.icon as React.ReactElement<any>, { sx: { fontSize: 17, color: "#B36B00" } })}
               {r.text}
             </Box>
           ))}

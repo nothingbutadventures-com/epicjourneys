@@ -1,6 +1,7 @@
 import { createTheme } from "@mui/material/styles";
 
-export const theme = createTheme({
+/** Legacy slate/yellow theme, kept for the /admin and /partner sections. */
+export const adminTheme = createTheme({
   palette: {
     mode: "light",
     primary: {

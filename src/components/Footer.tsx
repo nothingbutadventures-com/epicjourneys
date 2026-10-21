@@ -42,12 +42,12 @@ const linkSx = {
   color: "#475569",
   fontSize: "0.9rem",
   textDecoration: "none",
-  "&:hover": { color: "#a16207" },
+  "&:hover": { color: "#B36B00" },
 } as const;
 
 export default function Footer() {
   return (
-    <Box component="footer" sx={{ bgcolor: "#f8fafc", color: "#0f172a", mt: "auto", pt: 8, pb: 3 }}>
+    <Box component="footer" sx={{ bgcolor: "#FDF9EC", color: "#0f172a", mt: "auto", pt: 8, pb: 3 }}>
       <Container maxWidth="lg">
         <Grid container spacing={5}>
           <Grid size={{ xs: 12, md: 4 }}>
@@ -56,8 +56,8 @@ export default function Footer() {
                 sx={{
                   width: 38,
                   height: 38,
-                  borderRadius: "6px",
-                  bgcolor: "#facc15",
+                  borderRadius: "4px",
+                  bgcolor: "#FF9900",
                   color: "#0f172a",
                   display: "flex",
                   alignItems: "center",
@@ -76,10 +76,10 @@ export default function Footer() {
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 3 }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "#334155", fontSize: "0.9rem" }}>
-                <EmailOutlinedIcon sx={{ fontSize: 18, color: "#ca8a04" }} /> support@epicjourneys.in
+                <EmailOutlinedIcon sx={{ fontSize: 18, color: "#E68A00" }} /> support@epicjourneys.in
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "#334155", fontSize: "0.9rem" }}>
-                <PhoneOutlinedIcon sx={{ fontSize: 18, color: "#ca8a04" }} /> +91 00000 00000
+                <PhoneOutlinedIcon sx={{ fontSize: 18, color: "#E68A00" }} /> +91 00000 00000
               </Box>
             </Box>
             <Box sx={{ display: "flex", gap: 1 }}>
@@ -92,7 +92,7 @@ export default function Footer() {
                 <IconButton
                   key={s.label}
                   aria-label={s.label}
-                  sx={{ color: "#334155", bgcolor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", "&:hover": { bgcolor: "#facc15", color: "#0f172a" } }}
+                  sx={{ color: "#334155", bgcolor: "#ffffff", border: "1px solid #E2E2E2", borderRadius: "4px", "&:hover": { bgcolor: "#FF9900", color: "#0f172a" } }}
                 >
                   {s.icon}
                 </IconButton>
@@ -114,7 +114,7 @@ export default function Footer() {
           ))}
         </Grid>
 
-        <Divider sx={{ my: 5, borderColor: "#e2e8f0" }} />
+        <Divider sx={{ my: 5, borderColor: "#E2E2E2" }} />
 
         <Box sx={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
           <Typography sx={{ color: "#64748b", fontSize: "0.85rem" }}>

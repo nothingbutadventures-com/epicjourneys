@@ -90,7 +90,7 @@ export default function PaymentGateway({
         name: "EpicJourneys",
         description: `${payment.tourTitle} — ${payment.label}`,
         prefill: payment.prefill,
-        theme: { color: "#facc15" },
+        theme: { color: "#FF9900" },
         handler: async (r: any) => {
           setBusy(true);
           try {
@@ -170,13 +170,13 @@ export default function PaymentGateway({
       onClose={busy || done ? undefined : onClose}
       maxWidth="xs"
       fullWidth
-      slotProps={{ paper: { sx: { borderRadius: "6px", overflow: "hidden" } } }}
+      slotProps={{ paper: { sx: { borderRadius: "4px", overflow: "hidden" } } }}
     >
       {payment && (
         <Box>
-          <Box sx={{ p: 2.5, bgcolor: "#fffbeb", borderBottom: "1px solid #fde68a" }}>
+          <Box sx={{ p: 2.5, bgcolor: "#FFF6E5", borderBottom: "1px solid #FFD699" }}>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, px: 1.25, py: 0.4, borderRadius: "6px", bgcolor: "#facc15", color: "#0f172a", fontSize: "0.7rem", fontWeight: 800, letterSpacing: "0.08em" }}>
+              <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, px: 1.25, py: 0.4, borderRadius: "4px", bgcolor: "#FF9900", color: "#0f172a", fontSize: "0.7rem", fontWeight: 800, letterSpacing: "0.08em" }}>
                 <ScienceRoundedIcon sx={{ fontSize: 14 }} /> TEST MODE
               </Box>
               {!busy && !done && (
@@ -199,7 +199,7 @@ export default function PaymentGateway({
                 <Alert severity="info" icon={<LockRoundedIcon fontSize="small" />} sx={{ mb: 2, fontSize: "0.82rem" }}>
                   Razorpay keys aren&apos;t configured, so this is a payment <strong>simulator</strong>. Nothing is charged — a successful simulation books the trip.
                 </Alert>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1.5, mb: 2, borderRadius: "6px", border: "1px dashed #cbd5e1", bgcolor: "#f8fafc" }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, p: 1.5, mb: 2, borderRadius: "4px", border: "1px dashed #cbd5e1", bgcolor: "#FDF9EC" }}>
                   <CreditCardRoundedIcon sx={{ color: "#64748b" }} />
                   <Box>
                     <Typography sx={{ fontWeight: 700, fontSize: "0.9rem" }}>•••• •••• •••• 4242</Typography>
@@ -212,7 +212,7 @@ export default function PaymentGateway({
                   variant="contained"
                   disabled={busy}
                   onClick={() => simulate(true)}
-                  sx={{ py: 1.3, bgcolor: "#facc15", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#eab308" } }}
+                  sx={{ py: 1.3, bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#E68A00" } }}
                 >
                   {busy ? <CircularProgress size={22} color="inherit" /> : `Simulate successful payment · ${inr(payment.amountInr)}`}
                 </Button>
