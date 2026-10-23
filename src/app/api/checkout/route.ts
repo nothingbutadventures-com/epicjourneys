@@ -9,6 +9,7 @@ import { bookedSeatsByDeparture } from "@/lib/departures";
 import { computeQuote, type RoomType } from "@/lib/pricing";
 import { buildSchedule, depositOption } from "@/lib/deposit";
 import { HOLD_MINUTES, requireAuth, startInstallmentPayment } from "@/lib/checkout-server";
+import { resolvePartnerDiscount } from "@/lib/partner-discounts";
 
 const clean = (v: unknown) => String(v ?? "").trim();
 
@@ -42,8 +43,23 @@ export async function POST(req: NextRequest) {
     const raw = Array.isArray(body.travellers) ? body.travellers : [];
     if (raw.length < 1 || raw.length > 20) return NextResponse.json({ error: "Add between 1 and 20 travellers." }, { status: 400 });
     const singleOffered = (tour.singleRoomPriceInr || 0) > 0;
-    const user = await User.findById(auth.userId).select("name email phone").lean<any>();
+    const user = await User.findById(auth.userId).select("name email phone assignedDestination").lean<any>();
     if (!user) return NextResponse.json({ error: "Account not found." }, { status: 401 });
+
+    // A partner books on behalf of a customer: only departures from their own city, customer email required.
+    const isPartner = auth.role === "partner";
+    let customerEmail: string = user.email;
+    if (isPartner) {
+      if (!user.assignedDestination || String(departure.cityId?._id || departure.cityId) !== String(user.assignedDestination)) {
+        return NextResponse.json({ error: "You can only book departures that start from your own location." }, { status: 403 });
+      }
+      customerEmail = clean(body.customer?.email).toLowerCase();
+      if (!/^\S+@\S+\.\S+$/.test(customerEmail)) return NextResponse.json({ error: "Enter the customer's email address." }, { status: 400 });
+      const clash: any = await User.findOne({ email: customerEmail }).select("role").lean();
+      if (clash && clash.role !== "user") {
+        return NextResponse.json({ error: "That email belongs to a staff account. Use the customer's own email." }, { status: 400 });
+      }
+    }
 
     const travellers: any[] = [];
     for (const [i, t] of raw.entries()) {
@@ -55,12 +71,12 @@ export async function POST(req: NextRequest) {
       if (!/^[6-9]\d{9}$/.test(phone)) return NextResponse.json({ error: `Traveller ${i + 1}: enter a valid 10-digit mobile number.` }, { status: 400 });
       if (!(age >= 1 && age <= 100)) return NextResponse.json({ error: `Traveller ${i + 1}: enter a valid age.` }, { status: 400 });
       const roomType: RoomType = singleOffered && t.roomType === "single" ? "single" : "shared";
-      travellers.push({ firstName, lastName, phone, age, roomType, ...(i === 0 ? { email: user.email } : {}) });
+      travellers.push({ firstName, lastName, phone, age, roomType, ...(i === 0 ? { email: customerEmail } : {}) });
     }
 
     // Free up this user's earlier unpaid holds for the same date before counting seats.
     await Booking.deleteMany({
-      userId: auth.userId,
+      ...(isPartner ? { partnerId: auth.userId, bookedByRole: "partner", customerEmail } : { userId: auth.userId }),
       tourId: tour._id,
       departureId: departure._id,
       status: "pending",
@@ -84,8 +100,20 @@ export async function POST(req: NextRequest) {
       rooms: travellers.map((t) => t.roomType),
     });
 
+    // Partner discount sits on top of the tour's own discount and the room supplement, off the final total.
+    let partnerOff = 0;
+    let partnerDiscount: any = null;
+    if (body.partnerDiscountId) {
+      if (!isPartner) return NextResponse.json({ error: "Only partners can apply a partner discount." }, { status: 403 });
+      const r: any = await resolvePartnerDiscount(auth.userId, body.partnerDiscountId, quote.total);
+      if (r.error) return NextResponse.json({ error: r.error }, { status: r.status });
+      partnerDiscount = r.discount;
+      partnerOff = r.amountInr;
+    }
+    const payTotal = quote.total - partnerOff;
+
     const option = depositOption({
-      total: quote.total,
+      total: payTotal,
       travellers: travellers.length,
       startDate: departure.startDate,
       cfg: { type: tour.depositType, value: tour.depositValue },
@@ -93,7 +121,7 @@ export async function POST(req: NextRequest) {
     if (strategy === "deposit" && !option.available) {
       return NextResponse.json({ error: option.reason || "A deposit isn't available for this date. Please pay in full." }, { status: 400 });
     }
-    const schedule = buildSchedule({ total: quote.total, strategy, deposit: option.deposit, startDate: departure.startDate });
+    const schedule = buildSchedule({ total: payTotal, strategy, deposit: option.deposit, startDate: departure.startDate });
 
     const primary = travellers[0];
     const bookingRef = `EJ-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -109,11 +137,13 @@ export async function POST(req: NextRequest) {
       travelDate: departure.startDate,
       travelEndDate: departure.endDate,
       customerName: `${primary.firstName} ${primary.lastName}`,
-      customerEmail: user.email,
+      customerEmail,
       customerPhone: primary.phone,
+      specialRequests: clean(body.specialRequests).slice(0, 1000),
+      ...(partnerDiscount ? { partnerDiscountId: partnerDiscount._id, partnerDiscountName: partnerDiscount.name, partnerDiscountInr: partnerOff } : {}),
       numberOfTravelers: travellers.length,
       pricePerPerson: quote.unitPrice,
-      totalAmountInr: quote.total,
+      totalAmountInr: payTotal,
       roomSupplementInr: quote.roomSupplement,
       travellers,
       paymentStrategy: strategy,
@@ -121,9 +151,9 @@ export async function POST(req: NextRequest) {
       paymentStatus: "pending",
       amountPaidInr: 0,
       status: "pending",
-      bookedByRole: "user",
-      partnerId: destination?.partnerId || null,
-      userId: auth.userId,
+      bookedByRole: isPartner ? "partner" : "user",
+      partnerId: isPartner ? auth.userId : destination?.partnerId || null,
+      ...(isPartner ? {} : { userId: auth.userId }),
       holdExpiresAt: new Date(Date.now() + HOLD_MINUTES * 60 * 1000),
     });
 

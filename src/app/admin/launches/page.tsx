@@ -131,7 +131,7 @@ export default function AdminLaunchesPage() {
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, flexWrap: "wrap", gap: 1.5 }}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem", lineHeight: 1.2 }}>Partner Requests</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem", lineHeight: 1.2 }}>Tours Request</Typography>
           <Typography variant="caption" sx={{ color: "#64748b", fontSize: "0.75rem" }}>
             Partner requests to start a tour from their city — review, price, confirm with the partner and approve
           </Typography>

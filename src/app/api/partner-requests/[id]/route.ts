@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import PartnerRequest from "@/models/PartnerRequest";
 import { getAuthFromRequest } from "@/lib/auth";
+import Destination from "@/models/Destination";
+import { sendRejectionEmail } from "@/lib/partner-mail";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -20,8 +22,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (body.adminNotes !== undefined) update.adminNotes = String(body.adminNotes).slice(0, 1000);
     if (body.partnerId !== undefined) update.partnerId = body.partnerId || null;
 
+    const before = body.status === "rejected" ? await PartnerRequest.findById(id).select("status") : null;
     const updated = await PartnerRequest.findByIdAndUpdate(id, update, { new: true }).populate("destinationId", "name state partnerId");
     if (!updated) return NextResponse.json({ error: "Request not found" }, { status: 404 });
+    if (before && before.status !== "rejected") {
+      const open = (await Destination.find({ openForPartner: true, isActive: true, partnerId: null }).select("name state").sort({ name: 1 }).lean()).map((x: any) => ({ name: x.name, state: x.state }));
+      await sendRejectionEmail({ to: updated.email, name: updated.name, location: `${updated.city}, ${updated.state}`, open }).catch((e) => console.error("rejection mail failed", e));
+    }
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

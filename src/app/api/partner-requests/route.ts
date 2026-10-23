@@ -45,6 +45,12 @@ export async function POST(req: NextRequest) {
         { name: new RegExp(`^${esc(city)}$`, "i"), state: new RegExp(`^${esc(state)}$`, "i") },
       ],
     }).select("_id");
+    const closed = body.destinationId && mongoose.isValidObjectId(body.destinationId)
+      ? await Destination.findOne({ _id: body.destinationId, openForPartner: { $ne: true } }).select("_id")
+      : null;
+    if (closed) {
+      return NextResponse.json({ error: "This location isn't open for partners." }, { status: 400 });
+    }
     if (taken) {
       return NextResponse.json({ error: "This location already has a partner. Please choose a different location." }, { status: 409 });
     }

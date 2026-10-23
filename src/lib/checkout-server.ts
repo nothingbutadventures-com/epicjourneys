@@ -16,7 +16,9 @@ export async function loadOwnedBooking(req: NextRequest, ref: string) {
   if (!auth) return { error: "Please log in to continue.", status: 401 as const };
   const booking = await Booking.findOne({ bookingRef: ref });
   if (!booking) return { error: "Booking not found", status: 404 as const };
-  if (auth.role !== "admin" && String(booking.userId) !== auth.userId) {
+  // Partners can open bookings they made for customers.
+  const ownsAsPartner = auth.role === "partner" && String(booking.partnerId) === auth.userId && booking.bookedByRole === "partner";
+  if (auth.role !== "admin" && !ownsAsPartner && String(booking.userId) !== auth.userId) {
     return { error: "This booking belongs to another account.", status: 403 as const };
   }
   return { booking, auth };
@@ -30,12 +32,12 @@ export async function startInstallmentPayment(booking: any, index: number, auth:
   const inst = booking.installments.find((i: any) => i.index === index);
   if (!inst) throw new Error("Instalment not found");
 
-  const user = await User.findById(auth.userId).select("phone").lean<any>();
-  const prefill = {
-    name: auth.name,
-    email: auth.email,
-    contact: user?.phone || booking.customerPhone || "",
-  };
+  // For bookings a partner made, the payer details are the customer's, not the partner's.
+  const forCustomer = booking.bookedByRole === "partner";
+  const user = forCustomer ? null : await User.findById(auth.userId).select("phone").lean<any>();
+  const prefill = forCustomer
+    ? { name: booking.customerName, email: booking.customerEmail, contact: booking.customerPhone || "" }
+    : { name: auth.name, email: auth.email, contact: user?.phone || booking.customerPhone || "" };
   const base = {
     bookingRef: booking.bookingRef,
     index,

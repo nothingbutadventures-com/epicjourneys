@@ -23,6 +23,7 @@ export interface IDestination extends Document {
   partnerId?: mongoose.Types.ObjectId;
   addresses: IDestinationAddress[];
   isActive: boolean;
+  openForPartner: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,6 +60,7 @@ const DestinationSchema = new Schema<IDestination>(
     },
     addresses: { type: [AddressSchema], default: [] },
     isActive: { type: Boolean, default: true },
+    openForPartner: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

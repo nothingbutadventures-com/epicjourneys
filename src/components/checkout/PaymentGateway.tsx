@@ -40,10 +40,10 @@ function loadRazorpayScript(): Promise<boolean> {
   });
 }
 
-async function confirmOnServer(body: Record<string, unknown>) {
+async function confirmOnServer(body: Record<string, unknown>, headers: Record<string, string> = {}) {
   const res = await fetch("/api/checkout/confirm", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify(body),
   });
   const data = await res.json();
@@ -59,7 +59,9 @@ export default function PaymentGateway({
   payment,
   onSuccess,
   onClose,
+  headers,
 }: {
+  headers?: Record<string, string>;
   payment: PaymentDescriptor | null;
   onSuccess: (bookingRef: string) => void;
   onClose: () => void;
@@ -94,7 +96,7 @@ export default function PaymentGateway({
         handler: async (r: any) => {
           setBusy(true);
           try {
-            await confirmOnServer({ ref: payment.bookingRef, index: payment.index, razorpay: r });
+            await confirmOnServer({ ref: payment.bookingRef, index: payment.index, razorpay: r }, headers);
             setDone(true);
             setTimeout(() => onSuccess(payment.bookingRef), 900);
           } catch (e: any) {
@@ -108,6 +110,7 @@ export default function PaymentGateway({
       rzp.on("payment.failed", (resp: any) => setError(resp?.error?.description || "Payment failed. Please try again."));
       rzp.open();
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payment, onSuccess, onClose]);
 
   useEffect(() => {
@@ -128,7 +131,7 @@ export default function PaymentGateway({
     setBusy(true);
     setError(null);
     try {
-      await confirmOnServer({ ref: payment.bookingRef, index: payment.index, simulate: true });
+      await confirmOnServer({ ref: payment.bookingRef, index: payment.index, simulate: true }, headers);
       setDone(true);
       setTimeout(() => onSuccess(payment.bookingRef), 1100);
     } catch (e: any) {
@@ -192,7 +195,7 @@ export default function PaymentGateway({
               <Box sx={{ textAlign: "center", py: 2 }}>
                 <CheckCircleRoundedIcon sx={{ fontSize: 64, color: "#16a34a" }} />
                 <Typography sx={{ fontWeight: 800, fontSize: "1.15rem", mt: 1 }}>Payment successful</Typography>
-                <Typography sx={{ color: "#64748b", fontSize: "0.88rem" }}>Taking you to your booking…</Typography>
+                <Typography sx={{ color: "#64748b", fontSize: "0.88rem" }}>Finishing up…</Typography>
               </Box>
             ) : (
               <>

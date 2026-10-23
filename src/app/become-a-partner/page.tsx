@@ -3,15 +3,13 @@
 import React, { useEffect, useState } from "react";
 import {
   Alert,
-  Autocomplete,
   Box,
   Button,
   CircularProgress,
   Container,
   Grid,
   InputAdornment,
-  MenuItem,
-  Paper,
+    Paper,
   TextField,
   Typography,
 } from "@mui/material";
@@ -19,9 +17,9 @@ import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { INDIAN_STATES } from "@/lib/constants";
 
 interface City {
+  open?: boolean;
   id: string;
   name: string;
   state: string;
@@ -51,7 +49,6 @@ export default function BecomePartnerPage() {
   const [form, setForm] = useState(initial);
   const [cities, setCities] = useState<City[]>([]);
   const [city, setCity] = useState<City | null>(null);
-  const [cityText, setCityText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -59,7 +56,7 @@ export default function BecomePartnerPage() {
   useEffect(() => {
     fetch("/api/destinations")
       .then((r) => r.json())
-      .then((d) => d.success && setCities((d.data || []).map((x: any) => ({ id: x._id, name: x.name, state: x.state, hasPartner: Boolean(x.hasPartner) })).filter((c: City) => !c.hasPartner)))
+      .then((d) => d.success && setCities((d.data || []).map((x: any) => ({ id: x._id, name: x.name, state: x.state, hasPartner: Boolean(x.hasPartner), open: Boolean(x.openForPartner) })).filter((c: any) => c.open && !c.hasPartner)))
       .catch(() => {});
   }, []);
 
@@ -68,10 +65,9 @@ export default function BecomePartnerPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const cityName = (city?.name || cityText).trim();
-    const state = city?.state || form.state;
-    if (!cityName) return setError("Enter the city you want to partner for.");
-    if (!state) return setError("Select the state of that city.");
+    if (!city) return setError("Choose a location first.");
+    const cityName = city.name;
+    const state = city.state;
     setLoading(true);
     try {
       const res = await fetch("/api/partner-requests", {
@@ -122,16 +118,37 @@ export default function BecomePartnerPage() {
                   onClick={() => {
                     setForm(initial);
                     setCity(null);
-                    setCityText("");
                     setDone(false);
                   }}
                 >
                   Submit another request
                 </Button>
               </Paper>
+            ) : !city ? (
+              <Paper elevation={0} sx={{ p: { xs: 2.5, md: 4 }, border: "1px solid #E2E2E2" }}>
+                <Typography component="h2" sx={{ fontWeight: 800, fontSize: "1.4rem", mb: 0.5 }}>Locations open for partners</Typography>
+                <Typography sx={{ color: "#64748b", fontSize: "0.9rem", mb: 3 }}>Pick a location to start your request.</Typography>
+                {cities.length === 0 ? (
+                  <Typography sx={{ color: "#64748b" }}>No locations are open for partners right now. Please check back soon.</Typography>
+                ) : (
+                  <Grid container spacing={1.5}>
+                    {cities.map((c) => (
+                      <Grid key={c.id} size={{ xs: 12, sm: 6 }}>
+                        <Button fullWidth variant="outlined" onClick={() => setCity(c)} sx={{ justifyContent: "flex-start", textAlign: "left", py: 1.5, px: 2, color: "#0f172a", borderColor: "#E2E2E2", "&:hover": { borderColor: "#FF9900", bgcolor: "#FFF6E5" } }}>
+                          <Box>
+                            <Typography sx={{ fontWeight: 800 }}>{c.name}</Typography>
+                            <Typography sx={{ fontSize: "0.82rem", color: "#64748b" }}>{c.state}</Typography>
+                          </Box>
+                        </Button>
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+              </Paper>
             ) : (
               <Paper elevation={0} sx={{ p: { xs: 2.5, md: 4 }, border: "1px solid #E2E2E2" }}>
-                <Typography component="h2" sx={{ fontWeight: 800, fontSize: "1.4rem", mb: 0.5 }}>Request a location</Typography>
+                <Button size="small" onClick={() => setCity(null)} sx={{ mb: 1, color: "#475569" }}>← Choose another location</Button>
+                <Typography component="h2" sx={{ fontWeight: 800, fontSize: "1.4rem", mb: 0.5 }}>Request {city.name}</Typography>
                 <Typography sx={{ color: "#64748b", fontSize: "0.9rem", mb: 3 }}>Fields marked * are required.</Typography>
                 <form onSubmit={submit}>
                   {error && <Alert severity="error" sx={{ mb: 2.5 }}>{error}</Alert>}
@@ -168,35 +185,9 @@ export default function BecomePartnerPage() {
                         slotProps={{ input: { startAdornment: <InputAdornment position="start">+91</InputAdornment> }, htmlInput: { inputMode: "numeric", maxLength: 12 } }}
                       />
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <Autocomplete
-                        freeSolo
-                        options={cities}
-                        getOptionLabel={(o) => (typeof o === "string" ? o : `${o.name}, ${o.state}`)}
-                        value={city}
-                        inputValue={cityText}
-                        onInputChange={(_, v) => {
-                          setCityText(v);
-                          if (city && v !== `${city.name}, ${city.state}`) setCity(null);
-                        }}
-                        onChange={(_, v) => {
-                          if (v && typeof v !== "string") {
-                            setCity(v);
-                            setForm((f) => ({ ...f, state: v.state }));
-                          }
-                        }}
-                        renderInput={(p) => <TextField {...p} label="City you want to partner for" required helperText="Locations that already have a partner aren't listed. You can also type a new city." />}
-                      />
+                    <Grid size={{ xs: 12 }}>
+                      <TextField label="Location" fullWidth value={city ? `${city.name}, ${city.state}` : ""} slotProps={{ input: { readOnly: true } }} />
                     </Grid>
-                    {!city && (
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <TextField select label="State" required fullWidth value={form.state} onChange={set("state")}>
-                          {INDIAN_STATES.map((s) => (
-                            <MenuItem key={s} value={s}>{s}</MenuItem>
-                          ))}
-                        </TextField>
-                      </Grid>
-                    )}
                     <Grid size={{ xs: 12 }}>
                       <TextField label="Your address (optional)" fullWidth multiline minRows={2} value={form.address} onChange={set("address")} />
                     </Grid>

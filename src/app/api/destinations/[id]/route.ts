@@ -5,6 +5,7 @@ import User from "@/models/User";
 import Tour from "@/models/Tour";
 import { getAuthFromRequest } from "@/lib/auth";
 import { sanitizeAddresses } from "@/lib/address";
+import { settleApplicants } from "@/lib/partner-mail";
 
 export async function GET(
   req: NextRequest,
@@ -95,6 +96,9 @@ export async function PUT(
       }
     }
 
+    const willHavePartner = body.partnerId !== undefined ? Boolean(body.partnerId) : Boolean(existingDest.partnerId);
+    if (willHavePartner) body.openForPartner = false;
+
     const updated = await Destination.findByIdAndUpdate(
       id,
       {
@@ -111,9 +115,15 @@ export async function PUT(
         ...(body.partnerId !== undefined && { partnerId: body.partnerId || null }),
         ...(addresses !== undefined && { addresses }),
         ...(body.isActive !== undefined && { isActive: body.isActive }),
+        ...(body.openForPartner !== undefined && { openForPartner: Boolean(body.openForPartner) }),
       },
       { new: true }
     ).populate("partnerId", "name email phone secondaryPhone");
+
+    if (body.partnerId && body.partnerId !== existingDest.partnerId?.toString()) {
+      const u: any = await User.findById(body.partnerId).select("name email");
+      if (u) await settleApplicants({ destinationId: id, partnerId: String(u._id), email: u.email, name: u.name });
+    }
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {

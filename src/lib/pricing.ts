@@ -32,3 +32,25 @@ export function computeQuote(opts: {
 }
 
 export const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
+
+export interface PartnerDiscountLike {
+  discountType: "percentage" | "fixed";
+  value: number;
+  validUntil?: string | Date | null;
+  isActive?: boolean;
+}
+
+/** A discount can be used while it is active and its last valid day (inclusive) hasn't passed. */
+export function discountUsable(d: PartnerDiscountLike, now = new Date()) {
+  if (d.isActive === false) return false;
+  if (!d.validUntil) return true;
+  const end = new Date(d.validUntil);
+  end.setHours(23, 59, 59, 999);
+  return end.getTime() >= now.getTime();
+}
+
+/** Partner discount taken off the booking total: a percentage of it, or a flat ₹ amount. Never more than the total. */
+export function partnerDiscountAmount(subtotal: number, d: PartnerDiscountLike) {
+  const raw = d.discountType === "percentage" ? (subtotal * Math.min(100, Math.max(0, d.value))) / 100 : Math.max(0, d.value);
+  return Math.min(Math.round(raw), Math.max(0, Math.round(subtotal)));
+}

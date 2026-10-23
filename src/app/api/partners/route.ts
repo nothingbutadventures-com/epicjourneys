@@ -4,6 +4,9 @@ import User from "@/models/User";
 import Destination from "@/models/Destination";
 import Booking from "@/models/Booking";
 import { getAuthFromRequest, hashPassword } from "@/lib/auth";
+import Discount from "@/models/Discount";
+import { PARTNER_DISCOUNT_FIELDS, sanitizePartnerDiscountIds } from "@/lib/partner-discounts";
+import { settleApplicants } from "@/lib/partner-mail";
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,7 +19,7 @@ export async function GET(req: NextRequest) {
     }
 
     await connectToDatabase();
-    if (!Destination) {}
+    if (!Destination || !Discount) {}
 
     const filter: any = { role: "partner" };
     if (auth.role === "partner") {
@@ -26,6 +29,7 @@ export async function GET(req: NextRequest) {
     const partners = await User.find(filter)
       .select("-password")
       .populate("assignedDestination")
+      .populate("partnerDiscountIds", PARTNER_DISCOUNT_FIELDS)
       .sort({ createdAt: -1 })
       .lean();
 
@@ -109,6 +113,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const disc = await sanitizePartnerDiscountIds(body.partnerDiscountIds ?? []);
+    if (disc.error) return NextResponse.json({ error: disc.error }, { status: 400 });
+
     const hashedPassword = await hashPassword(password);
 
     const partner = await User.create({
@@ -119,6 +126,7 @@ export async function POST(req: NextRequest) {
       phone: phone || "",
       ...extra,
       assignedDestination: assignedDestination || null,
+      partnerDiscountIds: disc.ids,
     });
 
     if (assignedDestination) {
@@ -127,9 +135,21 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (assignedDestination) {
+      await settleApplicants({
+        destinationId: String(assignedDestination),
+        partnerId: String(partner._id),
+        email: partner.email,
+        name: partner.name,
+        password,
+        requestId: body.requestId || null,
+      });
+    }
+
     const created = await User.findById(partner._id)
       .select("-password")
-      .populate("assignedDestination");
+      .populate("assignedDestination")
+      .populate("partnerDiscountIds", PARTNER_DISCOUNT_FIELDS);
 
     return NextResponse.json({
       success: true,

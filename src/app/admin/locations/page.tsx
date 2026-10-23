@@ -35,6 +35,7 @@ import {
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
 import { INDIAN_STATES, KNOWN_DESTINATION_COORDINATES } from "@/lib/constants";
@@ -114,6 +115,19 @@ export default function AdminLocationsPage() {
   const visible = destinations.filter((d) =>
     `${d.name} ${d.state} ${d.partnerId?.name || ""}`.toLowerCase().includes(search.toLowerCase())
   );
+
+  const [openStates, setOpenStates] = useState<Set<string>>(new Set());
+  const groups = useMemo(() => {
+    const m = new Map<string, any[]>();
+    visible.forEach((d) => m.set(d.state, [...(m.get(d.state) || []), d]));
+    return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  }, [visible]);
+  const toggleState = (st: string) =>
+    setOpenStates((prev) => {
+      const n = new Set(prev);
+      n.has(st) ? n.delete(st) : n.add(st);
+      return n;
+    });
 
   const resetForm = () => {
     setEditingId(null);
@@ -273,11 +287,40 @@ export default function AdminLocationsPage() {
                   <TableCell>Starting Addresses</TableCell>
                   <TableCell>Assigned Partner</TableCell>
                   <TableCell>Active Tours</TableCell>
+                  <TableCell>Open for Partner</TableCell>
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {visible.map((dest) => (
+                {groups.map(([st, items]) => {
+                  const expanded = Boolean(search.trim()) || openStates.has(st);
+                  return (
+                  <React.Fragment key={st}>
+                  <TableRow hover onClick={() => toggleState(st)} sx={{ cursor: "pointer", bgcolor: "#f8fafc", "& td": { borderBottom: "1px solid #e2e8f0" } }}>
+                    <TableCell colSpan={8} sx={{ py: 1 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <ExpandMoreRoundedIcon sx={{ fontSize: 20, color: "#475569", transform: expanded ? "none" : "rotate(-90deg)", transition: "transform .15s" }} />
+                        <Typography sx={{ fontWeight: 700, fontSize: "0.85rem", color: "#0f172a" }}>{st}</Typography>
+                        <Chip label={`${items.length} ${items.length === 1 ? "location" : "locations"}`} size="small" sx={{ borderRadius: "4px", height: 18, fontSize: "0.65rem", bgcolor: "#e2e8f0", color: "#0f172a", fontWeight: 600 }} />
+                        {(() => {
+                          const tours = items.reduce((n, d) => n + (d.tourCount || 0), 0);
+                          const open = items.filter((d) => d.openForPartner && !d.partnerId).length;
+                          const assigned = items.filter((d) => d.partnerId).length;
+                          const inactive = items.filter((d) => d.isActive === false).length;
+                          return (
+                            <>
+                              <Chip label={`${tours} ${tours === 1 ? "tour" : "tours"}`} size="small" sx={{ borderRadius: "4px", height: 18, fontSize: "0.65rem", bgcolor: "#f1f5f9", color: "#0f172a", fontWeight: 600 }} />
+                              {open > 0 && <Chip label={`${open} open for partner`} size="small" sx={{ borderRadius: "4px", height: 18, fontSize: "0.65rem", bgcolor: "#dcfce7", color: "#166534", fontWeight: 600 }} />}
+                              {assigned > 0 && <Chip label={`${assigned} with partner`} size="small" sx={{ borderRadius: "4px", height: 18, fontSize: "0.65rem", bgcolor: "#dbeafe", color: "#1e40af", fontWeight: 600 }} />}
+                              {items.length - assigned > 0 && <Chip label={`${items.length - assigned} unassigned`} size="small" sx={{ borderRadius: "4px", height: 18, fontSize: "0.65rem", bgcolor: "#fffbeb", color: "#b45309", fontWeight: 600 }} />}
+                              {inactive > 0 && <Chip label={`${inactive} inactive`} size="small" sx={{ borderRadius: "4px", height: 18, fontSize: "0.65rem", bgcolor: "#f1f5f9", color: "#64748b", fontWeight: 600 }} />}
+                            </>
+                          );
+                        })()}
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                  {expanded && items.map((dest) => (
                   <TableRow key={dest._id} hover sx={{ "&:last-child td": { borderBottom: 0 }, opacity: dest.isActive === false ? 0.6 : 1 }}>
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
@@ -338,6 +381,23 @@ export default function AdminLocationsPage() {
                     <TableCell>
                       <Chip label={`${dest.tourCount || 0} Tours`} size="small" sx={{ borderRadius: "4px", height: 18, fontSize: "0.65rem", bgcolor: "#f1f5f9", color: "#0f172a", fontWeight: 600 }} />
                     </TableCell>
+                    <TableCell>
+                      <Tooltip title={dest.partnerId ? "A partner is already assigned" : dest.openForPartner ? "Visible on Become a Partner" : "Internal use only"}>
+                        <span>
+                          <Switch
+                            size="small"
+                            checked={Boolean(dest.openForPartner) && !dest.partnerId}
+                            disabled={Boolean(dest.partnerId)}
+                            onChange={async (e) => {
+                              const v = e.target.checked;
+                              setDestinations((prev: any[]) => prev.map((x) => (x._id === dest._id ? { ...x, openForPartner: v } : x)));
+                              const res = await fetch(`/api/destinations/${dest._id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ openForPartner: v }) });
+                              if (!res.ok) setDestinations((prev: any[]) => prev.map((x) => (x._id === dest._id ? { ...x, openForPartner: !v } : x)));
+                            }}
+                          />
+                        </span>
+                      </Tooltip>
+                    </TableCell>
                     <TableCell align="right">
                       <IconButton size="small" onClick={() => openEdit(dest)} aria-label="Edit destination" sx={{ color: "#475569", p: 0.5, borderRadius: "4px" }}>
                         <EditRoundedIcon sx={{ fontSize: 16 }} />
@@ -347,10 +407,13 @@ export default function AdminLocationsPage() {
                       </IconButton>
                     </TableCell>
                   </TableRow>
-                ))}
+                  ))}
+                  </React.Fragment>
+                  );
+                })}
                 {visible.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 4, color: "#94a3b8", fontSize: "0.8rem" }}>
+                    <TableCell colSpan={8} align="center" sx={{ py: 4, color: "#94a3b8", fontSize: "0.8rem" }}>
                       No destinations found
                     </TableCell>
                   </TableRow>

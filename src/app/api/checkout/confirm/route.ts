@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { loadOwnedBooking } from "@/lib/checkout-server";
 import { razorpayConfigured, verifyRazorpaySignature } from "@/lib/razorpay";
+import User from "@/models/User";
+import { ensureCustomerAccount, sendCustomerBookingEmail } from "@/lib/customer-account";
 
 /** Marks an instalment paid after a verified Razorpay payment (or a simulated one when keys are empty). */
 export async function POST(req: NextRequest) {
@@ -36,12 +38,29 @@ export async function POST(req: NextRequest) {
     inst.paidAt = new Date();
     booking.amountPaidInr = booking.installments.filter((x: any) => x.status === "paid").reduce((s: number, x: any) => s + x.amountInr, 0);
     booking.paymentStatus = booking.amountPaidInr >= booking.totalAmountInr ? "paid" : "partial";
-    if (booking.status === "pending") {
+    const firstConfirmation = booking.status === "pending";
+    let newPassword: string | undefined;
+    if (firstConfirmation) {
       booking.status = "confirmed";
       booking.holdExpiresAt = null;
+      // Bookings made by a partner give the customer their own account to log in and see the trip.
+      if (booking.bookedByRole === "partner" && !booking.userId) {
+        try {
+          const acct = await ensureCustomerAccount(booking);
+          booking.userId = acct.userId as any;
+          newPassword = acct.password;
+        } catch (e) {
+          console.error("customer account failed", e);
+        }
+      }
     }
     booking.markModified("installments");
     await booking.save();
+
+    if (firstConfirmation && booking.bookedByRole === "partner") {
+      const partner: any = booking.partnerId ? await User.findById(booking.partnerId).select("name phone email").lean() : null;
+      await sendCustomerBookingEmail(booking.toObject(), { password: newPassword, partner }).catch((e) => console.error("customer booking mail failed", e));
+    }
 
     return NextResponse.json({ success: true, bookingRef: booking.bookingRef, paymentStatus: booking.paymentStatus });
   } catch (error: any) {

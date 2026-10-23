@@ -16,6 +16,7 @@ export interface IUser extends Document {
   otpAttempts?: number;
   otpLastSent?: Date;
   assignedDestination?: mongoose.Types.ObjectId;
+  partnerDiscountIds?: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,6 +48,8 @@ const UserSchema = new Schema<IUser>(
       ref: "Destination",
       default: null,
     },
+    // Partner-only discounts an admin has attached; the partner can apply them when booking for a customer.
+    partnerDiscountIds: [{ type: Schema.Types.ObjectId, ref: "Discount" }],
   },
   { timestamps: true }
 );

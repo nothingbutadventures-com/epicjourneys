@@ -27,12 +27,21 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Tab,
+  Tabs,
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import PercentRoundedIcon from "@mui/icons-material/PercentRounded";
 
+const authHeaders = (): Record<string, string> => {
+  const t = typeof window !== "undefined" ? localStorage.getItem("epic_token") : null;
+  return t ? { Authorization: `Bearer ${t}` } : {};
+};
+
 export default function AdminDiscountsPage() {
+  const [tab, setTab] = useState<"all" | "normal" | "partner">("all");
+  const [kind, setKind] = useState<"normal" | "partner">("normal");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +56,8 @@ export default function AdminDiscountsPage() {
   const [validUntil, setValidUntil] = useState("");
   const [isActive, setIsActive] = useState(true);
 
+  const shown = items.filter((i) => tab === "all" || (tab === "partner" ? i.kind === "partner" : i.kind !== "partner"));
+
   useEffect(() => {
     fetchItems();
   }, []);
@@ -54,7 +65,7 @@ export default function AdminDiscountsPage() {
   const fetchItems = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/discounts?all=true");
+      const res = await fetch("/api/discounts?all=true&kind=all", { headers: authHeaders() });
       const data = await res.json();
       if (data.success) {
         setItems(data.data || []);
@@ -74,8 +85,9 @@ export default function AdminDiscountsPage() {
     try {
       const res = await fetch("/api/discounts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
+          kind,
           name,
           discountType,
           value: Number(value),
@@ -107,7 +119,7 @@ export default function AdminDiscountsPage() {
     try {
       await fetch(`/api/discounts/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ isActive: !current }),
       });
       fetchItems();
@@ -117,9 +129,9 @@ export default function AdminDiscountsPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete discount offer "${name}"?`)) return;
+    if (!confirm(`Delete discount offer "${name}"? It will also be removed from any partner it is attached to.`)) return;
     try {
-      await fetch(`/api/discounts/${id}`, { method: "DELETE" });
+      await fetch(`/api/discounts/${id}`, { method: "DELETE", headers: authHeaders() });
       fetchItems();
     } catch (e) {
       console.error(e);
@@ -145,14 +157,14 @@ export default function AdminDiscountsPage() {
             </Typography>
           </Box>
           <Typography variant="body2" sx={{ color: "#64748b" }}>
-            Create promotional discount rates to assign directly when creating or managing tours
+            Normal discounts go on tour dates. Partner discounts are attached to partners, who can apply them on top when booking for a customer
           </Typography>
         </Box>
 
         <Button
           variant="contained"
           startIcon={<AddRoundedIcon sx={{ fontSize: 18 }} />}
-          onClick={() => setOpenDialog(true)}
+          onClick={() => { setKind(tab === "partner" ? "partner" : "normal"); setOpenDialog(true); }}
           sx={{ borderRadius: "4px", px: 2 }}
         >
           Add Discount
@@ -164,6 +176,16 @@ export default function AdminDiscountsPage() {
           {error}
         </Alert>
       )}
+
+      <Tabs
+        value={tab}
+        onChange={(_, v) => setTab(v)}
+        sx={{ mb: 2, minHeight: 36, borderBottom: "1px solid #e2e8f0", "& .MuiTab-root": { minHeight: 36, fontSize: "0.82rem", textTransform: "none", fontWeight: 600 }, "& .MuiTabs-indicator": { bgcolor: "#0f172a" } }}
+      >
+        <Tab value="all" label={`All (${items.length})`} />
+        <Tab value="normal" label={`Normal (${items.filter((i) => i.kind !== "partner").length})`} />
+        <Tab value="partner" label={`Partner (${items.filter((i) => i.kind === "partner").length})`} />
+      </Tabs>
 
       {/* Table Paper */}
       <Paper
@@ -179,6 +201,7 @@ export default function AdminDiscountsPage() {
             <TableHead>
               <TableRow sx={{ bgcolor: "#f8fafc" }}>
                 <TableCell sx={{ fontWeight: 700, py: 1.25 }}>Discount Name</TableCell>
+                <TableCell sx={{ fontWeight: 700, py: 1.25 }}>Type</TableCell>
                 <TableCell sx={{ fontWeight: 700, py: 1.25 }}>Reduction</TableCell>
                 <TableCell sx={{ fontWeight: 700, py: 1.25 }}>Description</TableCell>
                 <TableCell sx={{ fontWeight: 700, py: 1.25 }}>Valid Until</TableCell>
@@ -189,21 +212,28 @@ export default function AdminDiscountsPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
                     <CircularProgress size={28} sx={{ color: "#0f172a" }} />
                   </TableCell>
                 </TableRow>
-              ) : items.length === 0 ? (
+              ) : shown.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 6, color: "#64748b" }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 6, color: "#64748b" }}>
                     No discounts found. Click "Add Discount" to create one.
                   </TableCell>
                 </TableRow>
               ) : (
-                items.map((item) => (
+                shown.map((item) => (
                   <TableRow key={item._id} hover sx={{ "&:last-child td": { border: 0 } }}>
                     <TableCell sx={{ fontWeight: 600, color: "#0f172a" }}>
                       {item.name}
+                    </TableCell>
+                    <TableCell>
+                      {item.kind === "partner" ? (
+                        <Chip label={`Partner · ${item.assignedPartners || 0} assigned`} size="small" sx={{ bgcolor: "#fff7ed", color: "#c2410c", fontWeight: 700, fontSize: "0.7rem", borderRadius: "4px" }} />
+                      ) : (
+                        <Chip label="Normal" size="small" sx={{ bgcolor: "#f1f5f9", color: "#475569", fontWeight: 700, fontSize: "0.7rem", borderRadius: "4px" }} />
+                      )}
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -276,7 +306,7 @@ export default function AdminDiscountsPage() {
       >
         <form onSubmit={handleSave}>
           <DialogTitle sx={{ fontWeight: 800, color: "#0f172a", pb: 1 }}>
-            Create Tour Discount
+            {kind === "partner" ? "Create Partner Discount" : "Create Tour Discount"}
           </DialogTitle>
           <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "16px !important" }}>
             <TextField
@@ -289,6 +319,14 @@ export default function AdminDiscountsPage() {
               size="small"
             />
 
+            <FormControl size="small" fullWidth>
+              <InputLabel>Discount for</InputLabel>
+              <Select value={kind} label="Discount for" onChange={(e) => setKind(e.target.value as any)} sx={{ borderRadius: "4px" }}>
+                <MenuItem value="normal">Normal — tour dates, everyone</MenuItem>
+                <MenuItem value="partner">Partner — attached to partners, applied on top when they book</MenuItem>
+              </Select>
+            </FormControl>
+
             <Box sx={{ display: "flex", gap: 2 }}>
               <FormControl size="small" sx={{ width: 180 }}>
                 <InputLabel>Type</InputLabel>
@@ -299,7 +337,7 @@ export default function AdminDiscountsPage() {
                   sx={{ borderRadius: "4px" }}
                 >
                   <MenuItem value="percentage">Percentage (%)</MenuItem>
-                  <MenuItem value="fixed">Fixed INR (₹)</MenuItem>
+                  <MenuItem value="fixed">{kind === "partner" ? "Flat ₹ off the booking" : "Fixed INR (₹)"}</MenuItem>
                 </Select>
               </FormControl>
               <TextField
@@ -342,7 +380,7 @@ export default function AdminDiscountsPage() {
                   size="small"
                 />
               }
-              label="Active (Display in tour discount selector)"
+              label={kind === "partner" ? "Active (partners can use it)" : "Active (Display in tour discount selector)"}
               sx={{ color: "#334155" }}
             />
           </DialogContent>
@@ -353,7 +391,7 @@ export default function AdminDiscountsPage() {
             <Button
               type="submit"
               variant="contained"
-              disabled={saving || !name || value === ""}
+              disabled={saving || !name || value === "" || Number(value) <= 0 || (discountType === "percentage" && Number(value) > 100)}
               sx={{ borderRadius: "4px", px: 2.5 }}
             >
               {saving ? <CircularProgress size={18} sx={{ color: "#ffffff" }} /> : "Save Discount"}

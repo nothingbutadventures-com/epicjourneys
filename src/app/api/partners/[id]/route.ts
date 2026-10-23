@@ -3,6 +3,9 @@ import { connectToDatabase } from "@/lib/mongodb";
 import User from "@/models/User";
 import Destination from "@/models/Destination";
 import { getAuthFromRequest, hashPassword } from "@/lib/auth";
+import { settleApplicants } from "@/lib/partner-mail";
+import Discount from "@/models/Discount";
+import { PARTNER_DISCOUNT_FIELDS, sanitizePartnerDiscountIds } from "@/lib/partner-discounts";
 
 export async function GET(
   req: NextRequest,
@@ -63,10 +66,16 @@ export async function PUT(
     for (const k of ["secondaryPhone", "companyName", "address", "notes"] as const) {
       if (body[k] !== undefined) updateData[k] = String(body[k]).trim();
     }
+    if (body.partnerDiscountIds !== undefined) {
+      const disc = await sanitizePartnerDiscountIds(body.partnerDiscountIds);
+      if (disc.error) return NextResponse.json({ error: disc.error }, { status: 400 });
+      updateData.partnerDiscountIds = disc.ids;
+    }
     if (body.password) {
       updateData.password = await hashPassword(body.password);
     }
 
+    let assignedNow: string | null = null;
     if (body.assignedDestination !== undefined) {
       const oldDestId = partner.assignedDestination?.toString();
       const newDestId = body.assignedDestination || null;
@@ -90,12 +99,19 @@ export async function PUT(
           });
         }
         updateData.assignedDestination = newDestId;
+        if (newDestId) assignedNow = String(newDestId);
       }
     }
 
+    if (!Discount) {}
     const updated = await User.findByIdAndUpdate(id, updateData, { new: true })
       .select("-password")
-      .populate("assignedDestination");
+      .populate("assignedDestination")
+      .populate("partnerDiscountIds", PARTNER_DISCOUNT_FIELDS);
+
+    if (assignedNow && updated) {
+      await settleApplicants({ destinationId: assignedNow, partnerId: String(updated._id), email: updated.email, name: updated.name, password: body.password || undefined });
+    }
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {

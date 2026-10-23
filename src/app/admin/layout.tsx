@@ -32,6 +32,7 @@ import BookOnlineRoundedIcon from "@mui/icons-material/BookOnlineRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
+import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 import StyleRoundedIcon from "@mui/icons-material/StyleRounded";
 import FitnessCenterRoundedIcon from "@mui/icons-material/FitnessCenterRounded";
 import ExploreRoundedIcon from "@mui/icons-material/ExploreRounded";
@@ -42,6 +43,10 @@ import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
 import StarRateRoundedIcon from "@mui/icons-material/StarRateRounded";
 import RocketLaunchRoundedIcon from "@mui/icons-material/RocketLaunchRounded";
 import ContactSupportRoundedIcon from "@mui/icons-material/ContactSupportRounded";
+import PersonAddAlt1RoundedIcon from "@mui/icons-material/PersonAddAlt1Rounded";
+import WorkRoundedIcon from "@mui/icons-material/WorkRounded";
+import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
+import AssignmentIndRoundedIcon from "@mui/icons-material/AssignmentIndRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 
 const DRAWER_WIDTH = 230;
@@ -71,14 +76,20 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    text: "Tours Management",
-    href: "/admin/tours",
+    text: "Tours",
     icon: <LuggageRoundedIcon sx={{ fontSize: 18 }} />,
-  },
-  {
-    text: "Partner Requests",
-    href: "/admin/launches",
-    icon: <RocketLaunchRoundedIcon sx={{ fontSize: 18 }} />,
+    children: [
+      {
+        text: "Tours Management",
+        href: "/admin/tours",
+        icon: <MapRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+      {
+        text: "Tours Request",
+        href: "/admin/launches",
+        icon: <RocketLaunchRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+    ],
   },
   {
     text: "Destinations & Cities",
@@ -86,44 +97,89 @@ const NAV_ITEMS: NavItem[] = [
     icon: <MapRoundedIcon sx={{ fontSize: 18 }} />,
   },
   {
-    text: "Partner Accounts",
-    href: "/admin/partners",
+    text: "Partners",
     icon: <HandshakeRoundedIcon sx={{ fontSize: 18 }} />,
+    children: [
+      {
+        text: "Partner Accounts",
+        href: "/admin/partners",
+        icon: <PeopleAltRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+      {
+        text: "Partner Requests",
+        href: "/admin/partner-requests",
+        icon: <PersonAddAlt1RoundedIcon sx={{ fontSize: 16 }} />,
+      },
+    ],
   },
   {
-    text: "Passenger Bookings",
-    href: "/admin/bookings",
+    text: "Bookings",
     icon: <BookOnlineRoundedIcon sx={{ fontSize: 18 }} />,
+    children: [
+      {
+        text: "Passenger Bookings",
+        href: "/admin/bookings",
+        icon: <BookOnlineRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+      {
+        text: "Cancellations",
+        href: "/admin/cancellations",
+        icon: <EventBusyRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+    ],
   },
   {
-    text: "Travel Styles",
-    href: "/admin/travel-styles",
-    icon: <StyleRoundedIcon sx={{ fontSize: 18 }} />,
-  },
-  {
-    text: "Physical Rating",
-    href: "/admin/physical-ratings",
-    icon: <FitnessCenterRoundedIcon sx={{ fontSize: 18 }} />,
+    text: "Categories",
+    icon: <CategoryRoundedIcon sx={{ fontSize: 18 }} />,
+    children: [
+      {
+        text: "Travel Styles",
+        href: "/admin/travel-styles",
+        icon: <StyleRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+      {
+        text: "Physical Rating",
+        href: "/admin/physical-ratings",
+        icon: <FitnessCenterRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+    ],
   },
   {
     text: "Discounts",
-    href: "/admin/discounts",
     icon: <PercentRoundedIcon sx={{ fontSize: 18 }} />,
+    children: [
+      {
+        text: "Discounts",
+        href: "/admin/discounts",
+        icon: <PercentRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+      {
+        text: "Promo Codes",
+        href: "/admin/promo-codes",
+        icon: <ConfirmationNumberRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+    ],
   },
   {
-    text: "Promo Codes",
-    href: "/admin/promo-codes",
-    icon: <ConfirmationNumberRoundedIcon sx={{ fontSize: 18 }} />,
+    text: "Careers",
+    icon: <WorkRoundedIcon sx={{ fontSize: 18 }} />,
+    children: [
+      {
+        text: "Job Openings",
+        href: "/admin/careers",
+        icon: <BadgeRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+      {
+        text: "Applications",
+        href: "/admin/career-applications",
+        icon: <AssignmentIndRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+    ],
   },
   {
     text: "User Management",
     href: "/admin/users",
     icon: <PeopleAltRoundedIcon sx={{ fontSize: 18 }} />,
-  },
-  {
-    text: "Cancellations",
-    href: "/admin/cancellations",
-    icon: <EventBusyRoundedIcon sx={{ fontSize: 18 }} />,
   },
   {
     text: "Reviews",

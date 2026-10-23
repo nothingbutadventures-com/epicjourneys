@@ -6,6 +6,9 @@ import Destination from "@/models/Destination";
 import User from "@/models/User";
 import { getAuthFromRequest } from "@/lib/auth";
 import { bookedSeatsByDeparture } from "@/lib/departures";
+import Discount from "@/models/Discount";
+import mongoose from "mongoose";
+import { discountUsable, discountedUnitPrice, partnerDiscountAmount } from "@/lib/pricing";
 
 export async function GET(req: NextRequest) {
   try {
@@ -75,6 +78,7 @@ export async function POST(req: NextRequest) {
       departureId,
       numberOfTravelers,
       specialRequests,
+      partnerDiscountId,
     } = body;
 
     if (
@@ -114,6 +118,16 @@ export async function POST(req: NextRequest) {
       partnerId = (tour.destinationId as any).partnerId;
     }
 
+    // Partners can only book tours that start from their own location.
+    if (isPartner) {
+      const me: any = await User.findById(auth!.userId).select("assignedDestination").lean();
+      const myCity = me?.assignedDestination ? String(me.assignedDestination) : "";
+      const startsHere = (tour.departures || []).some((d: any) => String((d.cityId as any)?._id || d.cityId) === myCity);
+      if (!myCity || !startsHere) {
+        return NextResponse.json({ error: "You can only book tours that start from your own location." }, { status: 403 });
+      }
+    }
+
     const travelers = Math.max(1, Number(numberOfTravelers) || 1);
 
     // Public bookings must pick one of the tour's scheduled departures. Partner/admin
@@ -123,6 +137,12 @@ export async function POST(req: NextRequest) {
       departure = (tour.departures || []).find((d: any) => String(d._id) === String(departureId));
       if (!departure) {
         return NextResponse.json({ error: "Selected date is not available for this tour." }, { status: 400 });
+      }
+      if (isPartner) {
+        const me: any = await User.findById(auth!.userId).select("assignedDestination").lean();
+        if (String((departure.cityId as any)?._id || departure.cityId) !== String(me?.assignedDestination)) {
+          return NextResponse.json({ error: "That departure doesn't start from your location." }, { status: 403 });
+        }
       }
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -137,14 +157,37 @@ export async function POST(req: NextRequest) {
           { status: 409 }
         );
       }
-    } else if (!isPartner && !(auth && auth.role === "admin")) {
+    } else if (isPartner) {
+      return NextResponse.json({ error: "Please choose a departure date for this booking." }, { status: 400 });
+    } else if (!(auth && auth.role === "admin")) {
       return NextResponse.json({ error: "Please choose one of the available dates." }, { status: 400 });
     }
 
     const discount = departure ? departure.discountPercentage || 0 : 0;
     const basePrice = departure ? departure.price ?? tour.priceInr : tour.priceInr;
-    const pricePerPerson = Math.round(basePrice * (1 - discount / 100));
-    const totalAmountInr = travelers * pricePerPerson;
+    const pricePerPerson = discountedUnitPrice(basePrice, discount);
+    const subtotal = travelers * pricePerPerson;
+
+    // Partner discount stacks on top of the tour's own discount. Only the booking partner's
+    // own attached, active and unexpired partner discounts are accepted.
+    let partnerDiscount: any = null;
+    let partnerDiscountInr = 0;
+    if (partnerDiscountId) {
+      if (!isPartner) {
+        return NextResponse.json({ error: "Only partners can apply a partner discount." }, { status: 403 });
+      }
+      const owner: any = await User.findById(auth!.userId).select("partnerDiscountIds").lean();
+      const attached = (owner?.partnerDiscountIds || []).map(String);
+      if (!mongoose.isValidObjectId(partnerDiscountId) || !attached.includes(String(partnerDiscountId))) {
+        return NextResponse.json({ error: "That discount isn't available to your account." }, { status: 400 });
+      }
+      partnerDiscount = await Discount.findOne({ _id: partnerDiscountId, kind: "partner" }).lean();
+      if (!partnerDiscount || !discountUsable(partnerDiscount)) {
+        return NextResponse.json({ error: "That discount is no longer active or has expired." }, { status: 400 });
+      }
+      partnerDiscountInr = partnerDiscountAmount(subtotal, partnerDiscount);
+    }
+    const totalAmountInr = subtotal - partnerDiscountInr;
 
     // Generate readable reference
     const randomSuffix = Math.floor(100000 + Math.random() * 900000);
@@ -169,6 +212,9 @@ export async function POST(req: NextRequest) {
       numberOfTravelers: travelers,
       pricePerPerson,
       totalAmountInr,
+      ...(partnerDiscount
+        ? { partnerDiscountId: partnerDiscount._id, partnerDiscountName: partnerDiscount.name, partnerDiscountInr }
+        : {}),
       specialRequests: specialRequests || "",
       status: "confirmed",
       bookedByRole,

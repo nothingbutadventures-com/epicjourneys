@@ -44,6 +44,9 @@ export interface IBooking extends Document {
   userId?: mongoose.Types.ObjectId;
   travellers: IBookingTraveller[];
   roomSupplementInr: number;
+  partnerDiscountId?: mongoose.Types.ObjectId;
+  partnerDiscountName?: string;
+  partnerDiscountInr: number;
   paymentStrategy: "full" | "deposit" | "emi";
   installments: IInstallment[];
   paymentStatus: "pending" | "partial" | "paid";
@@ -124,6 +127,10 @@ const BookingSchema = new Schema<IBooking>(
     userId: { type: Schema.Types.ObjectId, ref: "User" },
     travellers: { type: [TravellerSchema], default: [] },
     roomSupplementInr: { type: Number, default: 0 },
+    // Extra discount a partner applied when booking for a customer (already deducted from totalAmountInr).
+    partnerDiscountId: { type: Schema.Types.ObjectId, ref: "Discount" },
+    partnerDiscountName: { type: String, default: "" },
+    partnerDiscountInr: { type: Number, default: 0 },
     // "emi" is legacy (early test bookings); new bookings use "full" or "deposit".
     paymentStrategy: { type: String, enum: ["full", "deposit", "emi"], default: "full" },
     installments: { type: [InstallmentSchema], default: [] },

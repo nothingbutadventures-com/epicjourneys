@@ -28,6 +28,8 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
+import BookOnlineRoundedIcon from "@mui/icons-material/BookOnlineRounded";
+import MapRoundedIcon from "@mui/icons-material/MapRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 
 const DRAWER_WIDTH = 230;
@@ -44,7 +46,17 @@ const NAV_ITEMS = [
     icon: <TrendingUpRoundedIcon sx={{ fontSize: 18 }} />,
   },
   {
-    text: "Tours",
+    text: "Bookings",
+    href: "/partner/bookings",
+    icon: <BookOnlineRoundedIcon sx={{ fontSize: 18 }} />,
+  },
+  {
+    text: "City Tours",
+    href: "/partner/city-tours",
+    icon: <MapRoundedIcon sx={{ fontSize: 18 }} />,
+  },
+  {
+    text: "Request Tours",
     href: "/partner/tours",
     icon: <LuggageRoundedIcon sx={{ fontSize: 18 }} />,
   },

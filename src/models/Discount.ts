@@ -2,6 +2,8 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IDiscount extends Document {
   name: string;
+  // "normal" discounts go on tour dates; "partner" discounts are attached to partner accounts.
+  kind: "normal" | "partner";
   discountType: "percentage" | "fixed";
   value: number;
   description: string;
@@ -14,6 +16,7 @@ export interface IDiscount extends Document {
 const DiscountSchema = new Schema<IDiscount>(
   {
     name: { type: String, required: true, trim: true },
+    kind: { type: String, enum: ["normal", "partner"], default: "normal", index: true },
     discountType: { type: String, enum: ["percentage", "fixed"], default: "percentage" },
     value: { type: Number, required: true, min: 0 },
     description: { type: String, default: "" },

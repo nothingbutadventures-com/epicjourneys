@@ -437,7 +437,7 @@ export default function AdminToursPage() {
                   Base Location Only / No Partner ({counts.baseOnly})
                 </MenuItem>
                 <MenuItem value="pending_requests">
-                  Has Pending Partner Requests ({counts.pendingRequests})
+                  Has Pending Tours Requests ({counts.pendingRequests})
                 </MenuItem>
                 <MenuItem value="multi_city">
                   Multi-Location Departures ({counts.multiCity})
@@ -529,7 +529,7 @@ export default function AdminToursPage() {
                     : partnerStatusFilter === "base_only"
                     ? "Base Location Only"
                     : partnerStatusFilter === "pending_requests"
-                    ? "Pending Partner Requests"
+                    ? "Pending Tours Requests"
                     : "Multi-Location"
                 }`}
                 size="small"
