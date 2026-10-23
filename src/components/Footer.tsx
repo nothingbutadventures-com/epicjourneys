@@ -54,23 +54,7 @@ export default function Footer() {
         <Grid container spacing={5}>
           <Grid size={{ xs: 12, md: 4 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, mb: 2 }}>
-              <Box
-                sx={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: "4px",
-                  bgcolor: "#FF9900",
-                  color: "#0f172a",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 800,
-                  fontSize: "0.85rem",
-                }}
-              >
-                EJ
-              </Box>
-              <Typography sx={{ fontWeight: 800, fontSize: "1.2rem", letterSpacing: "-0.01em", color: "#0f172a" }}>EpicJourneys</Typography>
+              <Box component="img" src="/logo.svg" alt="EpicJourneys" sx={{ height: 46, width: "auto", display: "block" }} />
             </Box>
             <Typography sx={{ color: "#475569", fontSize: "0.92rem", lineHeight: 1.7, maxWidth: 360, mb: 3 }}>
               Curated Indian journeys starting closest to you. Verified local partners, transparent pricing in ₹ and

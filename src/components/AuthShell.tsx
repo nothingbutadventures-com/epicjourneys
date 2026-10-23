@@ -46,10 +46,7 @@ export default function AuthShell({
       <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", p: { xs: 2.5, sm: 4 } }}>
         <Box sx={{ width: "100%", maxWidth: 440 }}>
           <Link href="/" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
-            <Box sx={{ width: 38, height: 38, borderRadius: "4px", bgcolor: "#FF9900", color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.85rem" }}>
-              EJ
-            </Box>
-            <Typography sx={{ fontWeight: 800, fontSize: "1.15rem", color: "#0f172a" }}>EpicJourneys</Typography>
+            <Box component="img" src="/logo.svg" alt="EpicJourneys" sx={{ height: 44, width: "auto", display: "block" }} />
           </Link>
           <Typography sx={{ fontSize: "1.8rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.02em", mb: 0.75 }}>
             {title}

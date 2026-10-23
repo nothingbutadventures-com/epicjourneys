@@ -127,23 +127,7 @@ export default function PartnerLayout({
           borderBottom: "1px solid #e2e8f0",
         }}
       >
-        <Box
-          sx={{
-            width: 26,
-            height: 26,
-            borderRadius: "4px",
-            bgcolor: "#0f172a",
-            color: "#ffffff",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: 800,
-            fontSize: "0.72rem",
-            flexShrink: 0,
-          }}
-        >
-          EJ
-        </Box>
+        <Box component="img" src="/favicon.svg" alt="EpicJourneys" sx={{ width: 26, height: 26, flexShrink: 0 }} />
         <Box
           sx={{
             minWidth: 0,

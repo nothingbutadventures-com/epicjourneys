@@ -37,7 +37,6 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${font.variable} ${manrope.variable} ${logoFont.variable}`}>
       <head>
-        <link rel="icon" href="/favicon.ico" />
         <meta name="viewport" content="initial-scale=1, width=device-width" />
       </head>
       <body>

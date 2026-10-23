@@ -59,20 +59,7 @@ export default function Navbar({
         <Toolbar disableGutters sx={{ minHeight: "68px !important", height: 68, gap: 1.5 }}>
           {/* Brand Logo */}
           <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }} aria-label="Epic Journeys">
-            <Box sx={{ lineHeight: 1, fontFamily: "var(--font-logo), var(--font-manrope), sans-serif" }}>
-              <Typography
-                component="span"
-                sx={{ display: "block", color: "#43149D", fontFamily: "inherit", fontSize: "0.68rem", letterSpacing: "0.08em", lineHeight: 1 }}
-              >
-                ▸ EPIC
-              </Typography>
-              <Typography
-                component="span"
-                sx={{ display: "block", color: "#FF9900", fontFamily: "inherit", fontSize: "1.45rem", lineHeight: 1, mt: "1px" }}
-              >
-                journeys<Box component="span" sx={{ fontSize: "0.8rem" }}>.in</Box>
-              </Typography>
-            </Box>
+            <Box component="img" src="/logo.svg" alt="Epic Journeys" sx={{ height: { xs: 36, md: 42 }, width: "auto", display: "block" }} />
           </Link>
 
           {/* Location indicator button */}

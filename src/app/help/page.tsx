@@ -86,22 +86,7 @@ export default function HelpAndSupportPage() {
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <Box
-            sx={{
-              width: 30,
-              height: 30,
-              borderRadius: "4px",
-              bgcolor: "#43149D",
-              color: "#ffffff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 800,
-              fontSize: "0.75rem",
-            }}
-          >
-            EJ
-          </Box>
+          <Box component="img" src="/favicon.svg" alt="EpicJourneys" sx={{ width: 30, height: 30, flexShrink: 0 }} />
           <Typography variant="subtitle2" sx={{ fontWeight: 800, color: "#0f172a", fontSize: "0.85rem" }}>
             EpicJourneys
           </Typography>
