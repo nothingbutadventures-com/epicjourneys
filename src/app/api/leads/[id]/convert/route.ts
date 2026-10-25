@@ -96,6 +96,7 @@ export async function POST(
       status: "confirmed",
       bookedByRole: auth.role === "partner" ? "partner" : "user",
       partnerId: lead.partnerId || (auth.role === "partner" ? auth.userId : undefined),
+      locationId: (lead as any).locationId || undefined,
       travellers,
       roomSupplementInr: 0,
       paymentStrategy: "full",

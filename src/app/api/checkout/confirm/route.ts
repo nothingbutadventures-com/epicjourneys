@@ -4,6 +4,8 @@ import { loadOwnedBooking } from "@/lib/checkout-server";
 import { razorpayConfigured, verifyRazorpaySignature } from "@/lib/razorpay";
 import User from "@/models/User";
 import { ensureCustomerAccount, sendCustomerBookingEmail } from "@/lib/customer-account";
+import { buildInvoice } from "@/lib/invoice";
+import { generateInvoicePdf } from "@/lib/invoice-pdf";
 
 /** Marks an instalment paid after a verified Razorpay payment (or a simulated one when keys are empty). */
 export async function POST(req: NextRequest) {
@@ -57,9 +59,17 @@ export async function POST(req: NextRequest) {
     booking.markModified("installments");
     await booking.save();
 
-    if (firstConfirmation && booking.bookedByRole === "partner") {
-      const partner: any = booking.partnerId ? await User.findById(booking.partnerId).select("name phone email").lean() : null;
-      await sendCustomerBookingEmail(booking.toObject(), { password: newPassword, partner }).catch((e) => console.error("customer booking mail failed", e));
+    // First confirmed payment: email the customer their booking details with the invoice PDF attached.
+    if (firstConfirmation) {
+      try {
+        const isPartnerBooking = booking.bookedByRole === "partner";
+        const partner: any = isPartnerBooking && booking.partnerId ? await User.findById(booking.partnerId).select("name phone email").lean() : null;
+        const obj = booking.toObject();
+        const invoicePdf = await generateInvoicePdf(buildInvoice(obj, partner)).catch((e) => (console.error("invoice pdf failed", e), undefined));
+        await sendCustomerBookingEmail(obj, { password: newPassword, partner, ownAccount: !isPartnerBooking, invoicePdf });
+      } catch (e) {
+        console.error("customer booking mail failed", e);
+      }
     }
 
     return NextResponse.json({ success: true, bookingRef: booking.bookingRef, paymentStatus: booking.paymentStatus });

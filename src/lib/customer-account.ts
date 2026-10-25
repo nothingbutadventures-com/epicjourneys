@@ -42,7 +42,7 @@ export async function ensureCustomerAccount(booking: any): Promise<{ userId: str
 }
 
 /** Booking confirmation + login details for a customer whose booking was made by a partner. */
-export async function sendCustomerBookingEmail(booking: any, opts: { password?: string; partner?: { name?: string; phone?: string; email?: string } | null }) {
+export async function sendCustomerBookingEmail(booking: any, opts: { password?: string; partner?: { name?: string; phone?: string; email?: string } | null; ownAccount?: boolean; invoicePdf?: Buffer }) {
   const base = siteUrl();
   const loginUrl = `${base}/login`;
   const bookingUrl = `${base}/booking/${booking.bookingRef}`;
@@ -51,7 +51,9 @@ export async function sendCustomerBookingEmail(booking: any, opts: { password?: 
   const cell = (l: string, v: string) =>
     `<tr><td style="padding:6px 0;color:#94a3b8;font-size:12px;width:38%">${l}</td><td style="padding:6px 0;color:#0f172a;font-size:14px;font-weight:600">${v}</td></tr>`;
 
-  const credentials = opts.password
+  const credentials = opts.ownAccount
+    ? `<p style="margin:24px 0 10px;font-weight:800;color:#0f172a">Manage your booking</p><p style="margin:0 0 20px">Log in to your EpicJourneys account any time to see this booking, pay any balance and download your invoice.</p>`
+    : opts.password
     ? `<p style="margin:24px 0 10px;font-weight:800;color:#0f172a">Your EpicJourneys account</p>
 <p style="margin:0 0 10px">We created an account so you can view and manage this booking. Log in with:</p>
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#FFF6E5;border:1px solid #FFD699;margin:0 0 6px"><tr><td style="padding:18px 20px">
@@ -96,11 +98,11 @@ ${booking.specialRequests ? cell("Special requests", esc(booking.specialRequests
 </table>
 <p style="margin:0 0 4px;font-size:13px;color:#475569">Paid so far: <strong style="color:#059669">${inr(booking.amountPaidInr)}</strong>${balance > 0 ? ` · Balance: <strong style="color:#0f172a">${inr(balance)}</strong>` : " · Fully paid"}</p>
 ${credentials}
-<p style="margin:0 0 24px">${button(opts.password ? loginUrl : bookingUrl, opts.password ? "Log in & view booking" : "View my booking")}</p>
+<p style="margin:0 0 24px">${button(opts.password ? loginUrl : bookingUrl, opts.password ? "Log in & view booking" : "View my booking")} &nbsp; <a href="${bookingUrl}/invoice" style="display:inline-block;border:2px solid #0f172a;color:#0f172a;font-weight:800;text-decoration:none;padding:11px 24px;font-size:15px">View invoice</a></p>${opts.invoicePdf ? '<p style="margin:0 0 20px;font-size:12px;color:#94a3b8">Your invoice is attached to this email as a PDF.</p>' : ""}
 ${opts.partner?.name ? `<p style="margin:0 0 6px;font-weight:800;color:#0f172a">Your local contact</p><p style="margin:0 0 16px">${esc(opts.partner.name)}${opts.partner.phone ? ` · +91 ${esc(opts.partner.phone)}` : ""}${opts.partner.email ? ` · ${esc(opts.partner.email)}` : ""}</p>` : ""}
 <p style="margin:0">Pack your bags — we can't wait to see you on the road!</p>`,
   });
 
   const text = `Hi ${booking.customerName}, your booking ${booking.bookingRef} for ${booking.tourTitle} (${fmt(booking.travelDate)}) is confirmed.\nTotal ${inr(booking.totalAmountInr)}, paid ${inr(booking.amountPaidInr)}.\n${opts.password ? `\nLogin: ${loginUrl}\nEmail: ${booking.customerEmail}\nPassword: ${opts.password}\n` : `\nView booking: ${bookingUrl}\n`}`;
-  await send(booking.customerEmail, `Booking confirmed: ${booking.tourTitle} (${booking.bookingRef})`, html, text);
+  await send(booking.customerEmail, `Booking confirmed: ${booking.tourTitle} (${booking.bookingRef})`, html, text, opts.invoicePdf ? [{ filename: `INV-${String(booking.bookingRef).replace(/^EJ-/, "")}.pdf`, content: opts.invoicePdf, contentType: "application/pdf" }] : undefined);
 }

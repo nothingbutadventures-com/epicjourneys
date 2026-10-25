@@ -4,6 +4,7 @@ import Lead, { ILeadActivity } from "@/models/Lead";
 import User from "@/models/User";
 import Destination from "@/models/Destination";
 import Tour from "@/models/Tour";
+import { partnerLocation } from "@/lib/location-access";
 import { getAuthFromRequest } from "@/lib/auth";
 
 // Initial realistic demo leads if collection is empty
@@ -216,17 +217,10 @@ export async function GET(req: NextRequest) {
     let filter: any = {};
 
     if (auth.role === "partner") {
-      // Partner only sees leads assigned to them, created by them, or matching their assigned destination
+      // Leads belong to a location: a partner sees everything handled for the location they manage.
       const partnerUser = await User.findById(auth.userId);
       const assignedDestId = partnerUser?.assignedDestination;
-
-      filter = {
-        $or: [
-          { partnerId: auth.userId },
-          { createdBy: auth.userId },
-          ...(assignedDestId ? [{ destinationId: assignedDestId }] : []),
-        ],
-      };
+      filter = assignedDestId ? { $or: [{ locationId: assignedDestId }, { destinationId: assignedDestId }] } : { _id: null };
     } else {
       // Admin filters
       if (partnerId) {
@@ -283,15 +277,8 @@ export async function GET(req: NextRequest) {
 
     // Calculate aggregated metrics for the current view
     // Compute overall pipeline stats (across the user's scope)
-    const baseScope =
-      auth.role === "partner"
-        ? {
-            $or: [
-              { partnerId: auth.userId },
-              { createdBy: auth.userId },
-            ],
-          }
-        : {};
+    const myLoc = auth.role === "partner" ? await partnerLocation(auth.userId) : null;
+    const baseScope: any = auth.role === "partner" ? (myLoc ? { locationId: myLoc } : { _id: null }) : {};
 
     const allScopedLeads = await Lead.find(baseScope).select("stage estimatedBudget").lean();
 
@@ -423,6 +410,8 @@ export async function POST(req: NextRequest) {
       assignedPartnerId = auth.userId;
     }
 
+    const leadLocation = assignedPartnerId ? await partnerLocation(String(assignedPartnerId)) : null;
+
     // Lookup destination name if ID was provided
     if (finalDestId && !finalDestName) {
       const d = await Destination.findById(finalDestId);
@@ -467,6 +456,7 @@ export async function POST(req: NextRequest) {
       priority: priority || "medium",
       source: source || (auth.role === "partner" ? "partner_referral" : "direct_call"),
       partnerId: assignedPartnerId,
+      locationId: leadLocation,
       createdBy: auth.userId,
       createdRole: auth.role,
       requirements: requirements || "",

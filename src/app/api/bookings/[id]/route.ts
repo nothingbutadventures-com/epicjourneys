@@ -4,6 +4,7 @@ import Booking from "@/models/Booking";
 import Tour from "@/models/Tour";
 import Destination from "@/models/Destination";
 import User from "@/models/User";
+import { partnerLocation } from "@/lib/location-access";
 import { getAuthFromRequest } from "@/lib/auth";
 
 export async function GET(
@@ -53,7 +54,7 @@ export async function PATCH(
     }
 
     // If partner, verify they have permission to update this booking
-    if (auth.role === "partner" && booking.partnerId?.toString() !== auth.userId) {
+    if (auth.role === "partner" && String(booking.locationId || "") !== String((await partnerLocation(auth.userId)) || "none")) {
       return NextResponse.json(
         { error: "You cannot modify bookings that do not belong to you." },
         { status: 403 }

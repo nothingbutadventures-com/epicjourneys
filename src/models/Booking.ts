@@ -41,6 +41,7 @@ export interface IBooking extends Document {
   status: "confirmed" | "pending" | "cancelled";
   bookedByRole: "user" | "partner";
   partnerId?: mongoose.Types.ObjectId;
+  locationId?: mongoose.Types.ObjectId;
   userId?: mongoose.Types.ObjectId;
   travellers: IBookingTraveller[];
   roomSupplementInr: number;
@@ -124,6 +125,8 @@ const BookingSchema = new Schema<IBooking>(
       ref: "User",
       default: null,
     },
+    // The location this booking belongs to. Partners see bookings by location, so a new partner inherits them.
+    locationId: { type: Schema.Types.ObjectId, ref: "Destination", default: null, index: true },
     userId: { type: Schema.Types.ObjectId, ref: "User" },
     travellers: { type: [TravellerSchema], default: [] },
     roomSupplementInr: { type: Number, default: 0 },

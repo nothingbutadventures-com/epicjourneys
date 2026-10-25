@@ -8,6 +8,7 @@ import { getAuthFromRequest } from "@/lib/auth";
 import { bookedSeatsByDeparture } from "@/lib/departures";
 import Discount from "@/models/Discount";
 import mongoose from "mongoose";
+import { partnerCanBook } from "@/lib/partner-booking";
 import { discountUsable, discountedUnitPrice, partnerDiscountAmount } from "@/lib/pricing";
 
 export async function GET(req: NextRequest) {
@@ -26,16 +27,10 @@ export async function GET(req: NextRequest) {
     let filter: any = {};
 
     if (auth.role === "partner") {
-      // Partner sees bookings made by them, OR bookings for tours in their assigned destination
+      // Bookings belong to a location, so whoever manages the location sees all of its bookings.
       const partnerUser = await User.findById(auth.userId);
       const assignedDestId = partnerUser?.assignedDestination;
-
-      filter = {
-        $or: [
-          { partnerId: auth.userId },
-          ...(assignedDestId ? [{ destinationId: assignedDestId }] : []),
-        ],
-      };
+      filter = assignedDestId ? { locationId: assignedDestId } : { _id: null };
     }
 
     const { searchParams } = new URL(req.url);
@@ -122,11 +117,15 @@ export async function POST(req: NextRequest) {
     if (isPartner) {
       const me: any = await User.findById(auth!.userId).select("assignedDestination").lean();
       const myCity = me?.assignedDestination ? String(me.assignedDestination) : "";
-      const startsHere = (tour.departures || []).some((d: any) => String((d.cityId as any)?._id || d.cityId) === myCity);
-      if (!myCity || !startsHere) {
-        return NextResponse.json({ error: "You can only book tours that start from your own location." }, { status: 403 });
+      const bookable = (tour.departures || []).some((d: any) => partnerCanBook(d, myCity));
+      if (!bookable) {
+        return NextResponse.json({ error: "This tour has no dates you can book." }, { status: 403 });
       }
     }
+
+    // Location owner of this booking: the partner's city, or the city the departure was launched from.
+    let locationId: any = tour.destinationId?._id || tour.destinationId;
+    if (isPartner) locationId = (await User.findById(auth!.userId).select("assignedDestination").lean<any>())?.assignedDestination || locationId;
 
     const travelers = Math.max(1, Number(numberOfTravelers) || 1);
 
@@ -140,8 +139,8 @@ export async function POST(req: NextRequest) {
       }
       if (isPartner) {
         const me: any = await User.findById(auth!.userId).select("assignedDestination").lean();
-        if (String((departure.cityId as any)?._id || departure.cityId) !== String(me?.assignedDestination)) {
-          return NextResponse.json({ error: "That departure doesn't start from your location." }, { status: 403 });
+        if (!partnerCanBook(departure, me?.assignedDestination ? String(me.assignedDestination) : "")) {
+          return NextResponse.json({ error: "You can't book that departure." }, { status: 403 });
         }
       }
       const today = new Date();
@@ -219,6 +218,7 @@ export async function POST(req: NextRequest) {
       status: "confirmed",
       bookedByRole,
       partnerId,
+      locationId,
     });
 
     // Re-check after writing so two simultaneous requests can't oversell a date.

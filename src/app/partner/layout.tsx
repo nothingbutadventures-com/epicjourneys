@@ -51,12 +51,12 @@ const NAV_ITEMS = [
     icon: <BookOnlineRoundedIcon sx={{ fontSize: 18 }} />,
   },
   {
-    text: "City Tours",
+    text: "Book Tour",
     href: "/partner/city-tours",
     icon: <MapRoundedIcon sx={{ fontSize: 18 }} />,
   },
   {
-    text: "Request Tours",
+    text: "Tour Request",
     href: "/partner/tours",
     icon: <LuggageRoundedIcon sx={{ fontSize: 18 }} />,
   },

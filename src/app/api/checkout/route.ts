@@ -10,6 +10,7 @@ import { computeQuote, type RoomType } from "@/lib/pricing";
 import { buildSchedule, depositOption } from "@/lib/deposit";
 import { HOLD_MINUTES, requireAuth, startInstallmentPayment } from "@/lib/checkout-server";
 import { resolvePartnerDiscount } from "@/lib/partner-discounts";
+import { partnerCanBook } from "@/lib/partner-booking";
 
 const clean = (v: unknown) => String(v ?? "").trim();
 
@@ -50,8 +51,8 @@ export async function POST(req: NextRequest) {
     const isPartner = auth.role === "partner";
     let customerEmail: string = user.email;
     if (isPartner) {
-      if (!user.assignedDestination || String(departure.cityId?._id || departure.cityId) !== String(user.assignedDestination)) {
-        return NextResponse.json({ error: "You can only book departures that start from your own location." }, { status: 403 });
+      if (!partnerCanBook(departure, user.assignedDestination ? String(user.assignedDestination) : "")) {
+        return NextResponse.json({ error: "You can only book the tour's own dates or departures from your own location." }, { status: 403 });
       }
       customerEmail = clean(body.customer?.email).toLowerCase();
       if (!/^\S+@\S+\.\S+$/.test(customerEmail)) return NextResponse.json({ error: "Enter the customer's email address." }, { status: 400 });
@@ -153,6 +154,8 @@ export async function POST(req: NextRequest) {
       status: "pending",
       bookedByRole: isPartner ? "partner" : "user",
       partnerId: isPartner ? auth.userId : destination?.partnerId || null,
+      // A launched departure belongs to the city it starts from; the tour's own dates to the tour's city.
+      locationId: isPartner ? user.assignedDestination || departure.cityId?._id || departure.cityId : !departure.launchId ? tour.destinationId : departure.cityId?._id || departure.cityId,
       ...(isPartner ? {} : { userId: auth.userId }),
       holdExpiresAt: new Date(Date.now() + HOLD_MINUTES * 60 * 1000),
     });

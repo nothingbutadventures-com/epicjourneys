@@ -20,7 +20,8 @@ import {
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import PartnerBookingDialog from "@/components/partner/PartnerBookingDialog";
+import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
+import Link from "next/link";
 import PaymentGateway, { type PaymentDescriptor } from "@/components/checkout/PaymentGateway";
 
 const TOKEN = "epic_partner_token";
@@ -49,37 +50,22 @@ const statusChip = (status: string) => (
 
 export default function PartnerBookingsPage() {
   const [partner, setPartner] = useState<any>(null);
-  const [tours, setTours] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [open, setOpen] = useState(false);
   const [payment, setPayment] = useState<PaymentDescriptor | null>(null);
   const [paying, setPaying] = useState<string | null>(null);
-  const [openOnLoad, setOpenOnLoad] = useState(false);
 
   const load = async () => {
     try {
       const h = authHeaders();
       const me = await fetch("/api/partners", { headers: h }).then((r) => r.json());
       const p = me.data?.[0] || null;
-      const cityId = p?.assignedDestination?._id;
-      const [b, t] = await Promise.all([
-        fetch("/api/bookings", { headers: h }).then((r) => r.json()),
-        cityId ? fetch(`/api/tours?from=${cityId}`).then((r) => r.json()) : Promise.resolve({ success: true, data: [] }),
-      ]);
+      const b = await fetch("/api/bookings", { headers: h }).then((r) => r.json());
       if (b.success) setBookings(b.data || []);
       else setError(b.error || "Failed to load bookings");
-      // Only tours with an upcoming departure from this partner's city can be booked.
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      setTours(
-        (t.data || []).filter((x: any) =>
-          (x.departures || []).some((d: any) => String(d.cityId?._id || d.cityId) === String(cityId) && new Date(d.startDate) >= today)
-        )
-      );
       setPartner(p);
     } catch (e: any) {
       setError(e.message || "Failed to load bookings");
@@ -90,16 +76,8 @@ export default function PartnerBookingsPage() {
 
   useEffect(() => {
     load();
-    if (new URLSearchParams(window.location.search).get("new") === "1") setOpenOnLoad(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (openOnLoad && !loading && tours.length > 0) {
-      setOpen(true);
-      setOpenOnLoad(false);
-    }
-  }, [openOnLoad, loading, tours]);
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -134,24 +112,16 @@ export default function PartnerBookingsPage() {
         <Box>
           <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem", lineHeight: 1.2 }}>Bookings</Typography>
           <Typography variant="caption" sx={{ color: "#64748b", fontSize: "0.75rem" }}>
-            Book tours for your customers and track every booking for {partner?.assignedDestination?.name || "your location"}
+            Track and manage every booking you made for customers · book new ones from Book Tour
           </Typography>
         </Box>
-        <Button variant="contained" size="small" startIcon={<AddRoundedIcon sx={{ fontSize: 15 }} />} disabled={tours.length === 0} onClick={() => setOpen(true)}
+        <Button component={Link} href="/partner/city-tours" variant="contained" size="small" startIcon={<AddRoundedIcon sx={{ fontSize: 15 }} />}
           sx={{ bgcolor: "#0f172a", color: "#ffffff", borderRadius: "4px", height: 30, fontSize: "0.78rem", "&:hover": { bgcolor: "#1e293b" } }}>
-          Book Tour For Customer
+          Book a Tour
         </Button>
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2, borderRadius: "4px" }} onClose={() => setError(null)}>{error}</Alert>}
-      {!loading && tours.length === 0 && (
-        <Alert severity="info" sx={{ mb: 2, borderRadius: "4px" }}>
-          {partner?.assignedDestination
-            ? `No tours have upcoming departures from ${partner.assignedDestination.name} yet, so there's nothing to book for customers right now.`
-            : "No location is assigned to your account yet, so you can't book tours. Please contact the admin."}
-        </Alert>
-      )}
-
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5, gap: 1.5, flexWrap: "wrap" }}>
         <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
           {[["all", "All"], ["confirmed", "Confirmed"], ["pending", "Pending"], ["cancelled", "Cancelled"]].map(([v, l]) => (
@@ -207,7 +177,10 @@ export default function PartnerBookingsPage() {
                         {due > 0 && b.status !== "cancelled" && <Typography sx={{ fontSize: "0.66rem", color: "#64748b" }}>{inr(due)} due</Typography>}
                       </TableCell>
                       <TableCell>{statusChip(b.status)}</TableCell>
-                      <TableCell align="right">
+                      <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                        <Button component={Link} href={`/partner/invoice/${b.bookingRef}`} size="small" startIcon={<ReceiptLongRoundedIcon sx={{ fontSize: 14 }} />} sx={{ fontSize: "0.7rem", color: "#0f172a", mr: canCollect ? 0.5 : 0 }}>
+                          Invoice
+                        </Button>
                         {canCollect && (
                           <Button size="small" variant="outlined" disabled={paying === b._id} onClick={() => collect(b)} sx={{ borderRadius: "4px", fontSize: "0.7rem", whiteSpace: "nowrap" }}>
                             {paying === b._id ? "…" : "Collect payment"}
@@ -230,7 +203,6 @@ export default function PartnerBookingsPage() {
         )}
       </Paper>
 
-      <PartnerBookingDialog open={open} onClose={() => setOpen(false)} tours={tours} partner={partner} onBooked={load} />
       <PaymentGateway payment={payment} headers={authHeaders()} onSuccess={() => { setPayment(null); load(); }} onClose={() => setPayment(null)} />
     </Box>
   );

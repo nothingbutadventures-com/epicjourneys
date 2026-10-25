@@ -4,6 +4,7 @@ import Tour from "@/models/Tour";
 import User from "@/models/User";
 import Destination from "@/models/Destination";
 import TourLaunch from "@/models/TourLaunch";
+import { partnerLocation } from "@/lib/location-access";
 import { getAuthFromRequest } from "@/lib/auth";
 import { addMessage, composePartnerMessage, isObjectId, sanitizeLaunchPatch, sanitizeNotes } from "@/lib/launch";
 import type { LaunchStatus } from "@/lib/launch-shared";
@@ -26,7 +27,8 @@ export async function GET(req: NextRequest) {
     if (!Tour || !User || !Destination) {}
 
     const filter: any = {};
-    if (auth.role === "partner") filter.partnerId = auth.userId;
+    // Launch requests belong to the location (city), so a new partner inherits them.
+    if (auth.role === "partner") filter.cityId = (await partnerLocation(auth.userId)) || null;
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
     const tourId = searchParams.get("tourId");

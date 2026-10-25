@@ -113,9 +113,9 @@ export default function PartnerDashboardPage() {
             {city ? `Here's what's happening in ${city.name}, ${city.state}` : "No location assigned yet"}
           </Typography>
         </Box>
-        <Button component={Link} href="/partner/bookings?new=1" variant="contained" size="small" startIcon={<AddRoundedIcon sx={{ fontSize: 15 }} />}
+        <Button component={Link} href="/partner/city-tours" variant="contained" size="small" startIcon={<AddRoundedIcon sx={{ fontSize: 15 }} />}
           sx={{ bgcolor: "#0f172a", borderRadius: "4px", height: 30, fontSize: "0.78rem", "&:hover": { bgcolor: "#1e293b" } }}>
-          New booking
+          Book a tour
         </Button>
       </Box>
 

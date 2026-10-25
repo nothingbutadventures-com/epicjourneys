@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import Booking from "@/models/Booking";
 import User from "@/models/User";
+import { partnerLocation } from "@/lib/location-access";
 import { getAuthFromRequest } from "@/lib/auth";
 import { createRazorpayOrder, razorpayConfigured, razorpayKeyId } from "@/lib/razorpay";
 
@@ -17,7 +18,8 @@ export async function loadOwnedBooking(req: NextRequest, ref: string) {
   const booking = await Booking.findOne({ bookingRef: ref });
   if (!booking) return { error: "Booking not found", status: 404 as const };
   // Partners can open bookings they made for customers.
-  const ownsAsPartner = auth.role === "partner" && String(booking.partnerId) === auth.userId && booking.bookedByRole === "partner";
+  const ownsAsPartner =
+    auth.role === "partner" && booking.bookedByRole === "partner" && String(booking.locationId || "") === String((await partnerLocation(auth.userId)) || "none");
   if (auth.role !== "admin" && !ownsAsPartner && String(booking.userId) !== auth.userId) {
     return { error: "This booking belongs to another account.", status: 403 as const };
   }

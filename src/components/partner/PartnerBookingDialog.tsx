@@ -19,6 +19,8 @@ import {
   Select,
   Step,
   StepLabel,
+  Tab,
+  Tabs,
   Stepper,
   TextField,
   Typography,
@@ -31,6 +33,7 @@ import BedroomParentRoundedIcon from "@mui/icons-material/BedroomParentRounded";
 import KingBedRoundedIcon from "@mui/icons-material/KingBedRounded";
 import PaymentGateway, { type PaymentDescriptor } from "@/components/checkout/PaymentGateway";
 import { computeQuote, discountUsable, inr, partnerDiscountAmount, type RoomType } from "@/lib/pricing";
+import { isBaseDeparture, isMyCityDeparture, partnerCanBook } from "@/lib/partner-booking";
 import { balanceDueDate, buildSchedule, depositOption } from "@/lib/deposit";
 
 const TOKEN = "epic_partner_token";
@@ -51,19 +54,22 @@ const STEPS = ["Trip", "Travellers", "Rooms", "Payment"];
 export default function PartnerBookingDialog({
   open,
   onClose,
-  tours,
+  tour: pickedTour,
+  mode,
   partner,
   onBooked,
 }: {
   open: boolean;
   onClose: () => void;
-  tours: any[];
+  /** The tour chosen on the Book Tour page. */
+  tour: any | null;
+  /** "mine": dates launched from the partner's city. "all": the tour's own dates plus the partner's city. */
+  mode: "mine" | "all";
   partner: any;
   onBooked: () => void;
 }) {
   const cityId = partner?.assignedDestination?._id;
   const [step, setStep] = useState(0);
-  const [tourId, setTourId] = useState("");
   const [tour, setTour] = useState<any>(null);
   const [tourLoading, setTourLoading] = useState(false);
   const [departureId, setDepartureId] = useState("");
@@ -85,7 +91,6 @@ export default function PartnerBookingDialog({
   useEffect(() => {
     if (!open) return;
     setStep(0);
-    setTourId(tours[0]?._id || "");
     setDepartureId("");
     setPeople([blank()]);
     setEmail("");
@@ -102,6 +107,7 @@ export default function PartnerBookingDialog({
 
   // Load the tour with live seat availability and its deposit / single-room settings.
   useEffect(() => {
+    const tourId = pickedTour?._id;
     if (!open || !tourId) return;
     let cancelled = false;
     setTourLoading(true);
@@ -114,15 +120,15 @@ export default function PartnerBookingDialog({
     return () => {
       cancelled = true;
     };
-  }, [open, tourId]);
+  }, [open, pickedTour]);
 
   const departures: any[] = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return (tour?.departures || [])
-      .filter((d: any) => String(d.cityId) === String(cityId) && new Date(d.startDate) >= today && d.available > 0)
+      .filter((d: any) => (mode === "mine" ? isMyCityDeparture(d, cityId) : partnerCanBook(d, cityId)) && new Date(d.startDate) >= today && d.available > 0)
       .sort((a: any, b: any) => +new Date(a.startDate) - +new Date(b.startDate));
-  }, [tour, cityId]);
+  }, [tour, cityId, mode]);
   const departure = departures.find((d) => d._id === departureId) || null;
 
   useEffect(() => {
@@ -264,18 +270,22 @@ export default function PartnerBookingDialog({
               {step === 0 && (
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12 }}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Tour</InputLabel>
-                      <Select value={tourId} label="Tour" onChange={(e) => setTourId(e.target.value)}>
-                        {tours.map((t) => <MenuItem key={t._id} value={t._id}>{t.title}</MenuItem>)}
-                      </Select>
-                    </FormControl>
+                    <Box sx={{ p: 1.5, border: "1px solid #E2E2E2", borderRadius: "4px", bgcolor: "#F8FAFC", display: "flex", alignItems: "center", gap: 1.5 }}>
+                      {pickedTour?.coverImage && <Box component="img" src={pickedTour.coverImage} alt="" sx={{ width: 56, height: 40, objectFit: "cover", borderRadius: "3px" }} />}
+                      <Box>
+                        <Typography sx={{ fontWeight: 800, fontSize: "0.92rem" }}>{pickedTour?.title}</Typography>
+                        <Typography sx={{ fontSize: "0.75rem", color: "#64748b" }}>
+                          {pickedTour?.targetCity ? `${pickedTour.targetCity}, ` : ""}{pickedTour?.state} · {pickedTour?.durationDays}D / {pickedTour?.durationNights}N ·{" "}
+                          {mode === "mine" ? "Dates from your city" : "Tour's own dates + your city"}
+                        </Typography>
+                      </Box>
+                    </Box>
                   </Grid>
                   <Grid size={{ xs: 12 }}>
                     {tourLoading ? (
                       <Box sx={{ py: 2, display: "flex", justifyContent: "center" }}><CircularProgress size={22} /></Box>
                     ) : departures.length === 0 ? (
-                      <Alert severity="warning" sx={{ borderRadius: "4px" }}>No departures with free seats from your city for this tour.</Alert>
+                      <Alert severity="warning" sx={{ borderRadius: "4px" }}>No bookable dates with free seats for this tour.</Alert>
                     ) : (
                       <>
                         <Typography sx={{ fontWeight: 700, fontSize: "0.85rem", mb: 1 }}>Departure date</Typography>
@@ -285,7 +295,11 @@ export default function PartnerBookingDialog({
                             const unit = Math.round(d.price * (1 - (d.discountPercentage || 0) / 100));
                             return (
                               <Box key={d._id} onClick={() => setDepartureId(d._id)} sx={{ cursor: "pointer", p: 1.5, borderRadius: "4px", border: "2px solid", borderColor: sel ? "#FF9900" : "#E2E2E2", bgcolor: sel ? "#FFF6E5" : "#fff" }}>
-                                <Typography sx={{ fontWeight: 700, fontSize: "0.88rem" }}>{fmt(d.startDate)} – {fmt(d.endDate)}</Typography>
+                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1 }}>
+                                  <Typography sx={{ fontWeight: 700, fontSize: "0.88rem" }}>{fmt(d.startDate)} – {fmt(d.endDate)}</Typography>
+                                  <Chip size="small" label={isBaseDeparture(d) ? "Tour dates" : "Your city"} sx={{ height: 18, fontSize: "0.62rem", fontWeight: 700, borderRadius: "4px", bgcolor: isBaseDeparture(d) ? "#f1f5f9" : "#FFF0D1", color: isBaseDeparture(d) ? "#475569" : "#8A5200" }} />
+                                </Box>
+                                {d.cityName && <Typography sx={{ fontSize: "0.72rem", color: "#94a3b8" }}>Joining / leaving: {d.cityName}</Typography>}
                                 <Typography sx={{ fontSize: "0.78rem", color: "#64748b" }}>
                                   {inr(unit)} / person{d.discountPercentage ? ` · ${d.discountPercentage}% off` : ""} · {d.available} seat{d.available === 1 ? "" : "s"} left
                                 </Typography>

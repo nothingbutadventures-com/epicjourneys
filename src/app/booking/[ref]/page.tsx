@@ -14,6 +14,7 @@ import KingBedRoundedIcon from "@mui/icons-material/KingBedRounded";
 import BedroomParentRoundedIcon from "@mui/icons-material/BedroomParentRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
+import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
 import ExploreRoundedIcon from "@mui/icons-material/ExploreRounded";
 import ConfirmationNumberRoundedIcon from "@mui/icons-material/ConfirmationNumberRounded";
 import Navbar from "@/components/Navbar";
@@ -308,6 +309,7 @@ function BookingInner() {
             {[
               { l: `${inr(b.pricePerPerson)} × ${b.numberOfTravelers}`, v: inr(b.pricePerPerson * b.numberOfTravelers) },
               ...(b.roomSupplementInr > 0 ? [{ l: "Single room supplement", v: `+${inr(b.roomSupplementInr)}` }] : []),
+              ...(b.partnerDiscountInr > 0 ? [{ l: b.partnerDiscountName || "Partner discount", v: `−${inr(b.partnerDiscountInr)}` }] : []),
             ].map((r) => (
               <Box key={r.l} sx={{ display: "flex", justifyContent: "space-between", mb: 0.75, fontSize: "0.88rem", color: "#475569", position: "relative" }}>
                 <span>{r.l}</span><strong>{r.v}</strong>
@@ -326,7 +328,13 @@ function BookingInner() {
                 <motion.div initial={{ width: 0 }} animate={{ width: `${paidPct}%` }} transition={{ duration: 0.9, delay: 0.3 }} style={{ height: "100%", background: "#10b981" }} />
               </Box>
             </Box>
-            <Button fullWidth onClick={() => router.push("/tours")} sx={{ mt: 2.5, color: "#0f172a", fontWeight: 700 }} variant="outlined">
+            {!cancelled && (b.amountPaidInr > 0 || confirmed) && (
+              <Button fullWidth component={Link} href={`/booking/${b.bookingRef}/invoice`} startIcon={<ReceiptLongRoundedIcon />} variant="contained"
+                sx={{ mt: 2.5, bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, boxShadow: "none", "&:hover": { bgcolor: "#E68A00", boxShadow: "none" } }}>
+                View invoice
+              </Button>
+            )}
+            <Button fullWidth onClick={() => router.push("/tours")} sx={{ mt: 1.25, color: "#0f172a", fontWeight: 700 }} variant="outlined">
               Explore more journeys
             </Button>
           </Paper>

@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import PartnerRequest from "@/models/PartnerRequest";
 import Destination from "@/models/Destination";
+import { rebindLocationPartner } from "@/lib/location-access";
 
 export const esc = (v: unknown) => String(v ?? "").replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" }[c] as string));
 
@@ -10,7 +11,7 @@ export function siteUrl() {
   return /^https?:\/\//.test(raw) ? raw : `https://${raw}`;
 }
 
-export async function send(to: string, subject: string, html: string, text: string) {
+export async function send(to: string, subject: string, html: string, text: string, attachments?: { filename: string; content: Buffer; contentType?: string }[]) {
   const { GMAIL_USER, GMAIL_APP_PASSWORD } = process.env;
   if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
     console.log(`\n[DEV] Gmail not configured. Email to ${to}: ${subject}\n`);
@@ -20,7 +21,7 @@ export async function send(to: string, subject: string, html: string, text: stri
     service: "gmail",
     auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD.replace(/\s/g, "") },
   });
-  await transporter.sendMail({ from: `"EpicJourneys" <${GMAIL_USER}>`, to, subject, html, text });
+  await transporter.sendMail({ from: `"EpicJourneys" <${GMAIL_USER}>`, to, subject, html, text, attachments });
 }
 
 /** Branded shell that matches the website: cream hero band, orange accent, dark slate text. */
@@ -105,6 +106,8 @@ export async function settleApplicants(opts: { destinationId: string; partnerId:
     if (!dest) return;
     const location = `${dest.name}, ${dest.state}`;
     await Destination.findByIdAndUpdate(opts.destinationId, { openForPartner: false });
+    // The new partner takes over the location's existing requests and launched departures.
+    await rebindLocationPartner(opts.destinationId, opts.partnerId).catch((e) => console.error("rebind failed", e));
 
     const rx = (v: string) => new RegExp(`^${v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
     const mine: any = {

@@ -49,6 +49,7 @@ export interface ILead extends Document {
   priority: LeadPriority;
   source: LeadSource;
   partnerId?: mongoose.Types.ObjectId | null;
+  locationId?: mongoose.Types.ObjectId | null;
   createdBy?: mongoose.Types.ObjectId | null;
   createdRole: "admin" | "partner" | "system";
   lossReason?: string;
@@ -126,6 +127,8 @@ const LeadSchema = new Schema<ILead>(
       ],
       default: "website",
     },
+    // Location of the partner handling this lead; partners see leads by location, not by person.
+    locationId: { type: Schema.Types.ObjectId, ref: "Destination", default: null },
     partnerId: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -159,6 +162,7 @@ const LeadSchema = new Schema<ILead>(
 
 LeadSchema.index({ stage: 1 });
 LeadSchema.index({ partnerId: 1 });
+LeadSchema.index({ locationId: 1 });
 LeadSchema.index({ destinationId: 1 });
 LeadSchema.index({ createdAt: -1 });
 LeadSchema.index({ customerPhone: 1 });

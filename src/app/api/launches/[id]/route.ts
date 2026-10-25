@@ -4,6 +4,7 @@ import Tour from "@/models/Tour";
 import User from "@/models/User";
 import Destination from "@/models/Destination";
 import TourLaunch from "@/models/TourLaunch";
+import { partnerLocation } from "@/lib/location-access";
 import { getAuthFromRequest } from "@/lib/auth";
 import { addMessage, isObjectId, publishLaunch, refreshEndDates, sanitizeLaunchPatch, unpublishLaunch } from "@/lib/launch";
 import type { LaunchStatus } from "@/lib/launch-shared";
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     if (!Tour || !User || !Destination) {}
     const launch: any = await load(id);
     if (!launch) return bad("Request not found", 404);
-    if (auth.role === "partner" && String(launch.partnerId?._id) !== auth.userId) return bad("This request belongs to another partner.", 403);
+    if (auth.role === "partner" && String(launch.cityId?._id || launch.cityId) !== String((await partnerLocation(auth.userId)) || "none")) return bad("This request belongs to another location.", 403);
     return NextResponse.json({ success: true, data: launch });
   } catch (error: any) {
     return bad(error.message, 500);
@@ -57,7 +58,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const launch: any = await TourLaunch.findById(id);
     if (!launch) return bad("Request not found", 404);
     const isAdmin = auth.role === "admin";
-    if (!isAdmin && String(launch.partnerId) !== auth.userId) return bad("This request belongs to another partner.", 403);
+    if (!isAdmin && String(launch.cityId) !== String((await partnerLocation(auth.userId)) || "none")) return bad("This request belongs to another location.", 403);
 
     const who: any = await User.findById(auth.userId).select("name").lean();
     const name = who?.name || auth.name;

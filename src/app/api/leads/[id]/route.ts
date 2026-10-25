@@ -4,6 +4,7 @@ import Lead from "@/models/Lead";
 import User from "@/models/User";
 import Destination from "@/models/Destination";
 import Tour from "@/models/Tour";
+import { partnerLocation } from "@/lib/location-access";
 import { getAuthFromRequest } from "@/lib/auth";
 
 const STAGE_LABELS: Record<string, string> = {
@@ -50,8 +51,8 @@ export async function GET(
     // Role security check for partner
     if (auth.role === "partner") {
       const partnerUser = await User.findById(auth.userId);
-      const isAssigned = lead.partnerId?._id?.toString() === auth.userId;
-      const isCreator = lead.createdBy?._id?.toString() === auth.userId;
+      const isAssigned = Boolean(partnerUser?.assignedDestination) && String((lead as any).locationId || "") === String(partnerUser?.assignedDestination);
+      const isCreator = false;
       const isDestMatch =
         partnerUser?.assignedDestination &&
         lead.destinationId?._id?.toString() ===
@@ -95,11 +96,12 @@ export async function PUT(
 
     // Partner access check
     if (auth.role === "partner") {
-      const isAssigned = existingLead.partnerId?.toString() === auth.userId;
-      const isCreator = existingLead.createdBy?.toString() === auth.userId;
+      const myLoc = await partnerLocation(auth.userId);
+      const isAssigned = Boolean(myLoc) && String((existingLead as any).locationId || "") === myLoc;
+      const isCreator = false;
       if (!isAssigned && !isCreator) {
         return NextResponse.json(
-          { error: "You can only update leads assigned to or created by you" },
+          { error: "You can only update leads handled by your location" },
           { status: 403 }
         );
       }
@@ -176,6 +178,11 @@ export async function PUT(
     }
 
     body.activities = newActivities;
+    delete body.locationId;
+    // Assigning (or unassigning) a partner moves the lead to that partner's location.
+    if (auth.role === "admin" && body.partnerId !== undefined) {
+      body.locationId = body.partnerId ? await partnerLocation(String(body.partnerId)) : null;
+    }
 
     const updated = await Lead.findByIdAndUpdate(id, body, {
       new: true,
