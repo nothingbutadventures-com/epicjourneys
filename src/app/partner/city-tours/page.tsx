@@ -210,7 +210,7 @@ export default function BookTourPage() {
                   <TableCell colSpan={7} align="center" sx={{ py: 4, color: "#94a3b8", fontSize: "0.82rem" }}>
                     {rowsAll.length === 0
                       ? tab === "mine"
-                        ? "No tours are running from your city yet. Check the All tours tab or request a tour from Tour Request."
+                        ? "No tours are running from your city yet. Check the All tours tab or request a tour from Tour Requests."
                         : "No tours have upcoming bookable dates right now."
                       : "No tours match these filters"}
                   </TableCell>

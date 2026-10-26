@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import Destination from "@/models/Destination";
 
 export interface IBookingTraveller {
   firstName: string;
@@ -42,6 +43,7 @@ export interface IBooking extends Document {
   bookedByRole: "user" | "partner";
   partnerId?: mongoose.Types.ObjectId;
   locationId?: mongoose.Types.ObjectId;
+  commissionPartnerId?: mongoose.Types.ObjectId | null;
   userId?: mongoose.Types.ObjectId;
   travellers: IBookingTraveller[];
   roomSupplementInr: number;
@@ -127,6 +129,8 @@ const BookingSchema = new Schema<IBooking>(
     },
     // The location this booking belongs to. Partners see bookings by location, so a new partner inherits them.
     locationId: { type: Schema.Types.ObjectId, ref: "Destination", default: null, index: true },
+    // The partner managing the location when the booking was made. They earn commission on it, even if the location later changes partner.
+    commissionPartnerId: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
     userId: { type: Schema.Types.ObjectId, ref: "User" },
     travellers: { type: [TravellerSchema], default: [] },
     roomSupplementInr: { type: Number, default: 0 },
@@ -144,6 +148,17 @@ const BookingSchema = new Schema<IBooking>(
   },
   { timestamps: true }
 );
+
+// Every new booking is tied to the location's partner at that moment (covers all creation paths).
+BookingSchema.pre("save", async function () {
+  if (!this.isNew || this.commissionPartnerId || !this.locationId) return;
+  try {
+    const dest: any = await Destination.findById(this.locationId).select("partnerId").lean();
+    if (dest?.partnerId) this.commissionPartnerId = dest.partnerId;
+  } catch (e) {
+    console.error("commission partner lookup failed", e);
+  }
+});
 
 BookingSchema.index({ bookingRef: 1 });
 BookingSchema.index({ tourId: 1 });

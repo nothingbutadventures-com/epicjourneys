@@ -4,6 +4,7 @@ import Tour from "@/models/Tour";
 import Destination from "@/models/Destination";
 import User from "@/models/User";
 import { getAuthFromRequest } from "@/lib/auth";
+import { loadLiveSpecials, specialForTour } from "@/lib/special-discounts";
 import { applyBaseDepartures, cleanItinerary } from "@/lib/launch";
 import { calculateDistanceKm } from "@/lib/geo";
 
@@ -77,7 +78,31 @@ export async function GET(req: NextRequest) {
 
     // Distance is measured to the nearest start/end city of the tour (or only the selected one),
     // falling back to the target city for tours without dated departures.
+    // Live travel-style offers override the dates' own discounts for shoppers. The admin list (all=true) shows stored values.
+    const live = await loadLiveSpecials();
+    const showStored = all && isAdmin;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     let processedTours = tours.map((tour: any) => {
+      const special = specialForTour(tour, live);
+      if (special && !showStored) {
+        tour = {
+          ...tour,
+          departures: (tour.departures || []).map((d: any) => ({ ...d, baseDiscountPercentage: d.discountPercentage || 0, discountPercentage: special.percentage })),
+          discountPercentage: special.percentage,
+        };
+      }
+      // Headline price = the cheapest upcoming date after its discount; listPriceInr is that date's price before it.
+      if (!showStored) {
+        const upcoming = (tour.departures || []).filter((d: any) => new Date(d.startDate) >= today);
+        if (upcoming.length) {
+          const unit = (d: any) => Math.round((d.price ?? tour.priceInr) * (1 - (d.discountPercentage || 0) / 100));
+          const cheapest = upcoming.reduce((a: any, b: any) => (unit(b) < unit(a) ? b : a));
+          tour = { ...tour, listPriceInr: cheapest.price ?? tour.priceInr, priceInr: unit(cheapest), discountPercentage: Math.max(...upcoming.map((d: any) => d.discountPercentage || 0)) };
+        }
+      }
+      tour = { ...tour, specialOffer: special };
       let distanceKm: number | null = null;
       if (userLat !== null && userLng !== null) {
         let cities = (tour.departures || [])

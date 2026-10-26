@@ -48,13 +48,23 @@ export async function GET(req: NextRequest) {
     const statsMap = new Map();
     bookingStats.forEach((s) => statsMap.set(s._id.toString(), s));
 
+    // Commission earned so far (a % of what customers have paid) on bookings made while the partner managed the location.
+    const paid = await Booking.aggregate([
+      { $match: { commissionPartnerId: { $in: partnerIds }, status: { $ne: "cancelled" } } },
+      { $group: { _id: "$commissionPartnerId", paid: { $sum: { $min: ["$amountPaidInr", "$totalAmountInr"] } } } },
+    ]);
+    const paidMap = new Map(paid.map((p) => [String(p._id), p.paid]));
+
     const enrichedPartners = partners.map((partner) => {
       const stats = statsMap.get(partner._id.toString()) || {
         totalBookings: 0,
         totalRevenue: 0,
       };
+      const rate = (partner as any).commissionPercent ?? 5;
       return {
         ...partner,
+        commissionPercent: rate,
+        commissionEarned: Math.round(((paidMap.get(partner._id.toString()) || 0) * rate) / 100),
         stats,
       };
     });
@@ -116,6 +126,11 @@ export async function POST(req: NextRequest) {
     const disc = await sanitizePartnerDiscountIds(body.partnerDiscountIds ?? []);
     if (disc.error) return NextResponse.json({ error: disc.error }, { status: 400 });
 
+    const commission = body.commissionPercent === undefined || body.commissionPercent === "" ? 5 : Number(body.commissionPercent);
+    if (!Number.isFinite(commission) || commission < 0 || commission > 100) {
+      return NextResponse.json({ error: "Commission must be between 0 and 100 percent." }, { status: 400 });
+    }
+
     const hashedPassword = await hashPassword(password);
 
     const partner = await User.create({
@@ -127,6 +142,7 @@ export async function POST(req: NextRequest) {
       ...extra,
       assignedDestination: assignedDestination || null,
       partnerDiscountIds: disc.ids,
+      commissionPercent: commission,
     });
 
     if (assignedDestination) {

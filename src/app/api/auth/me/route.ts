@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import User from "@/models/User";
 import Destination from "@/models/Destination";
-import { getAuthFromRequest } from "@/lib/auth";
+import { getAuthFromRequest, signToken } from "@/lib/auth";
+import { loadStaffPerms } from "@/lib/staff";
 
 export async function GET(req: NextRequest) {
   try {
@@ -22,8 +23,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ authenticated: false }, { status: 401 });
     }
 
-    return NextResponse.json({
+    // Admin panel access: "all" for super admins, the role's page list for staff. Staff get a fresh token
+    // so role changes made by a super admin apply on their next page load.
+    const perms = user.role === "admin" ? await loadStaffPerms(user as any) : undefined;
+    const staffToken = perms && user.role === "admin" ? signToken({ userId: user._id.toString(), email: user.email, role: "admin", name: user.name, perms }) : undefined;
+    const response = NextResponse.json({
       authenticated: true,
+      permissions: user.role === "admin" ? perms ?? "all" : undefined,
+      ...(staffToken ? { token: staffToken } : {}),
       user: {
         id: user._id,
         name: user.name,
@@ -33,6 +40,8 @@ export async function GET(req: NextRequest) {
         assignedDestination: user.assignedDestination,
       },
     });
+    if (staffToken) response.cookies.set("token", staffToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", maxAge: 2 * 60 * 60, path: "/" });
+    return response;
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

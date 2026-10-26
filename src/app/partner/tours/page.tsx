@@ -154,7 +154,7 @@ export default function TourRequestPage() {
   return (
     <Box>
       <Box sx={{ mb: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem", lineHeight: 1.2 }}>Tour Request</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem", lineHeight: 1.2 }}>Tour Requests</Typography>
         <Typography variant="caption" sx={{ color: "#64748b", fontSize: "0.75rem" }}>
           Find a tour and request to start it from {city?.name || "your city"}
         </Typography>

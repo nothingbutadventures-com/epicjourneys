@@ -11,6 +11,7 @@ import { buildSchedule, depositOption } from "@/lib/deposit";
 import { HOLD_MINUTES, requireAuth, startInstallmentPayment } from "@/lib/checkout-server";
 import { resolvePartnerDiscount } from "@/lib/partner-discounts";
 import { partnerCanBook } from "@/lib/partner-booking";
+import { effectiveDiscount, liveSpecialForTour } from "@/lib/special-discounts";
 
 const clean = (v: unknown) => String(v ?? "").trim();
 
@@ -96,7 +97,8 @@ export async function POST(req: NextRequest) {
     // Server-side pricing (never trust client totals)
     const quote = computeQuote({
       price: departure.price ?? tour.priceInr,
-      discountPercentage: departure.discountPercentage || 0,
+      // A live travel-style offer beats the date's own discount; the price is locked into the booking below.
+      discountPercentage: effectiveDiscount(departure.discountPercentage, await liveSpecialForTour(tour)),
       singleRoomPrice: tour.singleRoomPriceInr || 0,
       rooms: travellers.map((t) => t.roomType),
     });

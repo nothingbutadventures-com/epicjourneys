@@ -28,3 +28,11 @@ export async function resolvePartnerDiscount(partnerUserId: string, discountId: 
   if (!discount || !discountUsable(discount)) return { error: "That discount is no longer active or has expired.", status: 400 };
   return { discount, amountInr: partnerDiscountAmount(subtotal, discount) };
 }
+
+export function validateDiscountFields(body: any): string | null {
+  const value = Number(body.value);
+  if (!Number.isFinite(value) || value <= 0) return "Enter a discount value greater than 0.";
+  if ((body.discountType || "percentage") === "percentage" && value > 100) return "A percentage discount can't be more than 100.";
+  return null;
+}
+

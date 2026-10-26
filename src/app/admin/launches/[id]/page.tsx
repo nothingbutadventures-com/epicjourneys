@@ -292,7 +292,7 @@ export default function AdminLaunchDetailPage() {
                 {addresses.map((a) => <MenuItem key={a._id} value={a._id}>{a.label} — {a.address}</MenuItem>)}
               </Select>
             </FormControl>
-            {addresses.length === 0 && <Typography variant="caption" sx={{ color: "#64748b", display: "block", mt: 0.5 }}>{city?.name} has no addresses yet — add them under Destinations & Cities.</Typography>}
+            {addresses.length === 0 && <Typography variant="caption" sx={{ color: "#64748b", display: "block", mt: 0.5 }}>{city?.name} has no addresses yet — add them under Destinations.</Typography>}
           </SectionPaper>
 
           {(launch.startNotes?.length > 0 || launch.endNotes?.length > 0) && (

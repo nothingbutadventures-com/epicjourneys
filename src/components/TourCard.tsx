@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 
@@ -36,6 +37,8 @@ interface TourCardProps {
     travelStyles?: string[];
     physicalRating?: string;
     discountPercentage?: number;
+    listPriceInr?: number;
+    specialOffer?: { name: string; percentage: number; endsAt: string } | null;
   };
 }
 
@@ -115,8 +118,27 @@ export default function TourCard({ tour, fromCityId, hideDescription }: TourCard
           }}
         />
 
-        {/* Optional Discount Badge */}
-        {tour.discountPercentage ? (
+        {/* Discount badge: a live special offer gets its own, louder ribbon */}
+        {tour.specialOffer ? (
+          <Chip
+            icon={<BoltRoundedIcon sx={{ fontSize: "15px !important", color: "#0f172a !important" }} />}
+            label={`${tour.specialOffer.percentage}% OFF`}
+            size="small"
+            sx={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+              background: "linear-gradient(135deg, #FFB84D 0%, #FF9900 100%)",
+              color: "#0f172a",
+              fontWeight: 800,
+              fontSize: "0.72rem",
+              letterSpacing: "0.02em",
+              borderRadius: "4px",
+              height: 24,
+              boxShadow: "0 4px 12px rgba(255,153,0,0.45)",
+            }}
+          />
+        ) : tour.discountPercentage ? (
           <Chip
             label={`${tour.discountPercentage}% OFF`}
             size="small"
@@ -134,6 +156,17 @@ export default function TourCard({ tour, fromCityId, hideDescription }: TourCard
           />
         ) : null}
       </Box>
+
+      {tour.specialOffer && (
+        <Box sx={{ px: 2, py: 0.75, bgcolor: "#FFF3DB", borderBottom: "1px solid #FFD699", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+          <Typography noWrap sx={{ fontSize: "0.74rem", fontWeight: 800, color: "#0f172a" }}>
+            {tour.specialOffer.name || "Limited-time offer"}
+          </Typography>
+          <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#92400e", whiteSpace: "nowrap" }}>
+            Ends {new Date(tour.specialOffer.endsAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}
+          </Typography>
+        </Box>
+      )}
 
       {/* Content */}
       <CardContent sx={{ p: 2.25, flexGrow: 1, display: "flex", flexDirection: "column" }}>
@@ -253,7 +286,7 @@ export default function TourCard({ tour, fromCityId, hideDescription }: TourCard
             </Typography>
             {tour.discountPercentage ? (
               <Typography component="span" sx={{ color: "#94a3b8", fontSize: "0.72rem", textDecoration: "line-through" }}>
-                ₹{Math.round(tour.priceInr / (1 - tour.discountPercentage / 100)).toLocaleString("en-IN")}
+                ₹{(tour.listPriceInr && tour.listPriceInr > tour.priceInr ? tour.listPriceInr : Math.round(tour.priceInr / (1 - tour.discountPercentage / 100))).toLocaleString("en-IN")}
               </Typography>
             ) : null}
           </Box>

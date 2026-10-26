@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import Discount from "@/models/Discount";
 import User from "@/models/User";
 import { getAuthFromRequest } from "@/lib/auth";
+import { validateDiscountFields } from "@/lib/partner-discounts";
 
 const isAdmin = (req: NextRequest) => getAuthFromRequest(req)?.role === "admin";
 
@@ -37,13 +38,6 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
-
-export function validateDiscountFields(body: any): string | null {
-  const value = Number(body.value);
-  if (!Number.isFinite(value) || value <= 0) return "Enter a discount value greater than 0.";
-  if ((body.discountType || "percentage") === "percentage" && value > 100) return "A percentage discount can't be more than 100.";
-  return null;
 }
 
 export async function POST(req: NextRequest) {

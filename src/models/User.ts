@@ -17,6 +17,8 @@ export interface IUser extends Document {
   otpLastSent?: Date;
   assignedDestination?: mongoose.Types.ObjectId;
   partnerDiscountIds?: mongoose.Types.ObjectId[];
+  adminRoleId?: mongoose.Types.ObjectId | null;
+  commissionPercent?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,6 +51,10 @@ const UserSchema = new Schema<IUser>(
       default: null,
     },
     // Partner-only discounts an admin has attached; the partner can apply them when booking for a customer.
+    // Partners earn this % of the bookings made for their location. Set by admins.
+    commissionPercent: { type: Number, default: 5, min: 0, max: 100 },
+    // Staff: an admin-panel role limiting which pages and APIs this admin can use. Empty = super admin.
+    adminRoleId: { type: Schema.Types.ObjectId, ref: "Role", default: null },
     partnerDiscountIds: [{ type: Schema.Types.ObjectId, ref: "Discount" }],
   },
   { timestamps: true }

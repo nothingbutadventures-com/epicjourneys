@@ -5,6 +5,7 @@ import Destination from "@/models/Destination";
 import { getAuthFromRequest } from "@/lib/auth";
 import { calculateDistanceKm } from "@/lib/geo";
 import { bookedSeatsByDeparture } from "@/lib/departures";
+import { liveSpecialForTour } from "@/lib/special-discounts";
 import { applyBaseDepartures, cleanItinerary, refreshTourDerived } from "@/lib/launch";
 
 export async function GET(
@@ -48,6 +49,9 @@ export async function GET(
     startOfToday.setHours(0, 0, 0, 0);
     // raw=true (admin edit form) returns every departure, including past ones
     const raw = searchParams.get("raw") === "true";
+    // A live travel-style offer overrides every date's own discount for customers. The admin edit form (raw)
+    // still gets the stored discounts so saving never bakes an offer into a date.
+    const special = await liveSpecialForTour(tour as any);
     const departures = (tour.departures || [])
       .filter((d: any) => raw || new Date(d.startDate) >= startOfToday)
       .sort((a: any, b: any) => +new Date(a.startDate) - +new Date(b.startDate))
@@ -72,7 +76,8 @@ export async function GET(
           startDate: d.startDate,
           endDate: d.endDate,
           seats: d.seats,
-          discountPercentage: d.discountPercentage || 0,
+          discountPercentage: !raw && special ? special.percentage : d.discountPercentage || 0,
+          baseDiscountPercentage: d.discountPercentage || 0,
           booked: bookedSeats,
           available: Math.max(0, d.seats - bookedSeats),
         };
@@ -102,6 +107,8 @@ export async function GET(
       success: true,
       data: {
         ...tourObj,
+        discountPercentage: !raw && special ? special.percentage : tourObj.discountPercentage,
+        specialOffer: special,
         departures,
         distanceKm,
         baseStartCity: baseCity ? { id: String(baseCity._id), name: baseCity.name, state: baseCity.state } : null,

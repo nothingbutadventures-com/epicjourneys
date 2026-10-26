@@ -346,7 +346,7 @@ export default function AdminToursPage() {
             variant="h5"
             sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem", lineHeight: 1.2 }}
           >
-            Tours Management
+            All Tours
           </Typography>
           <Typography variant="caption" sx={{ color: "#64748b", fontSize: "0.75rem" }}>
             Curated Indian tour itineraries, partner location departures and base pricing in INR (₹)
@@ -437,7 +437,7 @@ export default function AdminToursPage() {
                   Base Location Only / No Partner ({counts.baseOnly})
                 </MenuItem>
                 <MenuItem value="pending_requests">
-                  Has Pending Tours Requests ({counts.pendingRequests})
+                  Has Pending Tour Requests ({counts.pendingRequests})
                 </MenuItem>
                 <MenuItem value="multi_city">
                   Multi-Location Departures ({counts.multiCity})
@@ -529,7 +529,7 @@ export default function AdminToursPage() {
                     : partnerStatusFilter === "base_only"
                     ? "Base Location Only"
                     : partnerStatusFilter === "pending_requests"
-                    ? "Pending Tours Requests"
+                    ? "Pending Tour Requests"
                     : "Multi-Location"
                 }`}
                 size="small"

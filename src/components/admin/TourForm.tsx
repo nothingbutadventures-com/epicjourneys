@@ -58,7 +58,9 @@ export default function TourForm({ tourId }: { tourId?: string }) {
   // Basic tour ("Joining / Leaving"): where it starts/ends and its own dates
   const [baseCityId, setBaseCityId] = useState("");
   const [baseAddressId, setBaseAddressId] = useState("");
-  const [baseDates, setBaseDates] = useState<{ _id?: string; startDate: string; seats: number | ""; price: number | ""; discountPercentage: number; booked?: number }[]>([]);
+  const [baseDates, setBaseDates] = useState<{ _id?: string; startDate: string; seats: number | ""; price: number | ""; discountPercentage: number; booked?: number; isNew?: boolean; touched?: boolean }[]>([]);
+  // Travel-style offers that are live right now; they prefill the discount of every date added in this form.
+  const [liveOffers, setLiveOffers] = useState<{ travelStyle: string; percentage: number; name: string; endsAt: string }[]>([]);
   const [singleRoomPrice, setSingleRoomPrice] = useState<number | "">("");
   const [depositType, setDepositType] = useState<"amount" | "percentage">("percentage");
   const [depositValue, setDepositValue] = useState<number | "">(30);
@@ -72,6 +74,8 @@ export default function TourForm({ tourId }: { tourId?: string }) {
   const [travelStylesList, setTravelStylesList] = useState<any[]>([]);
   const [discountsList, setDiscountsList] = useState<any[]>([]);
   const [selectedTravelStyles, setSelectedTravelStyles] = useState<string[]>([]);
+  // The best live offer among the selected travel styles (offers never stack).
+  const special = liveOffers.filter((o) => selectedTravelStyles.includes(o.travelStyle)).sort((a, b) => b.percentage - a.percentage)[0] || null;
   const [physicalRatingsList, setPhysicalRatingsList] = useState<any[]>([]);
   const [selectedPhysicalRating, setSelectedPhysicalRating] = useState<string>("");
 
@@ -137,6 +141,21 @@ export default function TourForm({ tourId }: { tourId?: string }) {
       }
     })();
   }, [tourId]);
+
+  useEffect(() => {
+    fetch("/api/special-discounts?active=true")
+      .then((r) => r.json())
+      .then((d) => d.success && setLiveOffers(d.data || []))
+      .catch(() => {});
+  }, []);
+
+  // Dates added in this form (and not touched by hand) follow the live offer, and drop back to 0 when there is none.
+  useEffect(() => {
+    setBaseDates((prev) => {
+      const next = prev.map((d) => (d.isNew && !d.touched && d.discountPercentage !== (special?.percentage ?? 0) ? { ...d, discountPercentage: special?.percentage ?? 0 } : d));
+      return next.some((d, i) => d !== prev[i]) ? next : prev;
+    });
+  }, [special?.percentage]);
 
   const fetchClassifications = async () => {
     try {
@@ -316,7 +335,13 @@ export default function TourForm({ tourId }: { tourId?: string }) {
           basePriceInr: Number(basePrice) || 0,
           baseStartCityId: baseCityId || null,
           baseAddressId: baseAddressId || null,
-          baseDepartures: baseDates.map((d) => ({ ...d, seats: Number(d.seats), price: Number(d.price) || Number(basePrice) || 0 })),
+          // A prefilled, untouched discount is the live offer itself: store 0 so the date goes back to no discount when the offer ends.
+          baseDepartures: baseDates.map(({ isNew, touched, ...d }) => ({
+            ...d,
+            seats: Number(d.seats),
+            price: Number(d.price) || Number(basePrice) || 0,
+            discountPercentage: isNew && !touched && special && d.discountPercentage === special.percentage ? 0 : d.discountPercentage,
+          })),
           singleRoomPriceInr: Number(singleRoomPrice) || 0,
           depositType,
           depositValue: Number(depositValue) || 0,
@@ -893,12 +918,19 @@ export default function TourForm({ tourId }: { tourId?: string }) {
             <Button
               size="small"
               startIcon={<AddRoundedIcon sx={{ fontSize: 16 }} />}
-              onClick={() => setBaseDates([...baseDates, { startDate: "", seats: Number(maxGroupSize) || 15, price: basePrice, discountPercentage: 0 }])}
+              onClick={() => setBaseDates([...baseDates, { startDate: "", seats: Number(maxGroupSize) || 15, price: basePrice, discountPercentage: special?.percentage ?? 0, isNew: true, touched: false }])}
               sx={{ borderRadius: "4px" }}
             >
               Add Date
             </Button>
           </Box>
+          {special && (
+            <Alert severity="info" sx={{ mb: 1.25, borderRadius: "4px", fontSize: "0.8rem" }}>
+              <strong>{special.name || `${special.travelStyle} offer`}: {special.percentage}% off</strong> is live for {special.travelStyle} tours until{" "}
+              {new Date(special.endsAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}. Customers get it on every date of this tour while it lasts, and
+              new dates are prefilled with it. When it ends, dates added now go back to no discount.
+            </Alert>
+          )}
           {baseDates.length === 0 && <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8" }}>No dates yet.</Typography>}
           {baseDates.map((d, i) => {
             const set = (patch: Partial<typeof d>) => setBaseDates(baseDates.map((x, j) => (j === i ? { ...x, ...patch } : x)));
@@ -918,8 +950,11 @@ export default function TourForm({ tourId }: { tourId?: string }) {
                   <Grid size={{ xs: 8, sm: 3 }}>
                     <FormControl fullWidth size="small">
                       <InputLabel>Discount</InputLabel>
-                      <Select value={d.discountPercentage} label="Discount" onChange={(e) => set({ discountPercentage: Number(e.target.value) })} sx={{ borderRadius: "4px" }}>
+                      <Select value={d.discountPercentage} label="Discount" onChange={(e) => set({ discountPercentage: Number(e.target.value), touched: true })} sx={{ borderRadius: "4px" }}>
                         <MenuItem value={0}>No Discount (0%)</MenuItem>
+                        {d.discountPercentage > 0 && !discountsList.some((x) => x.value === d.discountPercentage) && (
+                          <MenuItem value={d.discountPercentage}>{special && d.discountPercentage === special.percentage ? `Special offer (${d.discountPercentage}% OFF)` : `Custom (${d.discountPercentage}% OFF)`}</MenuItem>
+                        )}
                         {discountsList.map((disc) => (
                           <MenuItem key={disc._id} value={disc.value}>
                             {disc.name} ({disc.value}% OFF)

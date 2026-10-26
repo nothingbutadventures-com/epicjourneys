@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { canOpenPage, firstAllowedHref } from "@/lib/permissions";
 import {
   Box,
   Drawer,
@@ -43,6 +44,12 @@ import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
 import StarRateRoundedIcon from "@mui/icons-material/StarRateRounded";
 import RocketLaunchRoundedIcon from "@mui/icons-material/RocketLaunchRounded";
 import ContactSupportRoundedIcon from "@mui/icons-material/ContactSupportRounded";
+import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
+import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSettingsRounded";
+import LockRoundedIcon from "@mui/icons-material/LockRounded";
+import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
+import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
+import PinDropRoundedIcon from "@mui/icons-material/PinDropRounded";
 import PersonAddAlt1RoundedIcon from "@mui/icons-material/PersonAddAlt1Rounded";
 import WorkRoundedIcon from "@mui/icons-material/WorkRounded";
 import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
@@ -80,19 +87,24 @@ const NAV_ITEMS: NavItem[] = [
     icon: <LuggageRoundedIcon sx={{ fontSize: 18 }} />,
     children: [
       {
-        text: "Tours Management",
+        text: "Create New Tour",
+        href: "/admin/tours/create",
+        icon: <AddCircleRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+      {
+        text: "All Tours",
         href: "/admin/tours",
         icon: <MapRoundedIcon sx={{ fontSize: 16 }} />,
       },
       {
-        text: "Tours Request",
+        text: "Tour Requests",
         href: "/admin/launches",
         icon: <RocketLaunchRoundedIcon sx={{ fontSize: 16 }} />,
       },
     ],
   },
   {
-    text: "Destinations & Cities",
+    text: "Destinations",
     href: "/admin/locations",
     icon: <MapRoundedIcon sx={{ fontSize: 18 }} />,
   },
@@ -104,6 +116,11 @@ const NAV_ITEMS: NavItem[] = [
         text: "Partner Accounts",
         href: "/admin/partners",
         icon: <PeopleAltRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+      {
+        text: "Partner Locations",
+        href: "/admin/partner-locations",
+        icon: <PinDropRoundedIcon sx={{ fontSize: 16 }} />,
       },
       {
         text: "Partner Requests",
@@ -145,13 +162,18 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    text: "Discounts",
+    text: "Promotions",
     icon: <PercentRoundedIcon sx={{ fontSize: 18 }} />,
     children: [
       {
         text: "Discounts",
         href: "/admin/discounts",
         icon: <PercentRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+      {
+        text: "Special Discounts",
+        href: "/admin/special-discounts",
+        icon: <LocalOfferRoundedIcon sx={{ fontSize: 16 }} />,
       },
       {
         text: "Promo Codes",
@@ -177,9 +199,20 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    text: "User Management",
-    href: "/admin/users",
-    icon: <PeopleAltRoundedIcon sx={{ fontSize: 18 }} />,
+    text: "Management",
+    icon: <ManageAccountsRoundedIcon sx={{ fontSize: 18 }} />,
+    children: [
+      {
+        text: "User Management",
+        href: "/admin/users",
+        icon: <PeopleAltRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+      {
+        text: "Role Management",
+        href: "/admin/roles",
+        icon: <AdminPanelSettingsRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+    ],
   },
   {
     text: "Reviews",
@@ -201,6 +234,42 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  // What this admin may open: "all" for super admins, a page list for staff, null until we know.
+  const [access, setAccess] = useState<"all" | string[] | null>(null);
+
+  useEffect(() => {
+    if (pathname === "/admin/login") return;
+    const token = localStorage.getItem("epic_token");
+    fetch("/api/auth/me", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then(async (r) => ({ ok: r.ok, data: await r.json().catch(() => ({})) }))
+      .then(({ ok, data }) => {
+        if (!ok || !data.authenticated || data.user?.role !== "admin") {
+          localStorage.removeItem("epic_token");
+          router.replace("/admin/login");
+          return;
+        }
+        // Staff get a fresh token carrying their latest permissions.
+        if (data.token) localStorage.setItem("epic_token", data.token);
+        setAccess(data.permissions ?? "all");
+      })
+      .catch(() => setAccess("all"));
+    // Re-check on every full page load of the admin panel; route changes reuse the result.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const nav = useMemo(() => {
+    if (access === null) return [];
+    const ok = (href?: string) => !href || canOpenPage(access, href);
+    return NAV_ITEMS.map((item) => (item.children ? { ...item, children: item.children.filter((c) => ok(c.href)) } : item)).filter((item) =>
+      item.children ? item.children.length > 0 : ok(item.href)
+    );
+  }, [access]);
+
+  const allowed = access === null || canOpenPage(access, pathname);
+  // A staff member without the dashboard lands on their first allowed page instead.
+  useEffect(() => {
+    if (access && access !== "all" && pathname === "/admin" && !allowed) router.replace(firstAllowedHref(access));
+  }, [access, allowed, pathname, router]);
   // Accordion groups the user has explicitly toggled; a group containing the
   // current page is open by default.
   const [toggled, setToggled] = useState<Record<string, boolean>>({});
@@ -277,9 +346,11 @@ export default function AdminLayout({
 
       {/* Nav List */}
       <List sx={{ px: 1, py: 1.5, flexGrow: 1, overflowY: "auto" }}>
-        {NAV_ITEMS.map((item) => {
+        {nav.map((item) => {
           const isActive = (href: string) =>
-            pathname === href || (href !== "/admin" && pathname.startsWith(href));
+            href === "/admin/tours"
+              ? pathname === href || (pathname.startsWith(`${href}/`) && !pathname.startsWith("/admin/tours/create"))
+              : pathname === href || (href !== "/admin" && pathname.startsWith(href));
           const btnSx = (active: boolean, indent = 0) => ({
             borderRadius: "4px",
             py: 0.75,
@@ -540,7 +611,18 @@ export default function AdminLayout({
           mt: "48px",
         }}
       >
-        {children}
+        {access === null ? null : allowed ? (
+          children
+        ) : (
+          <Box sx={{ maxWidth: 460, mx: "auto", mt: 10, textAlign: "center" }}>
+            <Box sx={{ width: 56, height: 56, borderRadius: "50%", bgcolor: "#f1f5f9", color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center", mx: "auto", mb: 2 }}>
+              <LockRoundedIcon />
+            </Box>
+            <Typography sx={{ fontWeight: 800, fontSize: "1.2rem", color: "#0f172a" }}>You don&apos;t have access to this page</Typography>
+            <Typography sx={{ color: "#64748b", mt: 0.75, mb: 2.5, fontSize: "0.9rem" }}>Your role doesn&apos;t include this section. Ask a super admin if you need it.</Typography>
+            <Button component={Link} href={firstAllowedHref(access)} variant="contained" sx={{ bgcolor: "#0f172a", "&:hover": { bgcolor: "#1e293b" } }}>Go to an allowed page</Button>
+          </Box>
+        )}
       </Box>
     </Box>
   );

@@ -58,8 +58,9 @@ interface PartnerForm {
   address: string;
   notes: string;
   assignedDestination: string;
+  commissionPercent: string;
 }
-const blankForm: PartnerForm = { name: "", companyName: "", email: "", password: "", phone: "", secondaryPhone: "", address: "", notes: "", assignedDestination: "" };
+const blankForm: PartnerForm = { name: "", companyName: "", email: "", password: "", phone: "", secondaryPhone: "", address: "", notes: "", assignedDestination: "", commissionPercent: "5" };
 
 export default function AdminPartnerRequestsPage() {
   const [destinations, setDestinations] = useState<any[]>([]);
@@ -321,6 +322,18 @@ export default function AdminPartnerRequestsPage() {
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <TextField label="Office address" fullWidth multiline minRows={2} value={form.address} onChange={set("address")} />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  label="Commission (%)"
+                  type="number"
+                  required
+                  fullWidth
+                  value={form.commissionPercent}
+                  onChange={set("commissionPercent")}
+                  slotProps={{ htmlInput: { min: 0, max: 100, step: 0.5 } }}
+                  helperText="Share of every booking made for this partner's location (default 5%)"
+                />
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <FormControl fullWidth size="small">

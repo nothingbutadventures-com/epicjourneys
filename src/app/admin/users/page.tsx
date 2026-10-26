@@ -30,6 +30,11 @@ import {
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 
+const authHeaders = (): Record<string, string> => {
+  const t = typeof window !== "undefined" ? localStorage.getItem("epic_token") : null;
+  return t ? { Authorization: `Bearer ${t}` } : {};
+};
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +48,7 @@ export default function AdminUsersPage() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/users?role=${roleFilter}`);
+      const res = await fetch(`/api/users?role=${roleFilter}`, { headers: authHeaders() });
       const data = await res.json();
       if (data.success) {
         setUsers(data.data || []);
@@ -61,7 +66,7 @@ export default function AdminUsersPage() {
     try {
       await fetch(`/api/users/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ isActive: !current }),
       });
       fetchUsers();
@@ -73,17 +78,17 @@ export default function AdminUsersPage() {
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Delete user account "${name}"?`)) return;
     try {
-      await fetch(`/api/users/${id}`, { method: "DELETE" });
+      await fetch(`/api/users/${id}`, { method: "DELETE", headers: authHeaders() });
       fetchUsers();
     } catch (e) {
       console.error(e);
     }
   };
 
-  const getRoleChip = (role: string) => {
+  const getRoleChip = (role: string, staffRole?: string) => {
     switch (role) {
       case "admin":
-        return <Chip label="Admin" size="small" sx={{ bgcolor: "#0f172a", color: "#ffffff", fontWeight: 700, borderRadius: "4px" }} />;
+        return <Chip label={staffRole ? `Staff · ${staffRole}` : "Super Admin"} size="small" sx={{ bgcolor: "#0f172a", color: "#ffffff", fontWeight: 700, borderRadius: "4px" }} />;
       case "partner":
         return <Chip label="Partner" size="small" sx={{ bgcolor: "#eff6ff", color: "#1d4ed8", fontWeight: 700, borderRadius: "4px" }} />;
       default:
@@ -206,7 +211,7 @@ export default function AdminUsersPage() {
                       {u.email}
                     </TableCell>
                     <TableCell>
-                      {getRoleChip(u.role)}
+                      {getRoleChip(u.role, u.adminRoleId?.name)}
                     </TableCell>
                     <TableCell sx={{ color: "#475569", fontSize: "0.8rem" }}>
                       {u.assignedDestination

@@ -41,6 +41,7 @@ export default function PartnerDashboardPage() {
   const [tours, setTours] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [launches, setLaunches] = useState<any[]>([]);
+  const [commission, setCommission] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,11 +53,13 @@ export default function PartnerDashboardPage() {
         const p = me.data?.[0] || null;
         setPartner(p);
         const cityId = p?.assignedDestination?._id;
-        const [b, t, l] = await Promise.all([
+        const [b, t, l, cm] = await Promise.all([
           fetch("/api/bookings", { headers: h }).then((r) => r.json()),
           cityId ? fetch(`/api/tours?from=${cityId}`).then((r) => r.json()) : Promise.resolve({ data: [] }),
           fetch("/api/launches", { headers: h }).then((r) => r.json()),
+          fetch("/api/partner/commission", { headers: h }).then((r) => r.json()),
         ]);
+        if (cm.success) setCommission(cm.data);
         if (b.success) setBookings(b.data || []);
         else setError(b.error || "Failed to load bookings");
         setTours(t.data || []);
@@ -96,6 +99,13 @@ export default function PartnerDashboardPage() {
 
   const needsReply = launches.filter((l) => l.status === "awaiting_partner").length;
   const discounts: any[] = (partner?.partnerDiscountIds || []).filter(Boolean);
+
+  const commissionStats = commission
+    ? [
+        { label: "Commission earned", value: inr(commission.totals.earned), sub: `${commission.percent}% of customer payments`, color: "#059669" },
+        { label: "Pending commission", value: inr(commission.totals.pending), sub: "on unpaid balances", color: "#d97706" },
+      ]
+    : [];
 
   const stats = [
     { label: "Bookings handled", value: data.active.length },
@@ -141,6 +151,23 @@ export default function PartnerDashboardPage() {
           </Paper>
         ))}
       </Box>
+
+      {commission && (
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1fr" }, gap: 1.5, mb: 2.5 }}>
+          {commissionStats.map((c) => (
+            <Paper key={c.label} elevation={0} sx={{ p: 1.75, borderRadius: "4px", border: "1px solid #FFD699", bgcolor: "#FFF9EE" }}>
+              <Typography sx={{ fontSize: "0.7rem", color: "#B36B00", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{c.label}</Typography>
+              <Typography sx={{ fontSize: "1.3rem", fontWeight: 800, color: c.color, lineHeight: 1.3 }}>{c.value}</Typography>
+              <Typography sx={{ fontSize: "0.68rem", color: "#94a3b8" }}>{c.sub}</Typography>
+            </Paper>
+          ))}
+          <Paper component={Link} href="/partner/commission" elevation={0} sx={{ p: 1.75, borderRadius: "4px", border: "1px solid #e2e8f0", textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", justifyContent: "center", "&:hover": { borderColor: "#FF9900" } }}>
+            <Typography sx={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>Your rate</Typography>
+            <Typography sx={{ fontSize: "1.3rem", fontWeight: 800, lineHeight: 1.3 }}>{commission.percent}%</Typography>
+            <Typography sx={{ fontSize: "0.72rem", color: "#B36B00", fontWeight: 700 }}>See full breakdown →</Typography>
+          </Paper>
+        </Box>
+      )}
 
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}><CircularProgress size={24} /></Box>

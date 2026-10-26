@@ -50,10 +50,12 @@ function DepartureDates({
   departures,
   selectedId,
   onPick,
+  special,
 }: {
   departures: any[];
   selectedId: string;
   onPick: (d: any) => void;
+  special?: { name?: string; percentage: number; endsAt: string } | null;
 }) {
   const [filter, setFilter] = useState<string>("all");
   const cities: { id: string; name: string }[] = [];
@@ -74,7 +76,18 @@ function DepartureDates({
       <Typography component="h2" sx={{ fontWeight: 800, color: "#0f172a", fontSize: "1.4rem", letterSpacing: "-0.015em", mb: 0.5 }}>
         All departure dates ({departures.length})
       </Typography>
-      <Typography sx={{ color: "#64748b", fontSize: "0.9rem", mb: 2.5 }}>As seats fill, prices can change — pick your city and date, then book.</Typography>
+      <Typography sx={{ color: "#64748b", fontSize: "0.9rem", mb: special ? 1.5 : 2.5 }}>As seats fill, prices can change — pick your city and date, then book.</Typography>
+      {special && (
+        <Box sx={{ mb: 2.5, display: "inline-flex", alignItems: "center", gap: 1, px: 1.5, py: 0.75, bgcolor: "#FFF6E5", border: "1px solid #FFD699", borderRadius: "4px" }}>
+          <BoltRoundedIcon sx={{ fontSize: 18, color: "#E68A00" }} />
+          <Typography sx={{ fontSize: "0.85rem", fontWeight: 800, color: "#0f172a" }}>
+            {special.name || "Limited-time offer"}: {special.percentage}% off every date
+          </Typography>
+          <Typography sx={{ fontSize: "0.78rem", color: "#92400e", fontWeight: 600 }}>
+            until {new Date(special.endsAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}
+          </Typography>
+        </Box>
+      )}
 
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 3 }}>
         {[{ id: "all", name: "All departures" }, ...cities].map((c) => {
@@ -134,8 +147,13 @@ function DepartureDates({
                         "&:hover": soldOut ? {} : { borderColor: sel ? "#0f172a" : "#FF9900" },
                       }}
                     >
-                      <Box sx={{ py: 0.4, bgcolor: sel ? "#FF9900" : "#F2F4F7", fontSize: "0.72rem", fontWeight: 800, color: "#475569", textTransform: "uppercase" }}>
+                      <Box sx={{ position: "relative", py: 0.4, bgcolor: sel ? "#FF9900" : "#F2F4F7", fontSize: "0.72rem", fontWeight: 800, color: "#475569", textTransform: "uppercase" }}>
                         {utc(d.startDate, { weekday: "short" })}
+                        {special && !soldOut && (
+                          <Box title={`${special.percentage}% special offer`} sx={{ position: "absolute", top: 0, right: 0, display: "flex", alignItems: "center", gap: 0.1, px: 0.5, height: "100%", bgcolor: sel ? "#0f172a" : "#FF9900", color: sel ? "#FF9900" : "#0f172a", fontSize: "0.6rem", fontWeight: 800 }}>
+                            <BoltRoundedIcon sx={{ fontSize: 11 }} />-{special.percentage}%
+                          </Box>
+                        )}
                       </Box>
                       <Typography sx={{ fontSize: "1.35rem", fontWeight: 800, lineHeight: 1.2, mt: 0.5, textDecoration: soldOut ? "line-through" : "none" }}>
                         {utc(d.startDate, { day: "2-digit" })}
@@ -398,6 +416,16 @@ export default function TourDetailPage() {
             <Chip label={`${tour.discountPercentage}% off`} size="small" sx={{ bgcolor: "#ef4444", color: "#fff", fontWeight: 700 }} />
           ) : null}
         </Box>
+        {tour.specialOffer && (
+          <Box sx={{ mt: 1.5, px: 2, py: 1.25, bgcolor: "#FFF6E5", border: "1px solid #FFD699", borderLeft: "4px solid #FF9900", display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+            <Typography sx={{ fontWeight: 800, fontSize: "0.92rem", color: "#0f172a" }}>
+              {tour.specialOffer.name || "Limited-time offer"}: {tour.specialOffer.percentage}% off every date
+            </Typography>
+            <Typography sx={{ fontSize: "0.82rem", color: "#92400e" }}>
+              Book by {new Date(tour.specialOffer.endsAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}
+            </Typography>
+          </Box>
+        )}
 
         {/* Gallery */}
         <Box
@@ -542,6 +570,7 @@ export default function TourDetailPage() {
             {/* All departure dates (every city) */}
             {allDepartures.length > 0 && (
               <DepartureDates
+                special={tour.specialOffer}
                 departures={allDepartures}
                 selectedId={selectedDepartureId}
                 onPick={(d) => {
@@ -682,7 +711,12 @@ export default function TourDetailPage() {
                               {formatDate(d.startDate)} – {formatDate(d.endDate)}
                             </Typography>
                             {d.discountPercentage > 0 && !soldOut && (
-                              <Chip label={`${d.discountPercentage}% OFF`} size="small" sx={{ height: 20, fontSize: "0.68rem", fontWeight: 700, bgcolor: "#ef4444", color: "#fff", borderRadius: "4px" }} />
+                              <Chip
+                                icon={tour.specialOffer ? <BoltRoundedIcon sx={{ fontSize: "13px !important", color: "#0f172a !important" }} /> : undefined}
+                                label={tour.specialOffer ? `SALE ${d.discountPercentage}% OFF` : `${d.discountPercentage}% OFF`}
+                                size="small"
+                                sx={{ height: 20, fontSize: "0.68rem", fontWeight: 800, bgcolor: tour.specialOffer ? "#FF9900" : "#ef4444", color: tour.specialOffer ? "#0f172a" : "#fff", borderRadius: "4px" }}
+                              />
                             )}
                             {soldOut && (
                               <Chip label="Sold out" size="small" sx={{ height: 20, fontSize: "0.68rem", fontWeight: 700, bgcolor: "#E2E2E2", color: "#475569", borderRadius: "4px" }} />

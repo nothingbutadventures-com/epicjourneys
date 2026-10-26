@@ -66,6 +66,13 @@ export async function PUT(
     for (const k of ["secondaryPhone", "companyName", "address", "notes"] as const) {
       if (body[k] !== undefined) updateData[k] = String(body[k]).trim();
     }
+    if (body.commissionPercent !== undefined) {
+      const c = Number(body.commissionPercent);
+      if (body.commissionPercent === "" || !Number.isFinite(c) || c < 0 || c > 100) {
+        return NextResponse.json({ error: "Commission must be between 0 and 100 percent." }, { status: 400 });
+      }
+      updateData.commissionPercent = c;
+    }
     if (body.partnerDiscountIds !== undefined) {
       const disc = await sanitizePartnerDiscountIds(body.partnerDiscountIds);
       if (disc.error) return NextResponse.json({ error: disc.error }, { status: 400 });

@@ -9,6 +9,7 @@ import { bookedSeatsByDeparture } from "@/lib/departures";
 import Discount from "@/models/Discount";
 import mongoose from "mongoose";
 import { partnerCanBook } from "@/lib/partner-booking";
+import { effectiveDiscount, liveSpecialForTour } from "@/lib/special-discounts";
 import { discountUsable, discountedUnitPrice, partnerDiscountAmount } from "@/lib/pricing";
 
 export async function GET(req: NextRequest) {
@@ -162,7 +163,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Please choose one of the available dates." }, { status: 400 });
     }
 
-    const discount = departure ? departure.discountPercentage || 0 : 0;
+    const discount = departure ? effectiveDiscount(departure.discountPercentage, await liveSpecialForTour(tour)) : 0;
     const basePrice = departure ? departure.price ?? tour.priceInr : tour.priceInr;
     const pricePerPerson = discountedUnitPrice(basePrice, discount);
     const subtotal = travelers * pricePerPerson;

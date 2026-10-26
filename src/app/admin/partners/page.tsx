@@ -59,8 +59,9 @@ interface PartnerForm {
   notes: string;
   assignedDestination: string;
   partnerDiscountIds: string[];
+  commissionPercent: string;
 }
-const blankForm: PartnerForm = { name: "", companyName: "", email: "", password: "", phone: "", secondaryPhone: "", address: "", notes: "", assignedDestination: "", partnerDiscountIds: [] };
+const blankForm: PartnerForm = { name: "", companyName: "", email: "", password: "", phone: "", secondaryPhone: "", address: "", notes: "", assignedDestination: "", partnerDiscountIds: [], commissionPercent: "5" };
 
 export default function AdminPartnersPage() {
   const [partners, setPartners] = useState<any[]>([]);
@@ -121,6 +122,7 @@ export default function AdminPartnersPage() {
       notes: p.notes || "",
       assignedDestination: p.assignedDestination?._id || "",
       partnerDiscountIds: (p.partnerDiscountIds || []).filter(Boolean).map((d: any) => d._id),
+      commissionPercent: String(p.commissionPercent ?? 5),
     });
     setDialogError(null);
     setOpenDialog(true);
@@ -203,6 +205,7 @@ export default function AdminPartnersPage() {
                   <TableCell>Partner</TableCell>
                   <TableCell>Contact</TableCell>
                   <TableCell>Assigned Destination</TableCell>
+                  <TableCell>Commission</TableCell>
                   <TableCell>Partner Discounts</TableCell>
                   <TableCell>Bookings</TableCell>
                   <TableCell>Volume</TableCell>
@@ -240,6 +243,10 @@ export default function AdminPartnersPage() {
                       )}
                     </TableCell>
                     <TableCell>
+                      <Typography sx={{ fontWeight: 700, fontSize: "0.82rem", color: "#0f172a" }}>{partner.commissionPercent ?? 5}%</Typography>
+                      <Typography sx={{ fontSize: "0.68rem", color: "#059669" }}>{inr(partner.commissionEarned || 0)} earned</Typography>
+                    </TableCell>
+                    <TableCell>
                       {(partner.partnerDiscountIds || []).filter(Boolean).length > 0 ? (
                         <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", maxWidth: 220 }}>
                           {partner.partnerDiscountIds.filter(Boolean).map((d: any) => (
@@ -266,7 +273,7 @@ export default function AdminPartnersPage() {
                 ))}
                 {partners.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 4, color: "#94a3b8", fontSize: "0.8rem" }}>No partners yet</TableCell>
+                    <TableCell colSpan={8} align="center" sx={{ py: 4, color: "#94a3b8", fontSize: "0.8rem" }}>No partners yet</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -315,6 +322,18 @@ export default function AdminPartnersPage() {
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <TextField label="Office address" fullWidth multiline minRows={2} value={form.address} onChange={set("address")} />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  label="Commission (%)"
+                  type="number"
+                  required
+                  fullWidth
+                  value={form.commissionPercent}
+                  onChange={set("commissionPercent")}
+                  slotProps={{ htmlInput: { min: 0, max: 100, step: 0.5 } }}
+                  helperText="Share of every booking made for this partner's location"
+                />
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <FormControl fullWidth size="small">

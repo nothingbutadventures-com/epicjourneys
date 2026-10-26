@@ -20,7 +20,12 @@ import {
   Chip,
   Avatar,
   Tooltip,
+  Collapse,
 } from "@mui/material";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
+import LeaderboardRoundedIcon from "@mui/icons-material/LeaderboardRounded";
+import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
+import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import LuggageRoundedIcon from "@mui/icons-material/LuggageRounded";
 import RocketLaunchRoundedIcon from "@mui/icons-material/RocketLaunchRounded";
@@ -28,42 +33,47 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
+import SavingsRoundedIcon from "@mui/icons-material/SavingsRounded";
 import BookOnlineRoundedIcon from "@mui/icons-material/BookOnlineRounded";
 import MapRoundedIcon from "@mui/icons-material/MapRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 
 const DRAWER_WIDTH = 230;
 
-const NAV_ITEMS = [
+type Child = { text: string; href: string; icon: React.ReactNode };
+type NavItem = { text: string; href?: string; icon: React.ReactNode; children?: Child[] };
+
+const NAV_ITEMS: NavItem[] = [
   {
     text: "Dashboard",
     href: "/partner",
     icon: <DashboardRoundedIcon sx={{ fontSize: 18 }} />,
   },
   {
-    text: "Leads CRM",
-    href: "/partner/leads",
-    icon: <TrendingUpRoundedIcon sx={{ fontSize: 18 }} />,
+    text: "CRM",
+    icon: <LeaderboardRoundedIcon sx={{ fontSize: 18 }} />,
+    children: [{ text: "Leads", href: "/partner/leads", icon: <TrendingUpRoundedIcon sx={{ fontSize: 16 }} /> }],
   },
   {
     text: "Bookings",
-    href: "/partner/bookings",
     icon: <BookOnlineRoundedIcon sx={{ fontSize: 18 }} />,
+    children: [
+      { text: "Your Bookings", href: "/partner/bookings", icon: <ReceiptLongRoundedIcon sx={{ fontSize: 16 }} /> },
+      { text: "Book a Tour", href: "/partner/city-tours", icon: <MapRoundedIcon sx={{ fontSize: 16 }} /> },
+    ],
   },
   {
-    text: "Book Tour",
-    href: "/partner/city-tours",
-    icon: <MapRoundedIcon sx={{ fontSize: 18 }} />,
+    text: "Commission",
+    href: "/partner/commission",
+    icon: <SavingsRoundedIcon sx={{ fontSize: 18 }} />,
   },
   {
-    text: "Tour Request",
-    href: "/partner/tours",
-    icon: <LuggageRoundedIcon sx={{ fontSize: 18 }} />,
-  },
-  {
-    text: "My Requests",
-    href: "/partner/requests",
+    text: "Tour Launches",
     icon: <RocketLaunchRoundedIcon sx={{ fontSize: 18 }} />,
+    children: [
+      { text: "Tour Requests", href: "/partner/tours", icon: <LuggageRoundedIcon sx={{ fontSize: 16 }} /> },
+      { text: "My Requests", href: "/partner/requests", icon: <AssignmentRoundedIcon sx={{ fontSize: 16 }} /> },
+    ],
   },
 ];
 
@@ -76,6 +86,8 @@ export default function PartnerLayout({
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [partner, setPartner] = useState<any>(null);
+  // Groups the user has toggled by hand; a group containing the current page is open by default.
+  const [toggled, setToggled] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (pathname === "/partner/login") return;
@@ -164,47 +176,58 @@ export default function PartnerLayout({
       {/* Nav List */}
       <List sx={{ px: 1, py: 1.5, flexGrow: 1, overflowY: "auto" }}>
         {NAV_ITEMS.map((item) => {
-          const active =
-            pathname === item.href ||
-            (item.href !== "/partner" && pathname.startsWith(item.href));
+          const isActive = (href: string) =>
+            pathname === href ||
+            (href !== "/partner" && pathname.startsWith(`${href}/`)) ||
+            (href === "/partner/bookings" && pathname.startsWith("/partner/invoice"));
+          const btnSx = (active: boolean, indent = 0) => ({
+            borderRadius: "4px",
+            py: 0.75,
+            px: 1.25,
+            pl: 1.25 + indent,
+            bgcolor: active ? "#0f172a" : "transparent",
+            color: active ? "#ffffff" : "#475569",
+            "&:hover": { bgcolor: active ? "#1e293b" : "#f8fafc", color: active ? "#ffffff" : "#0f172a" },
+          });
+          const labelSx = (active: boolean) => ({ primary: { sx: { fontSize: "0.8rem", fontWeight: active ? 600 : 500 } } });
 
+          if (item.children) {
+            const childActive = item.children.some((c) => isActive(c.href));
+            const open = toggled[item.text] ?? childActive;
+            return (
+              <React.Fragment key={item.text}>
+                <ListItem disablePadding sx={{ mb: 0.25 }}>
+                  <ListItemButton onClick={() => setToggled((t) => ({ ...t, [item.text]: !open }))} aria-expanded={open} sx={{ ...btnSx(false), color: childActive ? "#0f172a" : "#475569" }}>
+                    <ListItemIcon sx={{ minWidth: 28, color: childActive ? "#0f172a" : "#64748b" }}>{item.icon}</ListItemIcon>
+                    <ListItemText primary={item.text} slotProps={labelSx(childActive)} />
+                    <ExpandMoreRoundedIcon sx={{ fontSize: 18, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }} />
+                  </ListItemButton>
+                </ListItem>
+                <Collapse in={open} timeout="auto" unmountOnExit>
+                  <List disablePadding sx={{ mb: 0.25 }}>
+                    {item.children.map((c) => {
+                      const active = isActive(c.href);
+                      return (
+                        <ListItem key={c.text} disablePadding sx={{ mb: 0.25 }}>
+                          <ListItemButton component={Link} href={c.href} onClick={() => setMobileOpen(false)} sx={btnSx(active, 2)}>
+                            <ListItemIcon sx={{ minWidth: 26, color: active ? "#ffffff" : "#64748b" }}>{c.icon}</ListItemIcon>
+                            <ListItemText primary={c.text} slotProps={labelSx(active)} />
+                          </ListItemButton>
+                        </ListItem>
+                      );
+                    })}
+                  </List>
+                </Collapse>
+              </React.Fragment>
+            );
+          }
+
+          const active = isActive(item.href!);
           return (
             <ListItem key={item.text} disablePadding sx={{ mb: 0.25 }}>
-              <ListItemButton
-                component={Link}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                sx={{
-                  borderRadius: "4px",
-                  py: 0.75,
-                  px: 1.25,
-                  bgcolor: active ? "#0f172a" : "transparent",
-                  color: active ? "#ffffff" : "#475569",
-                  "&:hover": {
-                    bgcolor: active ? "#1e293b" : "#f8fafc",
-                    color: active ? "#ffffff" : "#0f172a",
-                  },
-                }}
-              >
-                <ListItemIcon
-                  sx={{
-                    minWidth: 28,
-                    color: active ? "#ffffff" : "#64748b",
-                  }}
-                >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.text}
-                  slotProps={{
-                    primary: {
-                      sx: {
-                        fontSize: "0.8rem",
-                        fontWeight: active ? 600 : 500,
-                      },
-                    },
-                  }}
-                />
+              <ListItemButton component={Link} href={item.href!} onClick={() => setMobileOpen(false)} sx={btnSx(active)}>
+                <ListItemIcon sx={{ minWidth: 28, color: active ? "#ffffff" : "#64748b" }}>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} slotProps={labelSx(active)} />
               </ListItemButton>
             </ListItem>
           );

@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import User from "@/models/User";
 import Destination from "@/models/Destination";
 import { comparePassword, signToken } from "@/lib/auth";
+import { loadStaffPerms } from "@/lib/staff";
 
 export async function POST(req: NextRequest) {
   try {
@@ -53,7 +54,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const perms = await loadStaffPerms(user as any);
     const token = signToken({
+      ...(perms ? { perms } : {}),
       userId: user._id.toString(),
       email: user.email,
       role: user.role,
@@ -79,7 +82,7 @@ export async function POST(req: NextRequest) {
     response.cookies.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60,
+      maxAge: perms ? 2 * 60 * 60 : 7 * 24 * 60 * 60,
       path: "/",
     });
 
