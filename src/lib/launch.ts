@@ -231,7 +231,18 @@ export async function applyBaseDepartures(
     }
   }
 
-  if (input.baseDepartures === undefined) return {};
+  // Dates are managed from the tours list now: when only the location or address changed, the existing basic dates follow it.
+  if (input.baseDepartures === undefined) {
+    if (input.baseStartCityId !== undefined || input.baseAddressId !== undefined) {
+      const cityNow = tour.baseStartCityId || tour.destinationId;
+      for (const d of tour.departures || []) {
+        if (!isBase(d)) continue;
+        if (cityNow) d.cityId = cityNow;
+        d.addressId = tour.baseAddressId || null;
+      }
+    }
+    return {};
+  }
   if (!Array.isArray(input.baseDepartures)) return { error: "Dates must be a list" };
   const cityId = tour.baseStartCityId || tour.destinationId;
   if (input.baseDepartures.length && !cityId) return { error: "Choose the tour's start & end location first." };

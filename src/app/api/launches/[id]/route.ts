@@ -8,6 +8,7 @@ import { partnerLocation } from "@/lib/location-access";
 import { getAuthFromRequest } from "@/lib/auth";
 import { addMessage, isObjectId, publishLaunch, refreshEndDates, sanitizeLaunchPatch, unpublishLaunch } from "@/lib/launch";
 import type { LaunchStatus } from "@/lib/launch-shared";
+import { liveSpecialForTour } from "@/lib/special-discounts";
 
 const EDITABLE: LaunchStatus[] = ["submitted", "changes_requested"];
 const OPEN: LaunchStatus[] = ["submitted", "awaiting_partner", "changes_requested", "partner_approved"];
@@ -17,6 +18,13 @@ async function load(id: string) {
     .populate("tourId")
     .populate("cityId", "name state addresses")
     .populate("partnerId", "name email phone secondaryPhone companyName");
+}
+
+/** The launch plus the travel-style offer (if any) that is live for its tour right now. */
+async function withOffer(launch: any) {
+  const o = launch?.toObject ? launch.toObject() : launch;
+  const special = o?.tourId ? await liveSpecialForTour(o.tourId) : null;
+  return { ...o, specialOffer: special ? { name: special.name, percentage: special.percentage, endsAt: special.endsAt, travelStyle: special.travelStyle } : null };
 }
 
 const bad = (error: string, status = 400) => NextResponse.json({ error }, { status });
@@ -32,7 +40,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const launch: any = await load(id);
     if (!launch) return bad("Request not found", 404);
     if (auth.role === "partner" && String(launch.cityId?._id || launch.cityId) !== String((await partnerLocation(auth.userId)) || "none")) return bad("This request belongs to another location.", 403);
-    return NextResponse.json({ success: true, data: launch });
+    return NextResponse.json({ success: true, data: await withOffer(launch) });
   } catch (error: any) {
     return bad(error.message, 500);
   }
@@ -156,7 +164,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     await launch.save();
     const fresh = await load(id);
-    return NextResponse.json({ success: true, data: fresh });
+    return NextResponse.json({ success: true, data: await withOffer(fresh) });
   } catch (error: any) {
     console.error("PATCH /api/launches/[id] error:", error);
     return bad(error.message || "Update failed", 500);

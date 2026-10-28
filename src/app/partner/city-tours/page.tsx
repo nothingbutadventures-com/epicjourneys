@@ -142,7 +142,7 @@ export default function BookTourPage() {
   return (
     <Box>
       <Box sx={{ mb: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem", lineHeight: 1.2 }}>Book Tour</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem", lineHeight: 1.2 }}>All Tours</Typography>
         <Typography variant="caption" sx={{ color: "#64748b", fontSize: "0.75rem" }}>
           Pick a tour and book it for a customer. Your bookings are managed under Bookings.
         </Typography>
@@ -245,7 +245,7 @@ export default function BookTourPage() {
                       <TableCell align="right">
                         <Button size="small" variant="contained" onClick={() => setBooking(t)}
                           sx={{ fontSize: "0.72rem", py: 0.25, bgcolor: "#0f172a", borderRadius: "4px", boxShadow: "none", "&:hover": { bgcolor: "#1e293b", boxShadow: "none" } }}>
-                          Book
+                          Book Now
                         </Button>
                       </TableCell>
                     </TableRow>

@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Third-party lookups must never hold a request open: each one is capped, and results are cached briefly
+// so a slow or rate-limited ipapi.co can't pile up pending requests (which freezes page navigation).
+const LOOKUP_TIMEOUT_MS = 2500;
+const cache = new Map<string, { at: number; data: any }>();
+const TTL_MS = 10 * 60 * 1000;
+
 export async function GET(req: NextRequest) {
   try {
     // Attempt to extract client IP from headers
@@ -15,12 +21,14 @@ export async function GET(req: NextRequest) {
       clientIp.startsWith("10.");
 
     let geoData = null;
+    const cached = cache.get(isLocal ? "server" : clientIp);
+    if (cached && Date.now() - cached.at < TTL_MS) return NextResponse.json({ success: true, data: cached.data });
 
     if (!isLocal) {
       try {
         const ipRes = await fetch(`https://ipapi.co/${clientIp}/json/`, {
           headers: { "User-Agent": "EpicJourneys/1.0" },
-          next: { revalidate: 3600 },
+          signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS),
         });
         if (ipRes.ok) {
           const data = await ipRes.json();
@@ -45,6 +53,7 @@ export async function GET(req: NextRequest) {
       try {
         const fallbackRes = await fetch("https://ipapi.co/json/", {
           headers: { "User-Agent": "EpicJourneys/1.0" },
+          signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS),
         });
         if (fallbackRes.ok) {
           const data = await fallbackRes.json();
@@ -76,6 +85,7 @@ export async function GET(req: NextRequest) {
       };
     }
 
+    cache.set(isLocal ? "server" : clientIp, { at: Date.now(), data: geoData });
     return NextResponse.json({
       success: true,
       data: geoData,

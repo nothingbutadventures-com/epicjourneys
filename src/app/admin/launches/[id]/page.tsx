@@ -44,6 +44,7 @@ interface DateRow {
   startDate: string;
   seats: number | "";
   discountPercentage: number;
+  touched?: boolean;
 }
 
 type PendingAction = { action: string; title: string; button: string; required?: boolean; danger?: boolean; help?: string } | null;
@@ -71,7 +72,9 @@ export default function AdminLaunchDetailPage() {
 
   const hydrate = useCallback((l: any) => {
     setLaunch(l);
-    setDates((l.dates || []).map((d: any) => ({ startDate: String(d.startDate).slice(0, 10), seats: d.seats, discountPercentage: d.discountPercentage || 0 })));
+    // A live travel-style offer is the default discount for every date that has no discount of its own.
+    const offer = l.specialOffer?.percentage ?? 0;
+    setDates((l.dates || []).map((d: any) => ({ startDate: String(d.startDate).slice(0, 10), seats: d.seats, discountPercentage: d.discountPercentage > 0 ? d.discountPercentage : offer, touched: d.discountPercentage > 0 })));
     setStartDays(l.startItinerary || []);
     setEndDays(l.endItinerary || []);
     setAddressId(l.addressId ? String(l.addressId) : "");
@@ -127,10 +130,13 @@ export default function AdminLaunchDetailPage() {
     }
   };
 
+  const offer = launch?.specialOffer?.percentage ?? 0;
+
   const save = () =>
     patch({
       action: "update",
-      dates: dates.map((d) => ({ ...d, seats: Number(d.seats) })),
+      // A prefilled, untouched discount is the live offer itself: store 0 so the date returns to no discount when the offer ends.
+      dates: dates.map(({ touched, ...d }) => ({ ...d, seats: Number(d.seats), discountPercentage: !touched && offer && d.discountPercentage === offer ? 0 : d.discountPercentage })),
       startItinerary: startDays,
       endItinerary: endDays,
       addressId: addressId || null,
@@ -221,11 +227,17 @@ export default function AdminLaunchDetailPage() {
             title="Dates & seats"
             caption={`End dates are set automatically: ${tour?.durationDays} tour days + ${startDays.length} start + ${endDays.length} end = ${daysPerTrip} days.`}
             action={editable && (
-              <Button size="small" startIcon={<AddRoundedIcon sx={{ fontSize: 16 }} />} onClick={() => touch(setDates)([...dates, { startDate: "", seats: tour?.maxGroupSize || 15, discountPercentage: 0 }])} sx={{ borderRadius: "4px" }}>
+              <Button size="small" startIcon={<AddRoundedIcon sx={{ fontSize: 16 }} />} onClick={() => touch(setDates)([...dates, { startDate: "", seats: tour?.maxGroupSize || 15, discountPercentage: offer, touched: false }])} sx={{ borderRadius: "4px" }}>
                 Add date
               </Button>
             )}
           >
+            {launch.specialOffer && (
+              <Alert severity="info" sx={{ mb: 1.25, borderRadius: "4px", fontSize: "0.8rem" }}>
+                <strong>{launch.specialOffer.name || `${launch.specialOffer.travelStyle} offer`}: {launch.specialOffer.percentage}% off</strong> is live for {launch.specialOffer.travelStyle} tours until{" "}
+                {new Date(launch.specialOffer.endsAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}. It is the default discount on every date and the partner sees it. When it ends, these dates go back to no discount.
+              </Alert>
+            )}
             {dates.length === 0 && <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8" }}>No dates yet.</Typography>}
             {dates.map((d, i) => {
               const end = d.startDate ? endDateFor(d.startDate, tour.durationDays, startDays.length, endDays.length) : "";
@@ -245,13 +257,13 @@ export default function AdminLaunchDetailPage() {
                     <Grid size={{ xs: 4, sm: 2 }}>
                       <FormControl fullWidth size="small" disabled={!editable}>
                         <InputLabel>Discount</InputLabel>
-                        <Select value={d.discountPercentage} label="Discount" onChange={(e) => set({ discountPercentage: Number(e.target.value) })}>
+                        <Select value={d.discountPercentage} label="Discount" onChange={(e) => set({ discountPercentage: Number(e.target.value), touched: true })}>
                           <MenuItem value={0}>No Discount (0%)</MenuItem>
                           {discounts.map((disc) => (
                             <MenuItem key={disc._id} value={disc.value}>{disc.name} ({disc.value}% OFF)</MenuItem>
                           ))}
                           {d.discountPercentage > 0 && !discounts.some((x) => x.value === d.discountPercentage) && (
-                            <MenuItem value={d.discountPercentage}>Custom ({d.discountPercentage}% OFF)</MenuItem>
+                            <MenuItem value={d.discountPercentage}>{offer && d.discountPercentage === offer ? `Special offer (${offer}% OFF)` : `Custom (${d.discountPercentage}% OFF)`}</MenuItem>
                           )}
                         </Select>
                       </FormControl>

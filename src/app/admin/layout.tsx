@@ -47,6 +47,7 @@ import ContactSupportRoundedIcon from "@mui/icons-material/ContactSupportRounded
 import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
 import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSettingsRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import PinDropRoundedIcon from "@mui/icons-material/PinDropRounded";
@@ -79,6 +80,11 @@ const NAV_ITEMS: NavItem[] = [
         text: "Leads",
         href: "/admin/leads",
         icon: <TrendingUpRoundedIcon sx={{ fontSize: 16 }} />,
+      },
+      {
+        text: "Calendar",
+        href: "/admin/tours-calendar",
+        icon: <CalendarMonthRoundedIcon sx={{ fontSize: 16 }} />,
       },
     ],
   },
@@ -166,12 +172,12 @@ const NAV_ITEMS: NavItem[] = [
     icon: <PercentRoundedIcon sx={{ fontSize: 18 }} />,
     children: [
       {
-        text: "Discounts",
+        text: "Special Discount",
         href: "/admin/discounts",
         icon: <PercentRoundedIcon sx={{ fontSize: 16 }} />,
       },
       {
-        text: "Special Discounts",
+        text: "Discounts",
         href: "/admin/special-discounts",
         icon: <LocalOfferRoundedIcon sx={{ fontSize: 16 }} />,
       },
@@ -199,11 +205,11 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    text: "Management",
+    text: "User Management",
     icon: <ManageAccountsRoundedIcon sx={{ fontSize: 18 }} />,
     children: [
       {
-        text: "User Management",
+        text: "All Roles",
         href: "/admin/users",
         icon: <PeopleAltRoundedIcon sx={{ fontSize: 16 }} />,
       },

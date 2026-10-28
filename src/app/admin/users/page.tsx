@@ -111,7 +111,7 @@ export default function AdminUsersPage() {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
             <PeopleAltRoundedIcon sx={{ fontSize: 22, color: "#0f172a" }} />
             <Typography variant="h5" sx={{ fontWeight: 800, color: "#0f172a" }}>
-              User Management
+              All Roles
             </Typography>
           </Box>
           <Typography variant="body2" sx={{ color: "#64748b" }}>

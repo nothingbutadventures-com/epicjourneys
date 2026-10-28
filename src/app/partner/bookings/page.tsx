@@ -110,9 +110,9 @@ export default function PartnerBookingsPage() {
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2.5, flexWrap: "wrap", gap: 1.5 }}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem", lineHeight: 1.2 }}>Bookings</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem", lineHeight: 1.2 }}>Booking</Typography>
           <Typography variant="caption" sx={{ color: "#64748b", fontSize: "0.75rem" }}>
-            Track and manage every booking you made for customers · book new ones from Book Tour
+            Track and manage every booking you made for customers · book new ones from All Tours
           </Typography>
         </Box>
         <Button component={Link} href="/partner/city-tours" variant="contained" size="small" startIcon={<AddRoundedIcon sx={{ fontSize: 15 }} />}

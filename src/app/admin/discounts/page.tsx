@@ -153,7 +153,7 @@ export default function AdminDiscountsPage() {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
             <PercentRoundedIcon sx={{ fontSize: 22, color: "#0f172a" }} />
             <Typography variant="h5" sx={{ fontWeight: 800, color: "#0f172a" }}>
-              Discounts & Offers
+              Special Discount
             </Typography>
           </Box>
           <Typography variant="body2" sx={{ color: "#64748b" }}>

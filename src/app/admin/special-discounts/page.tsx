@@ -160,14 +160,14 @@ export default function SpecialDiscountsPage() {
             <BoltRoundedIcon sx={{ fontSize: 20 }} />
           </Box>
           <Box>
-            <Typography variant="h5" sx={{ fontWeight: 800, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.2 }}>Special Discounts</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 800, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.2 }}>Discounts</Typography>
             <Typography variant="body2" sx={{ color: "#64748b", fontSize: "0.85rem" }}>
               Time-limited offers on every tour of a travel style. Customers get the live offer on all dates.
             </Typography>
           </Box>
         </Box>
         <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={openCreate} disabled={styles.length === 0} sx={{ bgcolor: "#0f172a", fontWeight: 700, textTransform: "none", borderRadius: "6px", "&:hover": { bgcolor: "#1e293b" } }}>
-          New Special Discount
+          New Discount
         </Button>
       </Box>
 
@@ -232,7 +232,7 @@ export default function SpecialDiscountsPage() {
                   );
                 })}
                 {rows.length === 0 && (
-                  <TableRow><TableCell colSpan={7} align="center" sx={{ py: 5, color: "#94a3b8", fontSize: "0.85rem" }}>{items.length === 0 ? 'No special discounts yet. Click "New Special Discount" to run an offer on a travel style.' : "No offers match your filters"}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} align="center" sx={{ py: 5, color: "#94a3b8", fontSize: "0.85rem" }}>{items.length === 0 ? 'No discounts yet. Click "New Discount" to run an offer on a travel style.' : "No offers match your filters"}</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
@@ -242,7 +242,7 @@ export default function SpecialDiscountsPage() {
 
       <Dialog open={open} onClose={() => !saving && setOpen(false)} maxWidth="sm" fullWidth slotProps={{ paper: { sx: { borderRadius: "8px" } } }}>
         <form onSubmit={save}>
-          <DialogTitle sx={{ fontWeight: 800 }}>{editingId ? "Edit Special Discount" : "New Special Discount"}</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 800 }}>{editingId ? "Edit Discount" : "New Discount"}</DialogTitle>
           <DialogContent>
             {dialogError && <Alert severity="error" sx={{ mb: 2 }}>{dialogError}</Alert>}
             <Grid container spacing={1.75} sx={{ mt: 0 }}>

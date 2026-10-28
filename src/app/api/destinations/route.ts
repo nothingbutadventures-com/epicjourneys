@@ -87,6 +87,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // The same city can't be added twice (the pickers search by name, so duplicates would be confusing).
+    const esc = (v: string) => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const dupe = await Destination.findOne({ name: new RegExp(`^${esc(String(name).trim())}$`, "i"), state: new RegExp(`^${esc(String(state).trim())}$`, "i") }).select("_id").lean();
+    if (dupe) return NextResponse.json({ error: `${String(name).trim()}, ${String(state).trim()} already exists. Search for it instead.` }, { status: 409 });
+
     const addrs = sanitizeAddresses(body.addresses);
     if (addrs.error) return NextResponse.json({ error: addrs.error }, { status: 400 });
 

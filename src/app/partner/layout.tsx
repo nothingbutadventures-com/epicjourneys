@@ -58,8 +58,8 @@ const NAV_ITEMS: NavItem[] = [
     text: "Bookings",
     icon: <BookOnlineRoundedIcon sx={{ fontSize: 18 }} />,
     children: [
-      { text: "Your Bookings", href: "/partner/bookings", icon: <ReceiptLongRoundedIcon sx={{ fontSize: 16 }} /> },
-      { text: "Book a Tour", href: "/partner/city-tours", icon: <MapRoundedIcon sx={{ fontSize: 16 }} /> },
+      { text: "Booking", href: "/partner/bookings", icon: <ReceiptLongRoundedIcon sx={{ fontSize: 16 }} /> },
+      { text: "All Tours", href: "/partner/city-tours", icon: <MapRoundedIcon sx={{ fontSize: 16 }} /> },
     ],
   },
   {

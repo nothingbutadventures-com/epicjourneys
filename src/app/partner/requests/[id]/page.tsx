@@ -128,11 +128,17 @@ export default function PartnerRequestDetailPage() {
       <Grid container spacing={2.5}>
         <Grid size={{ xs: 12, md: 8 }}>
           <SectionPaper title="Dates & seats" caption={`${days} days per trip (${tour.durationDays} tour days + ${launch.startItinerary.length} start + ${launch.endItinerary.length} end)`}>
+            {launch.specialOffer && (
+              <Alert severity="info" sx={{ mb: 1.25, borderRadius: "4px", fontSize: "0.8rem" }}>
+                <strong>{launch.specialOffer.name || "Special offer"}: {launch.specialOffer.percentage}% off</strong> is live for this tour until{" "}
+                {new Date(launch.specialOffer.endsAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}. Customers get it on every date.
+              </Alert>
+            )}
             {launch.dates.map((d: any, i: number) => (
               <Box key={i} sx={{ display: "flex", gap: 2, py: 1, borderBottom: i < launch.dates.length - 1 ? "1px solid #f1f5f9" : "none", flexWrap: "wrap" }}>
                 <Typography sx={{ fontSize: "0.85rem", fontWeight: 600, flex: 1, minWidth: 200 }}>{fmtDate(d.startDate)} – {fmtDate(d.endDate)}</Typography>
                 <Typography sx={{ fontSize: "0.82rem", color: "#475569" }}>{d.seats} seats</Typography>
-                {d.discountPercentage > 0 && <Typography sx={{ fontSize: "0.82rem", color: "#dc2626" }}>{d.discountPercentage}% off</Typography>}
+                {(launch.specialOffer || d.discountPercentage > 0) && <Typography sx={{ fontSize: "0.82rem", color: "#dc2626" }}>{launch.specialOffer ? launch.specialOffer.percentage : d.discountPercentage}% off{launch.specialOffer ? " (special offer)" : ""}</Typography>}
               </Box>
             ))}
           </SectionPaper>

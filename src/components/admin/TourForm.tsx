@@ -39,7 +39,10 @@ interface ItineraryDay {
 export default function TourForm({ tourId }: { tourId?: string }) {
   const isEdit = Boolean(tourId);
   const router = useRouter();
-  const [destinations, setDestinations] = useState<any[]>([]);
+  // Locations are searched in a popup (there may be thousands), so only the picked ones are held here.
+  const [destinationPick, setDestinationPick] = useState<{ name: string; state: string } | null>(null);
+  const [baseCity, setBaseCity] = useState<{ name: string; state: string; addresses: any[] } | null>(null);
+  const [locationPicker, setLocationPicker] = useState<"destination" | "base" | null>(null);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEdit);
   const [error, setError] = useState<string | null>(null);
@@ -58,9 +61,6 @@ export default function TourForm({ tourId }: { tourId?: string }) {
   // Basic tour ("Joining / Leaving"): where it starts/ends and its own dates
   const [baseCityId, setBaseCityId] = useState("");
   const [baseAddressId, setBaseAddressId] = useState("");
-  const [baseDates, setBaseDates] = useState<{ _id?: string; startDate: string; seats: number | ""; price: number | ""; discountPercentage: number; booked?: number; isNew?: boolean; touched?: boolean }[]>([]);
-  // Travel-style offers that are live right now; they prefill the discount of every date added in this form.
-  const [liveOffers, setLiveOffers] = useState<{ travelStyle: string; percentage: number; name: string; endsAt: string }[]>([]);
   const [singleRoomPrice, setSingleRoomPrice] = useState<number | "">("");
   const [depositType, setDepositType] = useState<"amount" | "percentage">("percentage");
   const [depositValue, setDepositValue] = useState<number | "">(30);
@@ -74,8 +74,6 @@ export default function TourForm({ tourId }: { tourId?: string }) {
   const [travelStylesList, setTravelStylesList] = useState<any[]>([]);
   const [discountsList, setDiscountsList] = useState<any[]>([]);
   const [selectedTravelStyles, setSelectedTravelStyles] = useState<string[]>([]);
-  // The best live offer among the selected travel styles (offers never stack).
-  const special = liveOffers.filter((o) => selectedTravelStyles.includes(o.travelStyle)).sort((a, b) => b.percentage - a.percentage)[0] || null;
   const [physicalRatingsList, setPhysicalRatingsList] = useState<any[]>([]);
   const [selectedPhysicalRating, setSelectedPhysicalRating] = useState<string>("");
 
@@ -89,7 +87,6 @@ export default function TourForm({ tourId }: { tourId?: string }) {
   const [itinerary, setItinerary] = useState<ItineraryDay[]>([]);
 
   useEffect(() => {
-    fetchDestinations();
     fetchClassifications();
   }, []);
 
@@ -106,25 +103,22 @@ export default function TourForm({ tourId }: { tourId?: string }) {
         setDescription(t.description || "");
         setState(t.state || "");
         setDestinationId(t.destinationId?._id || t.destinationId || "");
+        if (t.destinationId?.name) setDestinationPick({ name: t.destinationId.name, state: t.destinationId.state || "" });
         setDurationDays(t.durationDays ?? "");
         setDurationNights(t.durationNights ?? "");
         setMaxGroupSize(t.maxGroupSize ?? "");
         setSingleRoomPrice(t.singleRoomPriceInr ?? "");
         setBasePrice(t.basePriceInr || t.priceInr || "");
-        setBaseCityId(t.baseStartCityId || t.destinationId?._id || t.destinationId || "");
+        const startId = t.baseStartCityId || t.destinationId?._id || t.destinationId || "";
+        setBaseCityId(startId);
+        if (startId) {
+          const token = localStorage.getItem("epic_token");
+          fetch(`/api/destinations/${startId}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+            .then((r) => r.json())
+            .then((d) => d.success && setBaseCity({ name: d.data.name, state: d.data.state, addresses: d.data.addresses || [] }))
+            .catch(() => {});
+        }
         setBaseAddressId(t.baseAddressId || "");
-        setBaseDates(
-          (t.departures || [])
-            .filter((d: any) => d.isBase)
-            .map((d: any) => ({
-              _id: d._id,
-              startDate: String(d.startDate).split("T")[0],
-              seats: d.seats,
-              price: d.price,
-              discountPercentage: d.discountPercentage || 0,
-              booked: d.booked || 0,
-            }))
-        );
         setDepositType(t.depositType === "amount" ? "amount" : "percentage");
         setDepositValue(t.depositValue ?? 30);
         setCoverImage(t.coverImage || "");
@@ -141,21 +135,6 @@ export default function TourForm({ tourId }: { tourId?: string }) {
       }
     })();
   }, [tourId]);
-
-  useEffect(() => {
-    fetch("/api/special-discounts?active=true")
-      .then((r) => r.json())
-      .then((d) => d.success && setLiveOffers(d.data || []))
-      .catch(() => {});
-  }, []);
-
-  // Dates added in this form (and not touched by hand) follow the live offer, and drop back to 0 when there is none.
-  useEffect(() => {
-    setBaseDates((prev) => {
-      const next = prev.map((d) => (d.isNew && !d.touched && d.discountPercentage !== (special?.percentage ?? 0) ? { ...d, discountPercentage: special?.percentage ?? 0 } : d));
-      return next.some((d, i) => d !== prev[i]) ? next : prev;
-    });
-  }, [special?.percentage]);
 
   const fetchClassifications = async () => {
     try {
@@ -186,25 +165,15 @@ export default function TourForm({ tourId }: { tourId?: string }) {
     }
   };
 
-  const fetchDestinations = async () => {
-    try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("epic_token") : null;
-      const res = await fetch("/api/destinations?all=true", { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-      const data = await res.json();
-      if (data.success) {
-        setDestinations(data.data || []);
-      }
-    } catch (e) {
-      console.error(e);
-    }
+  const pickDestination = (d: { _id: string; name: string; state: string }) => {
+    setDestinationId(d._id);
+    setState(d.state);
+    setDestinationPick({ name: d.name, state: d.state });
   };
-
-  const handleDestinationChange = (destId: string) => {
-    setDestinationId(destId);
-    const dest = destinations.find((d) => d._id === destId);
-    if (dest) {
-      setState(dest.state);
-    }
+  const pickBaseCity = (d: { _id: string; name: string; state: string; addresses?: any[] }) => {
+    setBaseCityId(d._id);
+    setBaseAddressId("");
+    setBaseCity({ name: d.name, state: d.state, addresses: d.addresses || [] });
   };
 
   const addHighlight = () => {
@@ -300,14 +269,6 @@ export default function TourForm({ tourId }: { tourId?: string }) {
       setError("Enter the tour duration (days and nights).");
       return;
     }
-    if (baseDates.length > 0 && !baseCityId) {
-      setError("Choose where the basic tour starts and ends before adding dates.");
-      return;
-    }
-    if (baseDates.some((d) => !d.startDate || !(Number(d.seats) >= 1))) {
-      setError("Every basic-tour date needs a start date and number of travellers.");
-      return;
-    }
     if (!(Number(basePrice) > 0)) {
       setError("Enter the base price per person.");
       return;
@@ -335,13 +296,6 @@ export default function TourForm({ tourId }: { tourId?: string }) {
           basePriceInr: Number(basePrice) || 0,
           baseStartCityId: baseCityId || null,
           baseAddressId: baseAddressId || null,
-          // A prefilled, untouched discount is the live offer itself: store 0 so the date goes back to no discount when the offer ends.
-          baseDepartures: baseDates.map(({ isNew, touched, ...d }) => ({
-            ...d,
-            seats: Number(d.seats),
-            price: Number(d.price) || Number(basePrice) || 0,
-            discountPercentage: isNew && !touched && special && d.discountPercentage === special.percentage ? 0 : d.discountPercentage,
-          })),
           singleRoomPriceInr: Number(singleRoomPrice) || 0,
           depositType,
           depositValue: Number(depositValue) || 0,
@@ -533,23 +487,21 @@ export default function TourForm({ tourId }: { tourId?: string }) {
 
           <Grid container spacing={1.5}>
             <Grid size={{ xs: 12 }}>
-              <FormControl fullWidth size="small" required>
-                <InputLabel>Tour Destination</InputLabel>
-                <Select
-                  value={destinationId}
-                  label="Tour Destination"
-                  onChange={(e) => handleDestinationChange(e.target.value)}
-                >
-                  {destinations.map((d) => (
-                    <MenuItem key={d._id} value={d._id}>
-                      {d.name} ({d.state})
-                    </MenuItem>
-                  ))}
-                </Select>
-                <Typography variant="caption" sx={{ color: "#64748b", mt: 0.5 }}>
-                  Where this tour is based. Start & end cities, prices and seats are set per date below.
-                </Typography>
-              </FormControl>
+              <TextField
+                label="Tour Destination"
+                required
+                fullWidth
+                size="small"
+                value={destinationPick ? `${destinationPick.name}${destinationPick.state ? `, ${destinationPick.state}` : ""}` : ""}
+                placeholder="Search or add a location"
+                onClick={() => setLocationPicker("destination")}
+                slotProps={{
+                  input: { readOnly: true, startAdornment: <PlaceRoundedIcon sx={{ fontSize: 18, color: destinationPick ? "#0f172a" : "#94a3b8", mr: 1 }} />, endAdornment: <Typography sx={{ fontSize: "0.72rem", color: "#0f172a", fontWeight: 600, whiteSpace: "nowrap" }}>{destinationPick ? "Change" : "Select"}</Typography> },
+                  htmlInput: { style: { cursor: "pointer" } },
+                }}
+                sx={{ "& .MuiOutlinedInput-root": { cursor: "pointer" } }}
+                helperText="Where this tour is based. Joining / leaving dates are added from the All Tours list."
+              />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 4 }}>
@@ -634,6 +586,37 @@ export default function TourForm({ tourId }: { tourId?: string }) {
                 helperText="Minimum travellers pay now to reserve seats; the remaining balance is due 30 days before the tour starts. Set 0 to turn the deposit option off."
                 slotProps={{ htmlInput: { min: 0, max: depositType === "percentage" ? 100 : undefined } }}
               />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 5 }}>
+              <TextField
+                label="Start & end location"
+                fullWidth
+                size="small"
+                value={baseCity ? `${baseCity.name}${baseCity.state ? `, ${baseCity.state}` : ""}` : baseCityId ? "Loading…" : ""}
+                placeholder="Search or add a location"
+                onClick={() => setLocationPicker("base")}
+                slotProps={{
+                  input: { readOnly: true, startAdornment: <PlaceRoundedIcon sx={{ fontSize: 18, color: baseCityId ? "#0f172a" : "#94a3b8", mr: 1 }} />, endAdornment: <Typography sx={{ fontSize: "0.72rem", color: "#0f172a", fontWeight: 600, whiteSpace: "nowrap" }}>{baseCityId ? "Change" : "Select"}</Typography> },
+                  htmlInput: { style: { cursor: "pointer" } },
+                }}
+                sx={{ "& .MuiOutlinedInput-root": { cursor: "pointer" } }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 7 }}>
+              {(() => {
+                const addrs: any[] = baseCity?.addresses || [];
+                return (
+                  <FormControl fullWidth size="small" disabled={!baseCityId || addrs.length === 0}>
+                    <InputLabel>Starting address</InputLabel>
+                    <Select value={baseAddressId} label="Starting address" onChange={(e) => setBaseAddressId(e.target.value as string)} sx={{ borderRadius: "4px" }}>
+                      <MenuItem value=""><em>No address selected</em></MenuItem>
+                      {addrs.map((a) => (
+                        <MenuItem key={a._id} value={a._id}>{a.label} — {a.address}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                );
+              })()}
             </Grid>
           </Grid>
         </Paper>
@@ -777,6 +760,21 @@ export default function TourForm({ tourId }: { tourId?: string }) {
         </Paper>
 
         <DestinationPicker
+          single
+          title={locationPicker === "base" ? "Start & end location" : "Tour destination"}
+          open={locationPicker !== null}
+          selectedIds={locationPicker === "base" ? (baseCityId ? [baseCityId] : []) : destinationId ? [destinationId] : []}
+          onClose={() => setLocationPicker(null)}
+          onToggle={(d) => (locationPicker === "base" ? pickBaseCity(d) : pickDestination(d))}
+          allowClear={locationPicker === "base"}
+          onClear={() => {
+            setBaseCityId("");
+            setBaseAddressId("");
+            setBaseCity(null);
+          }}
+        />
+
+        <DestinationPicker
           open={pickerDay !== null}
           selectedIds={pickerDay !== null ? (itinerary[pickerDay]?.destinations || []).map((c) => c.destinationId) : []}
           onClose={() => setPickerDay(null)}
@@ -864,115 +862,6 @@ export default function TourForm({ tourId }: { tourId?: string }) {
           </Box>
         </Paper>
 
-        {/* Section 6: Basic tour (Joining / Leaving) */}
-        <Paper elevation={0} sx={{ p: 2.5, mb: 2, borderRadius: "4px", border: "1px solid #e2e8f0", bgcolor: "#ffffff" }}>
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#0f172a" }}>
-              6. Joining / Leaving (basic tour)
-            </Typography>
-            <Typography variant="caption" sx={{ color: "#64748b" }}>
-              Where the tour itself starts and ends, and its own dates. Travellers who join here pay the tour's base price (no separate date price). Partner cities add their own extra days and price from the Tour Launches screen.
-            </Typography>
-          </Box>
-
-          <Grid container spacing={1.5} sx={{ mb: 2 }}>
-            <Grid size={{ xs: 12, sm: 5 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Start & end location</InputLabel>
-                <Select
-                  value={baseCityId}
-                  label="Start & end location"
-                  onChange={(e) => {
-                    setBaseCityId(e.target.value as string);
-                    setBaseAddressId("");
-                  }}
-                  sx={{ borderRadius: "4px" }}
-                >
-                  <MenuItem value=""><em>Not set</em></MenuItem>
-                  {destinations.map((c) => (
-                    <MenuItem key={c._id} value={c._id}>{c.name} ({c.state})</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 7 }}>
-              {(() => {
-                const addrs: any[] = destinations.find((c) => c._id === baseCityId)?.addresses || [];
-                return (
-                  <FormControl fullWidth size="small" disabled={!baseCityId || addrs.length === 0}>
-                    <InputLabel>Starting address</InputLabel>
-                    <Select value={baseAddressId} label="Starting address" onChange={(e) => setBaseAddressId(e.target.value as string)} sx={{ borderRadius: "4px" }}>
-                      <MenuItem value=""><em>No address selected</em></MenuItem>
-                      {addrs.map((a) => (
-                        <MenuItem key={a._id} value={a._id}>{a.label} — {a.address}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                );
-              })()}
-            </Grid>
-          </Grid>
-
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.25 }}>
-            <Typography sx={{ fontWeight: 700, fontSize: "0.85rem" }}>Dates</Typography>
-            <Button
-              size="small"
-              startIcon={<AddRoundedIcon sx={{ fontSize: 16 }} />}
-              onClick={() => setBaseDates([...baseDates, { startDate: "", seats: Number(maxGroupSize) || 15, price: basePrice, discountPercentage: special?.percentage ?? 0, isNew: true, touched: false }])}
-              sx={{ borderRadius: "4px" }}
-            >
-              Add Date
-            </Button>
-          </Box>
-          {special && (
-            <Alert severity="info" sx={{ mb: 1.25, borderRadius: "4px", fontSize: "0.8rem" }}>
-              <strong>{special.name || `${special.travelStyle} offer`}: {special.percentage}% off</strong> is live for {special.travelStyle} tours until{" "}
-              {new Date(special.endsAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}. Customers get it on every date of this tour while it lasts, and
-              new dates are prefilled with it. When it ends, dates added now go back to no discount.
-            </Alert>
-          )}
-          {baseDates.length === 0 && <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8" }}>No dates yet.</Typography>}
-          {baseDates.map((d, i) => {
-            const set = (patch: Partial<typeof d>) => setBaseDates(baseDates.map((x, j) => (j === i ? { ...x, ...patch } : x)));
-            const end = d.startDate ? new Date(new Date(`${d.startDate}T00:00:00Z`).getTime() + Math.max(0, (Number(durationDays) || 1) - 1) * 86400000).toISOString().slice(0, 10) : "";
-            return (
-              <Box key={d._id || `n${i}`} sx={{ mb: 1.25, p: 1.5, border: "1px solid #cbd5e1", borderRadius: "4px" }}>
-                <Grid container spacing={1.25} sx={{ alignItems: "center" }}>
-                  <Grid size={{ xs: 6, sm: 3 }}>
-                    <TextField label="Start date" type="date" required fullWidth size="small" value={d.startDate} onChange={(e) => set({ startDate: e.target.value })} slotProps={{ inputLabel: { shrink: true } }} />
-                  </Grid>
-                  <Grid size={{ xs: 6, sm: 3 }}>
-                    <TextField label="End date (auto)" fullWidth size="small" disabled value={end} slotProps={{ inputLabel: { shrink: true } }} />
-                  </Grid>
-                  <Grid size={{ xs: 4, sm: 2 }}>
-                    <TextField label="Travellers" type="number" required fullWidth size="small" value={d.seats} onChange={(e) => set({ seats: e.target.value === "" ? "" : Number(e.target.value) })} slotProps={{ htmlInput: { min: 1 } }} helperText={d.booked ? `${d.booked} booked` : undefined} />
-                  </Grid>
-                  <Grid size={{ xs: 8, sm: 3 }}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Discount</InputLabel>
-                      <Select value={d.discountPercentage} label="Discount" onChange={(e) => set({ discountPercentage: Number(e.target.value), touched: true })} sx={{ borderRadius: "4px" }}>
-                        <MenuItem value={0}>No Discount (0%)</MenuItem>
-                        {d.discountPercentage > 0 && !discountsList.some((x) => x.value === d.discountPercentage) && (
-                          <MenuItem value={d.discountPercentage}>{special && d.discountPercentage === special.percentage ? `Special offer (${d.discountPercentage}% OFF)` : `Custom (${d.discountPercentage}% OFF)`}</MenuItem>
-                        )}
-                        {discountsList.map((disc) => (
-                          <MenuItem key={disc._id} value={disc.value}>
-                            {disc.name} ({disc.value}% OFF)
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 1 }} sx={{ textAlign: "right" }}>
-                    <IconButton size="small" disabled={Boolean(d.booked)} aria-label="Remove date" title={d.booked ? "This date has bookings and can't be deleted" : "Remove date"} onClick={() => setBaseDates(baseDates.filter((_, j) => j !== i))} sx={{ color: "#dc2626" }}>
-                      <DeleteRoundedIcon fontSize="small" />
-                    </IconButton>
-                  </Grid>
-                </Grid>
-              </Box>
-            );
-          })}
-        </Paper>
 
         {/* Action bar */}
         <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1.5, mb: 4 }}>

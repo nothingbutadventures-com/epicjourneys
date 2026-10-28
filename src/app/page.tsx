@@ -127,7 +127,7 @@ export default function HomePage() {
 
   const fetchLocationFromIp = async (gpsResolved: () => boolean) => {
     try {
-      const res = await fetch("/api/geo/ip-location");
+      const res = await fetch("/api/geo/ip-location", { signal: AbortSignal.timeout(5000) });
       const data = await res.json();
       if (gpsResolved()) return;
       if (data.success && data.data) {

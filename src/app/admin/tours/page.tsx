@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import TourDatesDialog from "@/components/admin/TourDatesDialog";
 import Link from "next/link";
 import {
   Box,
@@ -41,6 +42,7 @@ export default function AdminToursPage() {
   const [launches, setLaunches] = useState<any[]>([]);
   const [partners, setPartners] = useState<any[]>([]);
   const [destinations, setDestinations] = useState<any[]>([]);
+  const [datesTour, setDatesTour] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,8 +61,8 @@ export default function AdminToursPage() {
       : { "Content-Type": "application/json" };
   };
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [toursRes, launchesRes, partnersRes, destsRes] = await Promise.all([
         fetch("/api/tours?all=true").then((r) => r.json()),
@@ -607,6 +609,7 @@ export default function AdminToursPage() {
                   <TableCell sx={{ fontWeight: 700, color: "#334155" }}>
                     Partner Locations & Departures
                   </TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: "#334155" }}>Joining / Leaving Dates</TableCell>
                   <TableCell sx={{ fontWeight: 700, color: "#334155" }}>Duration</TableCell>
                   <TableCell sx={{ fontWeight: 700, color: "#334155" }}>Base Price (INR)</TableCell>
                   <TableCell sx={{ fontWeight: 700, color: "#334155" }}>Status</TableCell>
@@ -618,7 +621,7 @@ export default function AdminToursPage() {
               <TableBody>
                 {filteredTours.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} sx={{ textAlign: "center", py: 5 }}>
+                    <TableCell colSpan={8} sx={{ textAlign: "center", py: 5 }}>
                       <Typography sx={{ color: "#64748b", fontSize: "0.85rem" }}>
                         No tours found matching the selected filters.
                       </Typography>
@@ -838,6 +841,29 @@ export default function AdminToursPage() {
                           </Box>
                         </TableCell>
 
+                        {/* Joining / Leaving dates */}
+                        <TableCell>
+                          {(() => {
+                            const todayStr = new Date().toISOString().slice(0, 10);
+                            const base = (tour.departures || []).filter((d: any) => !d.launchId && String(d.endDate).slice(0, 10) >= todayStr).sort((a: any, b: any) => +new Date(a.startDate) - +new Date(b.startDate));
+                            return (
+                              <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                                <Tooltip title="Add or manage joining / leaving dates">
+                                  <IconButton size="small" onClick={() => setDatesTour(tour)} aria-label="Add joining and leaving dates" sx={{ bgcolor: "#0f172a", color: "#fff", width: 24, height: 24, "&:hover": { bgcolor: "#1e293b" } }}>
+                                    <AddRoundedIcon sx={{ fontSize: 16 }} />
+                                  </IconButton>
+                                </Tooltip>
+                                <Box onClick={() => setDatesTour(tour)} sx={{ cursor: "pointer" }}>
+                                  <Typography sx={{ fontSize: "0.78rem", fontWeight: 600, color: "#0f172a", lineHeight: 1.2 }}>{base.length} upcoming</Typography>
+                                  <Typography sx={{ fontSize: "0.68rem", color: "#64748b" }}>
+                                    {base.length ? `Next: ${new Date(base[0].startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "UTC" })}` : "No dates yet"}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            );
+                          })()}
+                        </TableCell>
+
                         {/* Duration */}
                         <TableCell sx={{ fontSize: "0.8rem", fontWeight: 500 }}>
                           {tour.durationDays}D / {tour.durationNights}N
@@ -924,6 +950,8 @@ export default function AdminToursPage() {
           </TableContainer>
         )}
       </Paper>
+
+      <TourDatesDialog tour={datesTour} allTours={tours} onClose={() => setDatesTour(null)} onChanged={() => fetchData(true)} />
     </Box>
   );
 }
