@@ -6,6 +6,14 @@ import { getAuthFromRequest } from "@/lib/auth";
 import { calculateDistanceKm } from "@/lib/geo";
 import { bookedSeatsByDeparture } from "@/lib/departures";
 import { liveSpecialForTour } from "@/lib/special-discounts";
+import { deleteHostedImage, storageConfigured } from "@/lib/supabase";
+
+/** Deletes a hosted cover once no tour uses it any more, so storage doesn't fill with unused photos. */
+async function releaseCover(url?: string | null) {
+  if (!url || !storageConfigured()) return;
+  if (await Tour.exists({ coverImage: url })) return;
+  await deleteHostedImage(url).catch((e) => console.error("cover cleanup failed", e));
+}
 import { applyBaseDepartures, cleanItinerary, refreshTourDerived } from "@/lib/launch";
 
 export async function GET(
@@ -178,7 +186,9 @@ export async function PUT(
     delete body.baseAddressId;
     delete body.baseDepartures;
 
+    const previousCover = tour.coverImage;
     let updated: any = await Tour.findByIdAndUpdate(id, body, { new: true });
+    if (body.coverImage !== undefined && body.coverImage !== previousCover) await releaseCover(previousCover);
 
     // A new base price flows into every date: launched dates = base + city supplement; basic dates that
     // were still at the old base price follow the new one.
@@ -222,6 +232,7 @@ export async function DELETE(
     if (!tour) {
       return NextResponse.json({ error: "Tour not found" }, { status: 404 });
     }
+    await releaseCover(tour.coverImage);
 
     return NextResponse.json({
       success: true,

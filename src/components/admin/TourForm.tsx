@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DestinationPicker from "@/components/admin/DestinationPicker";
+import CoverImageUpload from "@/components/admin/CoverImageUpload";
 import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
 import {
   Box,
@@ -402,13 +403,7 @@ export default function TourForm({ tourId }: { tourId?: string }) {
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <TextField
-                label="Cover Image URL"
-                fullWidth
-                value={coverImage}
-                onChange={(e) => setCoverImage(e.target.value)}
-                placeholder="https://images.unsplash.com/..."
-              />
+              <CoverImageUpload value={coverImage} onChange={setCoverImage} />
             </Grid>
           </Grid>
         </Paper>

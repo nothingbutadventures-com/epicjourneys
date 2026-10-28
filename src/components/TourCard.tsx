@@ -12,6 +12,7 @@ import {
   Button,
 } from "@mui/material";
 import { motion } from "framer-motion";
+import { thumbUrl } from "@/lib/images";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -69,7 +70,7 @@ export default function TourCard({ tour, fromCityId, hideDescription }: TourCard
           height="215"
           className="tour-img"
           image={
-            tour.coverImage ||
+            thumbUrl(tour.coverImage) ||
             "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop&q=60"
           }
           alt={tour.title}

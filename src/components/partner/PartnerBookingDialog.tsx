@@ -35,6 +35,7 @@ import PaymentGateway, { type PaymentDescriptor } from "@/components/checkout/Pa
 import { computeQuote, discountUsable, inr, partnerDiscountAmount, type RoomType } from "@/lib/pricing";
 import { isBaseDeparture, isMyCityDeparture, partnerCanBook } from "@/lib/partner-booking";
 import { balanceDueDate, buildSchedule, depositOption } from "@/lib/deposit";
+import { thumbUrl } from "@/lib/images";
 
 const TOKEN = "epic_partner_token";
 const authHeaders = (): Record<string, string> => {
@@ -271,7 +272,7 @@ export default function PartnerBookingDialog({
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12 }}>
                     <Box sx={{ p: 1.5, border: "1px solid #E2E2E2", borderRadius: "4px", bgcolor: "#F8FAFC", display: "flex", alignItems: "center", gap: 1.5 }}>
-                      {pickedTour?.coverImage && <Box component="img" src={pickedTour.coverImage} alt="" sx={{ width: 56, height: 40, objectFit: "cover", borderRadius: "3px" }} />}
+                      {pickedTour?.coverImage && <Box component="img" src={thumbUrl(pickedTour.coverImage)} alt="" sx={{ width: 56, height: 40, objectFit: "cover", borderRadius: "3px" }} />}
                       <Box>
                         <Typography sx={{ fontWeight: 800, fontSize: "0.92rem" }}>{pickedTour?.title}</Typography>
                         <Typography sx={{ fontSize: "0.75rem", color: "#64748b" }}>

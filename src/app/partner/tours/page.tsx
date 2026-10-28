@@ -31,6 +31,7 @@ import FilterAltOffRoundedIcon from "@mui/icons-material/FilterAltOffRounded";
 import LaunchRequestDialog from "@/components/launch/LaunchRequestDialog";
 import { LAUNCH_STATUS, type LaunchStatus } from "@/lib/launch-shared";
 import { StatusChip, authHeaders, inr } from "@/components/launch/LaunchParts";
+import { thumbUrl } from "@/lib/images";
 
 const TOKEN = "epic_partner_token";
 const IN_PROGRESS = ["submitted", "awaiting_partner", "changes_requested", "partner_approved"];
@@ -242,7 +243,7 @@ export default function TourRequestPage() {
                     <TableRow key={t._id} hover sx={{ "&:last-child td": { borderBottom: 0 } }}>
                       <TableCell sx={{ maxWidth: 320 }}>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-                          <Box component="img" src={t.coverImage} alt="" sx={{ width: 44, height: 30, objectFit: "cover", borderRadius: "3px", flexShrink: 0 }} />
+                          <Box component="img" src={thumbUrl(t.coverImage)} alt="" sx={{ width: 44, height: 30, objectFit: "cover", borderRadius: "3px", flexShrink: 0 }} />
                           <Box sx={{ minWidth: 0 }}>
                             <Typography noWrap sx={{ fontSize: "0.82rem", fontWeight: 600, color: "#0f172a", lineHeight: 1.25 }}>{t.title}</Typography>
                             <Typography noWrap sx={{ fontSize: "0.7rem", color: "#64748b", lineHeight: 1.25 }}>{t.targetCity ? `${t.targetCity}, ` : ""}{t.state}</Typography>

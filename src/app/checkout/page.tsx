@@ -39,6 +39,7 @@ import InlineAuth from "@/components/checkout/InlineAuth";
 import PaymentGateway, { type PaymentDescriptor } from "@/components/checkout/PaymentGateway";
 import { computeQuote, inr, type RoomType } from "@/lib/pricing";
 import { balanceDueDate, BALANCE_DUE_DAYS_BEFORE, buildSchedule, depositOption } from "@/lib/deposit";
+import { thumbUrl } from "@/lib/images";
 
 type Step = "travellers" | "rooms" | "payment";
 const STEPS: { key: Step; label: string; hint: string; icon: React.ReactNode }[] = [
@@ -601,7 +602,7 @@ function CheckoutInner() {
 
   const summary = (
     <Paper elevation={0} sx={{ overflow: "hidden", border: "1px solid #E2E2E2" }}>
-      <Box component="img" src={tour.coverImage} alt={tour.title} sx={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
+      <Box component="img" src={thumbUrl(tour.coverImage)} alt={tour.title} sx={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
       <Box sx={{ p: 2.5 }}>
         <Typography sx={{ fontWeight: 800, lineHeight: 1.3, mb: 1.5 }}>{tour.title}</Typography>
         {[

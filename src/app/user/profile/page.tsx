@@ -31,6 +31,7 @@ import { CompassRose, MountainScene } from "@/components/home/Illustrations";
 import { rise, stagger } from "@/components/home/HomeSections";
 import { inr } from "@/lib/pricing";
 import { withRedirect } from "@/lib/redirect";
+import { thumbUrl } from "@/lib/images";
 
 type TabKey = "bookings" | "history" | "payments" | "profile" | "support";
 const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
@@ -60,7 +61,7 @@ function BookingCard({ b }: { b: any }) {
     <motion.div variants={rise} whileHover={{ y: -4 }}>
       <Paper elevation={0} sx={{ overflow: "hidden", display: "flex", flexDirection: { xs: "column", sm: "row" }, transition: "box-shadow .2s", "&:hover": { boxShadow: "0 16px 32px -18px rgba(15,23,42,0.3)" } }}>
         <Box sx={{ position: "relative", width: { xs: "100%", sm: 200 }, height: { xs: 150, sm: "auto" }, flexShrink: 0, bgcolor: "#F2F4F7" }}>
-          {t.coverImage && <Box component="img" src={t.coverImage} alt={b.tourTitle} sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
+          {t.coverImage && <Box component="img" src={thumbUrl(t.coverImage)} alt={b.tourTitle} sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
           <Chip label={st.label} size="small" sx={{ position: "absolute", top: 10, left: 10, bgcolor: st.bg, color: st.fg, fontWeight: 800 }} />
         </Box>
         <Box sx={{ p: 2.5, flex: 1, minWidth: 0 }}>

@@ -12,7 +12,7 @@ export interface PermissionDef {
   hint?: string;
 }
 
-const TOUR_FORM_APIS = ["/api/tours", "/api/destinations", "/api/travel-styles", "/api/physical-ratings", "/api/discounts"];
+const TOUR_FORM_APIS = ["/api/uploads", "/api/tours", "/api/destinations", "/api/travel-styles", "/api/physical-ratings", "/api/discounts"];
 
 export const PERMISSIONS: PermissionDef[] = [
   { key: "dashboard", label: "Dashboard", group: "Overview", href: "/admin", api: ["/api/bookings", "/api/destinations", "/api/partners", "/api/tours"], hint: "Overview numbers" },

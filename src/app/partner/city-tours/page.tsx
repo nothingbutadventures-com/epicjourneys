@@ -31,6 +31,7 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import FilterAltOffRoundedIcon from "@mui/icons-material/FilterAltOffRounded";
 import PartnerBookingDialog from "@/components/partner/PartnerBookingDialog";
 import { isMyCityDeparture, partnerCanBook } from "@/lib/partner-booking";
+import { thumbUrl } from "@/lib/images";
 
 const TOKEN = "epic_partner_token";
 const authHeaders = (): Record<string, string> => {
@@ -222,7 +223,7 @@ export default function BookTourPage() {
                     <TableRow key={t._id} hover sx={{ "&:last-child td": { borderBottom: 0 } }}>
                       <TableCell sx={{ maxWidth: 320 }}>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-                          <Box component="img" src={t.coverImage} alt="" sx={{ width: 44, height: 30, objectFit: "cover", borderRadius: "3px", flexShrink: 0 }} />
+                          <Box component="img" src={thumbUrl(t.coverImage)} alt="" sx={{ width: 44, height: 30, objectFit: "cover", borderRadius: "3px", flexShrink: 0 }} />
                           <Box sx={{ minWidth: 0 }}>
                             <Typography noWrap sx={{ fontSize: "0.82rem", fontWeight: 600, color: "#0f172a", lineHeight: 1.25 }}>{t.title}</Typography>
                             <Typography noWrap sx={{ fontSize: "0.7rem", color: "#64748b", lineHeight: 1.25 }}>{t.targetCity ? `${t.targetCity}, ` : ""}{t.state}</Typography>
