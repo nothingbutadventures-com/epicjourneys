@@ -14,6 +14,7 @@ export interface IDestinationAddress {
 export interface IDestination extends Document {
   name: string;
   state: string;
+  country: string;
   coordinates: {
     lat: number;
     lng: number;
@@ -42,6 +43,8 @@ const AddressSchema = new Schema<IDestinationAddress>({
 const DestinationSchema = new Schema<IDestination>(
   {
     name: { type: String, required: true, trim: true },
+    // Country > state > city for India; country > city elsewhere (then `state` repeats the country name).
+    country: { type: String, default: "India", trim: true, index: true },
     state: { type: String, required: true, trim: true },
     coordinates: {
       lat: { type: Number, required: true },

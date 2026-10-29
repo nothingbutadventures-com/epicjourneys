@@ -70,3 +70,16 @@ export const KNOWN_DESTINATION_COORDINATES: Record<string, { lat: number; lng: n
   "Mumbai": { lat: 19.0760, lng: 72.8777, state: "Maharashtra" },
   "Bengaluru": { lat: 12.9716, lng: 77.5946, state: "Karnataka" }
 };
+
+// ---- Countries ----
+// India is the home market: its cities sit under a state. Any other country has cities directly under it.
+export const HOME_COUNTRY = "India";
+
+export const COUNTRIES = [
+  "India", "Nepal", "Bhutan", "Sri Lanka", "Maldives", "Bangladesh", "Thailand", "Vietnam", "Cambodia", "Laos", "Malaysia", "Singapore", "Indonesia", "Philippines",
+  "Japan", "South Korea", "China", "Hong Kong", "Taiwan", "Mongolia", "Uzbekistan", "Kazakhstan", "Kyrgyzstan", "Georgia", "Armenia", "Azerbaijan", "Turkey",
+  "United Arab Emirates", "Oman", "Qatar", "Saudi Arabia", "Jordan", "Israel", "Egypt", "Morocco", "Tunisia", "Kenya", "Tanzania", "South Africa", "Mauritius", "Seychelles",
+  "United Kingdom", "Ireland", "France", "Spain", "Portugal", "Italy", "Switzerland", "Germany", "Austria", "Netherlands", "Belgium", "Greece", "Croatia", "Czech Republic",
+  "Hungary", "Poland", "Norway", "Sweden", "Finland", "Denmark", "Iceland", "Russia", "United States", "Canada", "Mexico", "Peru", "Brazil", "Argentina", "Chile",
+  "Australia", "New Zealand", "Fiji",
+];

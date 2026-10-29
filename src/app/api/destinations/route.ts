@@ -5,6 +5,7 @@ import User from "@/models/User";
 import Tour from "@/models/Tour";
 import { getAuthFromRequest } from "@/lib/auth";
 import { sanitizeAddresses } from "@/lib/address";
+import { resolvePlace } from "@/lib/location";
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,17 +14,20 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const state = searchParams.get("state");
+    const country = searchParams.get("country");
     const activeOnly = searchParams.get("all") !== "true";
 
     const filter: any = {};
     if (activeOnly) filter.isActive = true;
     if (state && state !== "All") filter.state = state;
+    // Destinations saved before countries existed have no country: they are all India.
+    if (country && country !== "All") filter.country = /^india$/i.test(country) ? { $in: ["India", null] } : country;
 
     // Optional server-side search with a cap, used by pickers so big lists stay fast.
     const q = (searchParams.get("search") || "").trim();
     if (q) {
       const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
-      filter.$or = [{ name: rx }, { state: rx }];
+      filter.$or = [{ name: rx }, { state: rx }, { country: rx }, ...(/india/i.test(q) ? [{ country: null }] : [])];
     }
     const limit = Math.min(100, Math.max(0, parseInt(searchParams.get("limit") || "0", 10) || 0));
 
@@ -78,30 +82,30 @@ export async function POST(req: NextRequest) {
 
     await connectToDatabase();
     const body = await req.json();
-    const { name, state, coordinates, description, coverImage, partnerId } = body;
+    const { name, coordinates, description, coverImage, partnerId } = body;
 
-    if (!name || !state || !coordinates?.lat || !coordinates?.lng) {
-      return NextResponse.json(
-        { error: "Name, state, and valid coordinates (lat, lng) are required." },
-        { status: 400 }
-      );
+    const lat = Number(coordinates?.lat);
+    const lng = Number(coordinates?.lng);
+    if (!String(name ?? "").trim() || coordinates?.lat === "" || coordinates?.lng === "" || !Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      return NextResponse.json({ error: "A name and valid coordinates (latitude and longitude) are required." }, { status: 400 });
     }
+    const place = resolvePlace(body);
+    if ("error" in place) return NextResponse.json({ error: place.error }, { status: 400 });
+    const { country, state } = place;
 
     // The same city can't be added twice (the pickers search by name, so duplicates would be confusing).
     const esc = (v: string) => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const dupe = await Destination.findOne({ name: new RegExp(`^${esc(String(name).trim())}$`, "i"), state: new RegExp(`^${esc(String(state).trim())}$`, "i") }).select("_id").lean();
-    if (dupe) return NextResponse.json({ error: `${String(name).trim()}, ${String(state).trim()} already exists. Search for it instead.` }, { status: 409 });
+    const dupe = await Destination.findOne({ name: new RegExp(`^${esc(String(name).trim())}$`, "i"), state: new RegExp(`^${esc(state)}$`, "i") }).select("_id").lean();
+    if (dupe) return NextResponse.json({ error: `${String(name).trim()}, ${state} already exists. Search for it instead.` }, { status: 409 });
 
     const addrs = sanitizeAddresses(body.addresses);
     if (addrs.error) return NextResponse.json({ error: addrs.error }, { status: 400 });
 
     const newDestination = await Destination.create({
       name: name.trim(),
-      state: state.trim(),
-      coordinates: {
-        lat: Number(coordinates.lat),
-        lng: Number(coordinates.lng),
-      },
+      country,
+      state,
+      coordinates: { lat, lng },
       description: description || "",
       coverImage:
         coverImage ||

@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Chip,
@@ -38,7 +39,8 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
-import { INDIAN_STATES, KNOWN_DESTINATION_COORDINATES } from "@/lib/constants";
+import { COUNTRIES, HOME_COUNTRY, INDIAN_STATES, KNOWN_DESTINATION_COORDINATES } from "@/lib/constants";
+import { countryOf, groupByCountry, isHome } from "@/lib/location";
 
 interface AddressForm {
   _id?: string;
@@ -80,6 +82,7 @@ export default function AdminLocationsPage() {
   const [saving, setSaving] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [country, setCountry] = useState<string>(HOME_COUNTRY);
   const [state, setState] = useState("Himachal Pradesh");
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
@@ -113,25 +116,24 @@ export default function AdminLocationsPage() {
   const selectedPartner = useMemo(() => partners.find((p) => p._id === partnerId) || null, [partners, partnerId]);
 
   const visible = destinations.filter((d) =>
-    `${d.name} ${d.state} ${d.partnerId?.name || ""}`.toLowerCase().includes(search.toLowerCase())
+    `${d.name} ${d.state} ${countryOf(d)} ${d.partnerId?.name || ""}`.toLowerCase().includes(search.toLowerCase())
   );
 
-  const [openStates, setOpenStates] = useState<Set<string>>(new Set());
-  const groups = useMemo(() => {
-    const m = new Map<string, any[]>();
-    visible.forEach((d) => m.set(d.state, [...(m.get(d.state) || []), d]));
-    return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  }, [visible]);
-  const toggleState = (st: string) =>
-    setOpenStates((prev) => {
+  const [openKeys, setOpenKeys] = useState<Set<string>>(new Set());
+  const searching = Boolean(search.trim());
+  // Country > state > city for India; country > city for every other country.
+  const tree = useMemo(() => groupByCountry(visible), [visible]);
+  const toggleKey = (k: string) =>
+    setOpenKeys((prev) => {
       const n = new Set(prev);
-      n.has(st) ? n.delete(st) : n.add(st);
+      n.has(k) ? n.delete(k) : n.add(k);
       return n;
     });
 
   const resetForm = () => {
     setEditingId(null);
     setName("");
+    setCountry(HOME_COUNTRY);
     setState("Himachal Pradesh");
     setLat("");
     setLng("");
@@ -152,7 +154,8 @@ export default function AdminLocationsPage() {
     resetForm();
     setEditingId(d._id);
     setName(d.name || "");
-    setState(d.state || "Himachal Pradesh");
+    setCountry(countryOf(d));
+    setState(isHome(d.country) ? d.state || "Himachal Pradesh" : "Himachal Pradesh");
     setLat(String(d.coordinates?.lat ?? ""));
     setLng(String(d.coordinates?.lng ?? ""));
     setDescription(d.description || "");
@@ -178,6 +181,7 @@ export default function AdminLocationsPage() {
     setName(cityName);
     const preset = KNOWN_DESTINATION_COORDINATES[cityName];
     if (preset) {
+      setCountry(HOME_COUNTRY);
       setState(preset.state);
       setLat(preset.lat.toString());
       setLng(preset.lng.toString());
@@ -197,7 +201,8 @@ export default function AdminLocationsPage() {
         headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
           name,
-          state,
+          country: country.trim() || HOME_COUNTRY,
+          ...(isHome(country) ? { state } : {}),
           coordinates: { lat: parseFloat(lat), lng: parseFloat(lng) },
           description,
           coverImage,
@@ -230,6 +235,86 @@ export default function AdminLocationsPage() {
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const cityRow = (dest: any, indent: number) => (
+                  <TableRow key={dest._id} hover sx={{ "&:last-child td": { borderBottom: 0 }, opacity: dest.isActive === false ? 0.6 : 1 }}>
+                    <TableCell sx={{ pl: indent }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+                        <Box
+                          component="img"
+                          src={dest.coverImage || "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=200"}
+                          alt={dest.name}
+                          sx={{ width: 34, height: 34, borderRadius: "4px", objectFit: "cover" }}
+                        />
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: "#0f172a", fontSize: "0.82rem" }}>
+                            {dest.name}
+                            {dest.isActive === false && <Typography component="span" sx={{ ml: 0.75, fontSize: "0.68rem", color: "#94a3b8" }}>inactive</Typography>}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: "#64748b", fontSize: "0.7rem" }}>
+                            {dest.description ? dest.description.substring(0, 42) + "..." : "Indian Destination"}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={dest.state} size="small" variant="outlined" sx={{ borderRadius: "4px", height: 20, fontSize: "0.68rem", borderColor: "#e2e8f0", color: "#334155" }} />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="caption" sx={{ fontFamily: "monospace", color: "#475569", fontSize: "0.72rem" }}>
+                        {dest.coordinates?.lat?.toFixed(4)}, {dest.coordinates?.lng?.toFixed(4)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      {(dest.addresses || []).length > 0 ? (
+                        <Tooltip
+                          title={(dest.addresses || []).map((a: any) => a.label).join(" • ")}
+                          arrow
+                        >
+                          <Chip
+                            icon={<PlaceRoundedIcon sx={{ fontSize: "13px !important" }} />}
+                            label={`${dest.addresses.length} ${dest.addresses.length === 1 ? "address" : "addresses"}`}
+                            size="small"
+                            sx={{ borderRadius: "4px", height: 20, fontSize: "0.68rem", bgcolor: "#f1f5f9", color: "#0f172a", fontWeight: 600 }}
+                          />
+                        </Tooltip>
+                      ) : (
+                        <Chip label="None added" size="small" sx={{ borderRadius: "4px", height: 18, fontSize: "0.65rem", bgcolor: "#fffbeb", color: "#b45309" }} />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={`${dest.tourCount || 0} Tours`} size="small" sx={{ borderRadius: "4px", height: 18, fontSize: "0.65rem", bgcolor: "#f1f5f9", color: "#0f172a", fontWeight: 600 }} />
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton size="small" onClick={() => openEdit(dest)} aria-label="Edit destination" sx={{ color: "#475569", p: 0.5, borderRadius: "4px" }}>
+                        <EditRoundedIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleDelete(dest._id, dest.name)} aria-label="Delete destination" sx={{ color: "#ef4444", p: 0.5, borderRadius: "4px" }}>
+                        <DeleteRoundedIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+  );
+
+  const chipSx = { borderRadius: "4px", height: 18, fontSize: "0.65rem", fontWeight: 600 } as const;
+  const headerRow = (key: string, label: string, items: any[], open: boolean, level: "country" | "state", extra?: string) => {
+    const tours = items.reduce((n, d) => n + (d.tourCount || 0), 0);
+    const inactive = items.filter((d) => d.isActive === false).length;
+    return (
+      <TableRow hover onClick={() => toggleKey(key)} sx={{ cursor: "pointer", bgcolor: level === "country" ? "#f1f5f9" : "#f8fafc", "& td": { borderBottom: "1px solid #e2e8f0" } }}>
+        <TableCell colSpan={6} sx={{ py: 1, pl: level === "country" ? 2 : 4 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <ExpandMoreRoundedIcon sx={{ fontSize: 20, color: "#475569", transform: open ? "none" : "rotate(-90deg)", transition: "transform .15s" }} />
+            <Typography sx={{ fontWeight: level === "country" ? 800 : 700, fontSize: level === "country" ? "0.9rem" : "0.85rem", color: "#0f172a" }}>{label}</Typography>
+            <Chip label={`${items.length} ${items.length === 1 ? "location" : "locations"}`} size="small" sx={{ ...chipSx, bgcolor: "#e2e8f0", color: "#0f172a" }} />
+            {extra && <Chip label={extra} size="small" sx={{ ...chipSx, bgcolor: "#e0e7ff", color: "#3730a3" }} />}
+            <Chip label={`${tours} ${tours === 1 ? "tour" : "tours"}`} size="small" sx={{ ...chipSx, bgcolor: level === "country" ? "#e2e8f0" : "#f1f5f9", color: "#0f172a" }} />
+            {inactive > 0 && <Chip label={`${inactive} inactive`} size="small" sx={{ ...chipSx, bgcolor: "#f1f5f9", color: "#64748b" }} />}
+          </Box>
+        </TableCell>
+      </TableRow>
+    );
   };
 
   return (
@@ -290,89 +375,27 @@ export default function AdminLocationsPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {groups.map(([st, items]) => {
-                  const expanded = Boolean(search.trim()) || openStates.has(st);
+                {tree.map((c) => {
+                  const cKey = `c:${c.country}`;
+                  const cOpen = searching || openKeys.has(cKey);
+                  const all = c.states.length ? c.states.flatMap((st) => st.items) : c.items;
                   return (
-                  <React.Fragment key={st}>
-                  <TableRow hover onClick={() => toggleState(st)} sx={{ cursor: "pointer", bgcolor: "#f8fafc", "& td": { borderBottom: "1px solid #e2e8f0" } }}>
-                    <TableCell colSpan={6} sx={{ py: 1 }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <ExpandMoreRoundedIcon sx={{ fontSize: 20, color: "#475569", transform: expanded ? "none" : "rotate(-90deg)", transition: "transform .15s" }} />
-                        <Typography sx={{ fontWeight: 700, fontSize: "0.85rem", color: "#0f172a" }}>{st}</Typography>
-                        <Chip label={`${items.length} ${items.length === 1 ? "location" : "locations"}`} size="small" sx={{ borderRadius: "4px", height: 18, fontSize: "0.65rem", bgcolor: "#e2e8f0", color: "#0f172a", fontWeight: 600 }} />
-                        {(() => {
-                          const tours = items.reduce((n, d) => n + (d.tourCount || 0), 0);
-                          const inactive = items.filter((d) => d.isActive === false).length;
-                          return (
-                            <>
-                              <Chip label={`${tours} ${tours === 1 ? "tour" : "tours"}`} size="small" sx={{ borderRadius: "4px", height: 18, fontSize: "0.65rem", bgcolor: "#f1f5f9", color: "#0f172a", fontWeight: 600 }} />
-                              {inactive > 0 && <Chip label={`${inactive} inactive`} size="small" sx={{ borderRadius: "4px", height: 18, fontSize: "0.65rem", bgcolor: "#f1f5f9", color: "#64748b", fontWeight: 600 }} />}
-                            </>
-                          );
-                        })()}
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                  {expanded && items.map((dest) => (
-                  <TableRow key={dest._id} hover sx={{ "&:last-child td": { borderBottom: 0 }, opacity: dest.isActive === false ? 0.6 : 1 }}>
-                    <TableCell>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-                        <Box
-                          component="img"
-                          src={dest.coverImage || "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=200"}
-                          alt={dest.name}
-                          sx={{ width: 34, height: 34, borderRadius: "4px", objectFit: "cover" }}
-                        />
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: "#0f172a", fontSize: "0.82rem" }}>
-                            {dest.name}
-                            {dest.isActive === false && <Typography component="span" sx={{ ml: 0.75, fontSize: "0.68rem", color: "#94a3b8" }}>inactive</Typography>}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: "#64748b", fontSize: "0.7rem" }}>
-                            {dest.description ? dest.description.substring(0, 42) + "..." : "Indian Destination"}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Chip label={dest.state} size="small" variant="outlined" sx={{ borderRadius: "4px", height: 20, fontSize: "0.68rem", borderColor: "#e2e8f0", color: "#334155" }} />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption" sx={{ fontFamily: "monospace", color: "#475569", fontSize: "0.72rem" }}>
-                        {dest.coordinates?.lat?.toFixed(4)}, {dest.coordinates?.lng?.toFixed(4)}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      {(dest.addresses || []).length > 0 ? (
-                        <Tooltip
-                          title={(dest.addresses || []).map((a: any) => a.label).join(" • ")}
-                          arrow
-                        >
-                          <Chip
-                            icon={<PlaceRoundedIcon sx={{ fontSize: "13px !important" }} />}
-                            label={`${dest.addresses.length} ${dest.addresses.length === 1 ? "address" : "addresses"}`}
-                            size="small"
-                            sx={{ borderRadius: "4px", height: 20, fontSize: "0.68rem", bgcolor: "#f1f5f9", color: "#0f172a", fontWeight: 600 }}
-                          />
-                        </Tooltip>
-                      ) : (
-                        <Chip label="None added" size="small" sx={{ borderRadius: "4px", height: 18, fontSize: "0.65rem", bgcolor: "#fffbeb", color: "#b45309" }} />
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Chip label={`${dest.tourCount || 0} Tours`} size="small" sx={{ borderRadius: "4px", height: 18, fontSize: "0.65rem", bgcolor: "#f1f5f9", color: "#0f172a", fontWeight: 600 }} />
-                    </TableCell>
-                    <TableCell align="right">
-                      <IconButton size="small" onClick={() => openEdit(dest)} aria-label="Edit destination" sx={{ color: "#475569", p: 0.5, borderRadius: "4px" }}>
-                        <EditRoundedIcon sx={{ fontSize: 16 }} />
-                      </IconButton>
-                      <IconButton size="small" onClick={() => handleDelete(dest._id, dest.name)} aria-label="Delete destination" sx={{ color: "#ef4444", p: 0.5, borderRadius: "4px" }}>
-                        <DeleteRoundedIcon sx={{ fontSize: 16 }} />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                  ))}
-                  </React.Fragment>
+                    <React.Fragment key={cKey}>
+                      {headerRow(cKey, c.country, all, cOpen, "country", c.states.length ? `${c.states.length} ${c.states.length === 1 ? "state" : "states"}` : undefined)}
+                      {cOpen &&
+                        (c.states.length > 0
+                          ? c.states.map((st) => {
+                              const sKey = `s:${c.country}|${st.state}`;
+                              const sOpen = searching || openKeys.has(sKey);
+                              return (
+                                <React.Fragment key={sKey}>
+                                  {headerRow(sKey, st.state, st.items, sOpen, "state")}
+                                  {sOpen && st.items.map((d) => cityRow(d, 7))}
+                                </React.Fragment>
+                              );
+                            })
+                          : c.items.map((d) => cityRow(d, 4)))}
+                    </React.Fragment>
                   );
                 })}
                 {visible.length === 0 && (
@@ -398,12 +421,12 @@ export default function AdminLocationsPage() {
       >
         <form onSubmit={handleSubmit}>
           <DialogTitle sx={{ fontWeight: 700, fontSize: "1rem", pb: 1 }}>
-            {editingId ? "Edit Destination" : "Add Indian Destination"}
+            {editingId ? "Edit Destination" : "Add Destination"}
           </DialogTitle>
           <DialogContent sx={{ pt: 1 }}>
             {dialogError && <Alert severity="error" sx={{ mb: 2, borderRadius: "4px" }}>{dialogError}</Alert>}
 
-            {!editingId && (
+            {!editingId && isHome(country) && (
               <>
                 <Typography variant="caption" sx={{ color: "#64748b", display: "block", mb: 1.5 }}>
                   Presets for popular Indian cities (auto-fills state and coordinates):
@@ -427,16 +450,29 @@ export default function AdminLocationsPage() {
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField label="Destination / City Name" required fullWidth value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Manali, Jaipur, Goa" />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Indian State</InputLabel>
-                  <Select value={state} label="Indian State" onChange={(e) => setState(e.target.value)}>
-                    {INDIAN_STATES.map((s) => (
-                      <MenuItem key={s} value={s}>{s}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+              <Grid size={{ xs: 12, sm: isHome(country) ? 3 : 6 }}>
+                <Autocomplete
+                  freeSolo
+                  size="small"
+                  options={COUNTRIES}
+                  value={country}
+                  onChange={(_, v) => setCountry(v ? String(v) : HOME_COUNTRY)}
+                  onInputChange={(_, v, reason) => reason === "input" && setCountry(v)}
+                  renderInput={(p) => <TextField {...p} label="Country" required helperText={isHome(country) ? undefined : "Cities sit directly under the country"} />}
+                />
               </Grid>
+              {isHome(country) && (
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Indian State</InputLabel>
+                    <Select value={state} label="Indian State" onChange={(e) => setState(e.target.value)}>
+                      {INDIAN_STATES.map((s) => (
+                        <MenuItem key={s} value={s}>{s}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              )}
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField label="Latitude" type="number" slotProps={{ htmlInput: { step: "any" } }} required fullWidth value={lat} onChange={(e) => setLat(e.target.value)} placeholder="32.2432" />
               </Grid>

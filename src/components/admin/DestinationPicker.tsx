@@ -21,7 +21,8 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import AddLocationAltRoundedIcon from "@mui/icons-material/AddLocationAltRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import { INDIAN_STATES, KNOWN_DESTINATION_COORDINATES } from "@/lib/constants";
+import { COUNTRIES, HOME_COUNTRY, INDIAN_STATES, KNOWN_DESTINATION_COORDINATES } from "@/lib/constants";
+import { isHome } from "@/lib/location";
 
 const LIMIT = 20;
 
@@ -70,6 +71,7 @@ export default function DestinationPicker({
 
   // create form
   const [name, setName] = useState("");
+  const [country, setCountry] = useState<string>(HOME_COUNTRY);
   const [state, setState] = useState<string | null>(null);
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
@@ -110,6 +112,7 @@ export default function DestinationPicker({
   const startCreate = () => {
     const known = Object.entries(KNOWN_DESTINATION_COORDINATES).find(([k]) => k.toLowerCase() === q.trim().toLowerCase());
     setName(q.trim());
+    setCountry(HOME_COUNTRY);
     setState(known ? known[1].state : null);
     setLat(known ? String(known[1].lat) : "");
     setLng(known ? String(known[1].lng) : "");
@@ -122,6 +125,7 @@ export default function DestinationPicker({
     setName(v);
     const known = Object.entries(KNOWN_DESTINATION_COORDINATES).find(([k]) => k.toLowerCase() === v.trim().toLowerCase());
     if (known) {
+      setCountry(HOME_COUNTRY);
       setState(known[1].state);
       setLat(String(known[1].lat));
       setLng(String(known[1].lng));
@@ -130,8 +134,12 @@ export default function DestinationPicker({
 
   const latN = Number(lat);
   const lngN = Number(lng);
-  const validCoords = lat !== "" && lng !== "" && latN >= 6 && latN <= 38 && lngN >= 67 && lngN <= 98; // inside India
-  const canCreate = name.trim().length >= 2 && Boolean(state) && validCoords;
+  const home = isHome(country);
+  // India's cities must sit inside India's bounding box; elsewhere any real coordinate is fine.
+  const validCoords =
+    lat !== "" && lng !== "" && Number.isFinite(latN) && Number.isFinite(lngN) &&
+    (home ? latN >= 6 && latN <= 38 && lngN >= 67 && lngN <= 98 : Math.abs(latN) <= 90 && Math.abs(lngN) <= 180 && !(latN === 0 && lngN === 0));
+  const canCreate = name.trim().length >= 2 && country.trim().length >= 2 && (!home || Boolean(state)) && validCoords;
 
   const create = async () => {
     setSaving(true);
@@ -140,7 +148,7 @@ export default function DestinationPicker({
       const res = await fetch("/api/destinations", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders() },
-        body: JSON.stringify({ name: name.trim(), state, coordinates: { lat: latN, lng: lngN } }),
+        body: JSON.stringify({ name: name.trim(), country: country.trim(), ...(home ? { state } : {}), coordinates: { lat: latN, lng: lngN } }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || "Couldn't create the location");
@@ -170,13 +178,27 @@ export default function DestinationPicker({
               Just the basics. You can add starting addresses and a partner later from Destinations.
             </Typography>
             <TextField label="City / place name" required fullWidth size="small" autoFocus value={name} onChange={(e) => onName(e.target.value)} sx={{ mb: 1.5 }} />
-            <Autocomplete size="small" options={INDIAN_STATES} value={state} onChange={(_, v) => setState(v)} sx={{ mb: 1.5 }} renderInput={(p) => <TextField {...p} label="State" required />} />
+            <Autocomplete
+              freeSolo
+              size="small"
+              options={COUNTRIES}
+              value={country}
+              onChange={(_, v) => setCountry(v ? String(v) : HOME_COUNTRY)}
+              onInputChange={(_, v, reason) => reason === "input" && setCountry(v)}
+              sx={{ mb: 1.5 }}
+              renderInput={(p) => <TextField {...p} label="Country" required />}
+            />
+            {home ? (
+              <Autocomplete size="small" options={INDIAN_STATES} value={state} onChange={(_, v) => setState(v)} sx={{ mb: 1.5 }} renderInput={(p) => <TextField {...p} label="State" required />} />
+            ) : (
+              <Typography sx={{ fontSize: "0.72rem", color: "#64748b", mb: 1.5, mt: -0.5 }}>Outside India a city sits directly under its country, so no state is needed.</Typography>
+            )}
             <Box sx={{ display: "flex", gap: 1.25 }}>
               <TextField label="Latitude" required fullWidth size="small" type="number" value={lat} onChange={(e) => setLat(e.target.value)} slotProps={{ htmlInput: { step: "any" } }} />
               <TextField label="Longitude" required fullWidth size="small" type="number" value={lng} onChange={(e) => setLng(e.target.value)} slotProps={{ htmlInput: { step: "any" } }} />
             </Box>
             <Typography sx={{ mt: 0.75, fontSize: "0.72rem", color: lat !== "" && lng !== "" && !validCoords ? "#dc2626" : "#94a3b8" }}>
-              {lat !== "" && lng !== "" && !validCoords ? "These coordinates are outside India. Check them." : "Right-click the place on Google Maps and copy the two numbers. Well-known cities fill in by themselves."}
+              {lat !== "" && lng !== "" && !validCoords ? (home ? "These coordinates are outside India. Check them, or change the country." : "These aren't valid coordinates. Check them.") : "Right-click the place on Google Maps and copy the two numbers. Well-known cities fill in by themselves."}
             </Typography>
           </DialogContent>
           <DialogActions sx={{ p: 2, pt: 1 }}>

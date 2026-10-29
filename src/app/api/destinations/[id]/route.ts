@@ -6,6 +6,7 @@ import Tour from "@/models/Tour";
 import { getAuthFromRequest } from "@/lib/auth";
 import { sanitizeAddresses } from "@/lib/address";
 import { settleApplicants } from "@/lib/partner-mail";
+import { resolvePlace } from "@/lib/location";
 
 export async function GET(
   req: NextRequest,
@@ -99,11 +100,19 @@ export async function PUT(
     const willHavePartner = body.partnerId !== undefined ? Boolean(body.partnerId) : Boolean(existingDest.partnerId);
     if (willHavePartner) body.openForPartner = false;
 
+    // Country / state: an Indian city needs a state, any other country keeps its cities directly under it.
+    let place: { country: string; state: string } | null = null;
+    if (body.country !== undefined || body.state !== undefined) {
+      const r = resolvePlace(body, existingDest as any);
+      if ("error" in r) return NextResponse.json({ error: r.error }, { status: 400 });
+      place = r;
+    }
+
     const updated = await Destination.findByIdAndUpdate(
       id,
       {
         ...(body.name && { name: body.name.trim() }),
-        ...(body.state && { state: body.state.trim() }),
+        ...(place && { country: place.country, state: place.state }),
         ...(body.coordinates && {
           coordinates: {
             lat: Number(body.coordinates.lat),
@@ -119,6 +128,14 @@ export async function PUT(
       },
       { new: true }
     ).populate("partnerId", "name email phone secondaryPhone");
+
+    // Tours copy the destination's name and state, so keep them in step when those change.
+    if (updated) {
+      const tourPatch: Record<string, string> = {};
+      if (place && place.state !== existingDest.state) tourPatch.state = place.state;
+      if (body.name && String(body.name).trim() !== existingDest.name) tourPatch.targetCity = String(body.name).trim();
+      if (Object.keys(tourPatch).length) await Tour.updateMany({ destinationId: id }, { $set: tourPatch });
+    }
 
     if (body.partnerId && body.partnerId !== existingDest.partnerId?.toString()) {
       const u: any = await User.findById(body.partnerId).select("name email");
