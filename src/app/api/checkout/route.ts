@@ -50,16 +50,19 @@ export async function POST(req: NextRequest) {
 
     // A partner books on behalf of a customer: only departures from their own city, customer email required.
     const isPartner = auth.role === "partner";
-    let customerEmail: string = user.email;
+    let customerEmail: string = user.email || "";
     if (isPartner) {
       if (!partnerCanBook(departure, user.assignedDestination ? String(user.assignedDestination) : "")) {
         return NextResponse.json({ error: "You can only book the tour's own dates or departures from your own location." }, { status: 403 });
       }
+      // The customer's email is optional (it only receives confirmations); their mobile number is their login.
       customerEmail = clean(body.customer?.email).toLowerCase();
-      if (!/^\S+@\S+\.\S+$/.test(customerEmail)) return NextResponse.json({ error: "Enter the customer's email address." }, { status: 400 });
-      const clash: any = await User.findOne({ email: customerEmail }).select("role").lean();
-      if (clash && clash.role !== "user") {
-        return NextResponse.json({ error: "That email belongs to a staff account. Use the customer's own email." }, { status: 400 });
+      if (customerEmail && !/^\S+@\S+\.\S+$/.test(customerEmail)) return NextResponse.json({ error: "That email address doesn't look right. Leave it empty to skip it." }, { status: 400 });
+      if (customerEmail) {
+        const clash: any = await User.findOne({ email: customerEmail }).select("role").lean();
+        if (clash && clash.role !== "user") {
+          return NextResponse.json({ error: "That email belongs to a staff account. Use the customer's own email." }, { status: 400 });
+        }
       }
     }
 
@@ -73,12 +76,12 @@ export async function POST(req: NextRequest) {
       if (!/^[6-9]\d{9}$/.test(phone)) return NextResponse.json({ error: `Traveller ${i + 1}: enter a valid 10-digit mobile number.` }, { status: 400 });
       if (!(age >= 1 && age <= 100)) return NextResponse.json({ error: `Traveller ${i + 1}: enter a valid age.` }, { status: 400 });
       const roomType: RoomType = singleOffered && t.roomType === "single" ? "single" : "shared";
-      travellers.push({ firstName, lastName, phone, age, roomType, ...(i === 0 ? { email: customerEmail } : {}) });
+      travellers.push({ firstName, lastName, phone, age, roomType, ...(i === 0 && customerEmail ? { email: customerEmail } : {}) });
     }
 
     // Free up this user's earlier unpaid holds for the same date before counting seats.
     await Booking.deleteMany({
-      ...(isPartner ? { partnerId: auth.userId, bookedByRole: "partner", customerEmail } : { userId: auth.userId }),
+      ...(isPartner ? { partnerId: auth.userId, bookedByRole: "partner", customerPhone: travellers[0].phone } : { userId: auth.userId }),
       tourId: tour._id,
       departureId: departure._id,
       status: "pending",

@@ -11,6 +11,7 @@ export interface IUser extends Document {
   address?: string;
   notes?: string;
   emailVerified?: boolean;
+  phoneVerified?: boolean;
   otpHash?: string;
   otpExpires?: Date;
   otpAttempts?: number;
@@ -26,14 +27,17 @@ export interface IUser extends Document {
 const UserSchema = new Schema<IUser>(
   {
     name: { type: String, required: true, trim: true },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true },
+    // Customers sign in with their mobile number, so email is optional for them (partners and admins always have one).
+    email: { type: String, lowercase: true, trim: true, required: function (this: any) { return this.role !== "user"; } },
+    // Customers sign in by mobile code and have no password (older email accounts keep theirs); partners and admins always do.
+    password: { type: String, required: function (this: any) { return this.role !== "user"; } },
     role: {
       type: String,
       enum: ["admin", "partner", "user"],
       default: "user",
     },
     phone: { type: String, default: "" },
+    phoneVerified: { type: Boolean, default: false },
     // Extra partner details (managed by admins)
     secondaryPhone: { type: String, default: "" },
     companyName: { type: String, default: "" },
@@ -59,6 +63,10 @@ const UserSchema = new Schema<IUser>(
   },
   { timestamps: true }
 );
+
+// Unique only where a value exists, so many customers can have no email.
+UserSchema.index({ email: 1 }, { unique: true, name: "email_unique_partial", partialFilterExpression: { email: { $type: "string" } } });
+// A unique customer-phone index is created by scripts/migrate-user-indexes.js once there are no duplicates; the sign-in code also checks.
 
 // Prevent mongoose model overwrite error during hot reload
 const User: Model<IUser> =

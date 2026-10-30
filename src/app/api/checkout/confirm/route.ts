@@ -41,7 +41,6 @@ export async function POST(req: NextRequest) {
     booking.amountPaidInr = booking.installments.filter((x: any) => x.status === "paid").reduce((s: number, x: any) => s + x.amountInr, 0);
     booking.paymentStatus = booking.amountPaidInr >= booking.totalAmountInr ? "paid" : "partial";
     const firstConfirmation = booking.status === "pending";
-    let newPassword: string | undefined;
     if (firstConfirmation) {
       booking.status = "confirmed";
       booking.holdExpiresAt = null;
@@ -50,7 +49,6 @@ export async function POST(req: NextRequest) {
         try {
           const acct = await ensureCustomerAccount(booking);
           booking.userId = acct.userId as any;
-          newPassword = acct.password;
         } catch (e) {
           console.error("customer account failed", e);
         }
@@ -66,7 +64,8 @@ export async function POST(req: NextRequest) {
         const partner: any = isPartnerBooking && booking.partnerId ? await User.findById(booking.partnerId).select("name phone email").lean() : null;
         const obj = booking.toObject();
         const invoicePdf = await generateInvoicePdf(buildInvoice(obj, partner)).catch((e) => (console.error("invoice pdf failed", e), undefined));
-        await sendCustomerBookingEmail(obj, { password: newPassword, partner, ownAccount: !isPartnerBooking, invoicePdf });
+        // Customers who gave no email simply get no email; they see the booking and invoice after logging in.
+        if (obj.customerEmail) await sendCustomerBookingEmail(obj, { partner, ownAccount: !isPartnerBooking, invoicePdf });
       } catch (e) {
         console.error("customer booking mail failed", e);
       }

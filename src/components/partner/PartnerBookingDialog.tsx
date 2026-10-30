@@ -173,7 +173,7 @@ export default function PartnerBookingDialog({
   const listTotal = departure ? departure.price * n : 0;
   const tourOff = quote ? listTotal - quote.baseTotal : 0;
 
-  const emailOk = /^\S+@\S+\.\S+$/.test(email.trim());
+  const emailOk = !email.trim() || /^\S+@\S+\.\S+$/.test(email.trim());
   const peopleOk = people.every(personValid) && emailOk;
   const canNext = step === 0 ? Boolean(departure) && n >= 1 : step === 1 ? peopleOk : true;
 
@@ -196,7 +196,7 @@ export default function PartnerBookingDialog({
           tour: tour._id,
           departureId: departure._id,
           strategy: effectivePay,
-          customer: { email: email.trim() },
+          customer: email.trim() ? { email: email.trim() } : {},
           specialRequests: requests,
           ...(discountId ? { partnerDiscountId: discountId } : {}),
           travellers: people.map((p, i) => ({ ...p, phone: cleanPhone(p.phone), roomType: rooms[i] })),
@@ -337,7 +337,7 @@ export default function PartnerBookingDialog({
 
               {step === 1 && (
                 <Box>
-                  <TextField label="Customer email (booking updates go here)" type="email" required fullWidth size="small" value={email} onChange={(e) => setEmail(e.target.value)} sx={{ mb: 2 }} error={Boolean(email) && !emailOk} />
+                  <TextField label="Customer email (optional, for confirmations and the invoice)" type="email" fullWidth size="small" value={email} onChange={(e) => setEmail(e.target.value)} sx={{ mb: 2 }} error={Boolean(email) && !emailOk} />
                   <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
                     {people.map((p, i) => (
                       <Box key={i} sx={{ p: 2, border: "1px solid #E2E2E2", borderRadius: "4px" }}>
@@ -434,7 +434,7 @@ export default function PartnerBookingDialog({
                         {fmt(departure.startDate)} – {fmt(departure.endDate)} · {n} traveller{n === 1 ? "" : "s"}
                       </Typography>
                       <Typography sx={{ fontSize: "0.78rem", color: "#64748b", mb: 1 }}>
-                        {people[0].firstName} {people[0].lastName}{n > 1 ? ` + ${n - 1} more` : ""} · {email}
+                        {people[0].firstName} {people[0].lastName}{n > 1 ? ` + ${n - 1} more` : ""} {email.trim() ? ` · ${email.trim()}` : ""}
                       </Typography>
                       {row(`Tour price ${inr(departure.price)} × ${n}`, inr(listTotal))}
                       {tourOff > 0 && row(`Tour discount (${departure.discountPercentage}%)`, `− ${inr(tourOff)}`, "#059669")}

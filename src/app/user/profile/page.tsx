@@ -118,7 +118,7 @@ function ProfileInner() {
   const [loadingBookings, setLoadingBookings] = useState(true);
 
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -129,7 +129,7 @@ function ProfileInner() {
       const d = await me.json();
       setUser(d.user);
       setName(d.user.name || "");
-      setPhone(d.user.phone || "");
+      setEmail(d.user.email || "");
       const r = await fetch("/api/user/bookings");
       const bd = await r.json();
       if (bd.success) setBookings(bd.data);
@@ -181,7 +181,7 @@ function ProfileInner() {
       const res = await fetch("/api/user/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone }),
+        body: JSON.stringify({ name, email }),
       });
       const d = await res.json();
       if (!res.ok || !d.success) throw new Error(d.error || "Couldn't save");
@@ -267,7 +267,7 @@ function ProfileInner() {
             <Box sx={{ minWidth: 0 }}>
               <Typography sx={{ fontSize: { xs: "1.6rem", md: "2.2rem" }, fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.1 }}>{user.name}</Typography>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1.25 }}>
-                <Chip icon={<EmailRoundedIcon sx={{ fontSize: "16px !important" }} />} label={user.email} size="small" sx={{ bgcolor: "#fff", fontWeight: 700 }} />
+                {user.email && <Chip icon={<EmailRoundedIcon sx={{ fontSize: "16px !important" }} />} label={user.email} size="small" sx={{ bgcolor: "#fff", fontWeight: 700 }} />}
                 {user.phone && <Chip icon={<PhoneRoundedIcon sx={{ fontSize: "16px !important" }} />} label={`+91 ${user.phone}`} size="small" sx={{ bgcolor: "#fff", fontWeight: 700 }} />}
                 <Chip icon={<VerifiedRoundedIcon sx={{ fontSize: "16px !important", color: "#059669 !important" }} />} label="Verified account" size="small" sx={{ bgcolor: "#dcfce7", color: "#166534", fontWeight: 700 }} />
               </Box>
@@ -367,15 +367,16 @@ function ProfileInner() {
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2.25 }}>
                 {saveMsg && <Alert severity={saveMsg.ok ? "success" : "error"}>{saveMsg.text}</Alert>}
                 <TextField label="Full name" value={name} onChange={(e) => setName(e.target.value)} required fullWidth />
-                <TextField label="Email address" value={user.email} disabled fullWidth helperText="Email can't be changed." slotProps={{ input: { endAdornment: <VerifiedRoundedIcon sx={{ color: "#10b981" }} /> } }} />
                 <TextField
                   label="Mobile number"
                   type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  value={user.phone || ""}
+                  disabled
                   fullWidth
-                  slotProps={{ input: { startAdornment: <InputAdornment position="start">+91</InputAdornment> }, htmlInput: { inputMode: "numeric", maxLength: 12 } }}
+                  helperText="This is how you log in, so it can't be changed here."
+                  slotProps={{ input: { startAdornment: <InputAdornment position="start">+91</InputAdornment>, endAdornment: <VerifiedRoundedIcon sx={{ color: "#10b981" }} /> } }}
                 />
+                <TextField label="Email address (optional)" type="email" value={email} onChange={(e) => setEmail(e.target.value)} fullWidth helperText="Only used to send your booking confirmations and invoices." />
                 <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
                   <Button type="submit" variant="contained" disabled={saving} startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveRoundedIcon />}
                     sx={{ px: 3, py: 1, bgcolor: "#FF9900", color: "#0f172a", fontWeight: 800, "&:hover": { bgcolor: "#E68A00" } }}>

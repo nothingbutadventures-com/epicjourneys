@@ -208,7 +208,7 @@ export default function AdminUsersPage() {
                       </Box>
                     </TableCell>
                     <TableCell sx={{ color: "#475569", fontSize: "0.8rem" }}>
-                      {u.email}
+                      {u.email || "—"}
                     </TableCell>
                     <TableCell>
                       {getRoleChip(u.role, u.adminRoleId?.name)}

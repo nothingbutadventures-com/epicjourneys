@@ -3,11 +3,12 @@
 import React, { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Alert, Button, CircularProgress, IconButton, InputAdornment, Stack, TextField } from "@mui/material";
+import { Alert, Box, Button, CircularProgress, IconButton, InputAdornment, Stack, TextField } from "@mui/material";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
 import { safeRedirect, withRedirect } from "@/lib/redirect";
 import AuthShell, { fieldSx, submitSx } from "@/components/AuthShell";
+import PhoneAuth from "@/components/PhoneAuth";
 
 function LoginForm() {
   const router = useRouter();
@@ -17,6 +18,8 @@ function LoginForm() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Customers log in with their mobile number; email + password stays for accounts created that way before.
+  const [useEmail, setUseEmail] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,16 +55,27 @@ function LoginForm() {
   return (
     <AuthShell
       title="Welcome back"
-      subtitle="Log in to manage your journeys."
+      subtitle={useEmail ? "Log in with your email and password." : "Log in or sign up with your mobile number."}
       footer={
         <>
-          New to EpicJourneys?{" "}
-          <Link href={withRedirect("/register", redirect)} style={{ color: "#E68A00", fontWeight: 700 }}>
-            Create an account
-          </Link>
+          {useEmail ? (
+            <Box component="button" type="button" onClick={() => setUseEmail(false)} sx={{ border: 0, bgcolor: "transparent", p: 0, font: "inherit", fontWeight: 700, color: "#E68A00", cursor: "pointer" }}>
+              Use my mobile number instead
+            </Box>
+          ) : (
+            <>
+              Have an email account?{" "}
+              <Box component="button" type="button" onClick={() => setUseEmail(true)} sx={{ border: 0, bgcolor: "transparent", p: 0, font: "inherit", fontWeight: 700, color: "#E68A00", cursor: "pointer" }}>
+                Log in with email
+              </Box>
+            </>
+          )}
         </>
       }
     >
+      {!useEmail ? (
+        <PhoneAuth fieldSx={fieldSx} buttonSx={submitSx} submitLabel="Log in" onAuthed={() => { router.push(safeRedirect(redirect)); router.refresh(); }} />
+      ) : (
       <form onSubmit={submit}>
         <Stack spacing={2.25}>
           {error && <Alert severity="error">{error}</Alert>}
@@ -101,6 +115,7 @@ function LoginForm() {
           </Button>
         </Stack>
       </form>
+      )}
     </AuthShell>
   );
 }

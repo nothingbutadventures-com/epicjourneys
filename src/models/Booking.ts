@@ -105,7 +105,8 @@ const BookingSchema = new Schema<IBooking>(
       ref: "Destination",
     },
     customerName: { type: String, required: true, trim: true },
-    customerEmail: { type: String, required: true, trim: true, lowercase: true },
+    // Customers who sign in with their mobile number may have no email.
+    customerEmail: { type: String, default: "", trim: true, lowercase: true },
     customerPhone: { type: String, required: true, trim: true },
     travelDate: { type: Date, required: true },
     numberOfTravelers: { type: Number, required: true, min: 1, default: 1 },

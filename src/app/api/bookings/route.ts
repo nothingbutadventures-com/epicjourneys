@@ -80,14 +80,13 @@ export async function POST(req: NextRequest) {
     if (
       !tourId ||
       !customerName ||
-      !customerEmail ||
       !customerPhone ||
       (!travelDate && !departureId)
     ) {
       return NextResponse.json(
         {
           error:
-            "Tour, customer name, email, phone, and travel date are required.",
+            "Tour, customer name, phone, and travel date are required.",
         },
         { status: 400 }
       );
@@ -199,7 +198,7 @@ export async function POST(req: NextRequest) {
       tourTitle: tour.title,
       destinationId: tour.destinationId?._id || tour.destinationId,
       customerName: customerName.trim(),
-      customerEmail: customerEmail.toLowerCase().trim(),
+      customerEmail: String(customerEmail || "").toLowerCase().trim(),
       customerPhone: customerPhone.trim(),
       ...(departure
         ? {

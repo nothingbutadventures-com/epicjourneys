@@ -81,7 +81,7 @@ export default function InvoiceView({ bookingRef, tokenKey }: { bookingRef: stri
             <Box>
               <Typography sx={{ fontSize: "0.7rem", fontWeight: 800, letterSpacing: "0.08em", color: "#94a3b8" }}>BILLED TO</Typography>
               <Typography sx={{ fontWeight: 800, fontSize: "1.1rem" }}>{inv.customer.name}</Typography>
-              <Typography sx={{ color: "#64748b", fontSize: "0.88rem" }}>{inv.customer.email}</Typography>
+              {inv.customer.email && <Typography sx={{ color: "#64748b", fontSize: "0.88rem" }}>{inv.customer.email}</Typography>}
               <Typography sx={{ color: "#64748b", fontSize: "0.88rem" }}>+91 {inv.customer.phone}</Typography>
             </Box>
             <Box sx={{ textAlign: { sm: "right" } }}>

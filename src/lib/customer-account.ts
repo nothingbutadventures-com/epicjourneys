@@ -1,48 +1,32 @@
-import crypto from "crypto";
 import User from "@/models/User";
-import { hashPassword } from "@/lib/auth";
 import { button, esc, layout, send, siteUrl } from "@/lib/partner-mail";
 
 const fmt = (d: unknown) => new Date(d as any).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 const inr = (n: number) => `₹${Math.round(n || 0).toLocaleString("en-IN")}`;
 
-/** Readable random password (no look-alike characters), e.g. "Kf7m-Tq3x-Pw9d". */
-function randomPassword() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-  const pick = () => chars[crypto.randomInt(chars.length)];
-  return Array.from({ length: 3 }, () => Array.from({ length: 4 }, pick).join("")).join("-");
-}
-
 /**
- * Finds or creates the customer's account for a booking a partner made.
- * A new account gets a random password (returned once so it can be emailed); an existing
- * verified account keeps its password. Staff accounts are never reused.
+ * Finds or creates the customer's account for a booking a partner made. Customers sign in with their mobile
+ * number (the primary traveller's), so the account is keyed by it: no password is created or emailed, and when
+ * the customer first logs in with a code they land in this account with the booking already there.
  */
-export async function ensureCustomerAccount(booking: any): Promise<{ userId: string; password?: string }> {
-  const email = String(booking.customerEmail).toLowerCase().trim();
-  const existing: any = await User.findOne({ email });
-  if (existing && existing.role !== "user") throw new Error("This email belongs to a staff account.");
+export async function ensureCustomerAccount(booking: any): Promise<{ userId: string }> {
+  const phone = String(booking.customerPhone || "").replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
+  if (!/^[6-9]\d{9}$/.test(phone)) throw new Error("The primary traveller needs a valid mobile number.");
+  const email = String(booking.customerEmail || "").toLowerCase().trim();
 
-  // Same mailbox owner gets the new credentials, so an unverified leftover account can be reclaimed.
-  if (existing && existing.emailVerified !== false) return { userId: String(existing._id) };
-
-  const password = randomPassword();
-  const fields = {
-    name: booking.customerName,
-    phone: booking.customerPhone,
-    password: await hashPassword(password),
-    emailVerified: true,
-  };
+  const existing: any = await User.findOne({ phone, role: "user" }).sort({ createdAt: 1 });
   if (existing) {
-    await User.updateOne({ _id: existing._id }, { $set: fields, $unset: { otpHash: 1, otpExpires: 1 } });
-    return { userId: String(existing._id), password };
+    // Add the email if they had none and nobody else uses it.
+    if (email && !existing.email && !(await User.exists({ email }))) await User.updateOne({ _id: existing._id }, { $set: { email, emailVerified: false } });
+    return { userId: String(existing._id) };
   }
-  const created = await User.create({ ...fields, email, role: "user" });
-  return { userId: String(created._id), password };
+  const withEmail = email && !(await User.exists({ email }));
+  const created = await User.create({ name: booking.customerName, phone, role: "user", ...(withEmail ? { email, emailVerified: false } : {}) });
+  return { userId: String(created._id) };
 }
 
 /** Booking confirmation + login details for a customer whose booking was made by a partner. */
-export async function sendCustomerBookingEmail(booking: any, opts: { password?: string; partner?: { name?: string; phone?: string; email?: string } | null; ownAccount?: boolean; invoicePdf?: Buffer }) {
+export async function sendCustomerBookingEmail(booking: any, opts: { partner?: { name?: string; phone?: string; email?: string } | null; ownAccount?: boolean; invoicePdf?: Buffer }) {
   const base = siteUrl();
   const loginUrl = `${base}/login`;
   const bookingUrl = `${base}/booking/${booking.bookingRef}`;
@@ -51,20 +35,13 @@ export async function sendCustomerBookingEmail(booking: any, opts: { password?: 
   const cell = (l: string, v: string) =>
     `<tr><td style="padding:6px 0;color:#94a3b8;font-size:12px;width:38%">${l}</td><td style="padding:6px 0;color:#0f172a;font-size:14px;font-weight:600">${v}</td></tr>`;
 
-  const credentials = opts.ownAccount
-    ? `<p style="margin:24px 0 10px;font-weight:800;color:#0f172a">Manage your booking</p><p style="margin:0 0 20px">Log in to your EpicJourneys account any time to see this booking, pay any balance and download your invoice.</p>`
-    : opts.password
-    ? `<p style="margin:24px 0 10px;font-weight:800;color:#0f172a">Your EpicJourneys account</p>
-<p style="margin:0 0 10px">We created an account so you can view and manage this booking. Log in with:</p>
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#FFF6E5;border:1px solid #FFD699;margin:0 0 6px"><tr><td style="padding:18px 20px">
-  <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8">Email</div>
-  <div style="font-size:16px;font-weight:700;color:#0f172a;margin:2px 0 14px">${esc(booking.customerEmail)}</div>
-  <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8">Password</div>
-  <div style="font-size:18px;font-weight:800;color:#0f172a;margin-top:2px;font-family:Consolas,Menlo,monospace;letter-spacing:.04em">${esc(opts.password)}</div>
-</td></tr></table>
-<p style="margin:0 0 20px;font-size:12px;color:#94a3b8">Please keep this safe and don't share it.</p>`
-    : `<p style="margin:24px 0 10px;font-weight:800;color:#0f172a">View your booking</p>
-<p style="margin:0 0 20px">This booking has been added to your existing EpicJourneys account (<strong style="color:#0f172a">${esc(booking.customerEmail)}</strong>). Log in with your usual password to see it.</p>`;
+  const phoneLine = booking.customerPhone ? `+91 ${esc(booking.customerPhone)}` : "your mobile number";
+  const credentials = `<p style="margin:24px 0 10px;font-weight:800;color:#0f172a">Manage your booking</p>
+<p style="margin:0 0 10px">${opts.ownAccount ? "Log in to your EpicJourneys account" : "We've set up an EpicJourneys account for you"} to see this booking, pay any balance and download your invoice. There's no password: just log in with your mobile number and we'll text you a one-time code.</p>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#FFF6E5;border:1px solid #FFD699;margin:0 0 20px"><tr><td style="padding:14px 20px">
+  <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8">Log in with</div>
+  <div style="font-size:18px;font-weight:800;color:#0f172a;margin-top:2px;letter-spacing:.02em">${phoneLine}</div>
+</td></tr></table>`;
 
   const travellers = (booking.travellers || [])
     .map((t: any, i: number) => `<tr><td style="padding:8px 12px;border:1px solid #E2E2E2;font-size:13px;color:#0f172a"><strong>${esc(t.firstName)} ${esc(t.lastName)}</strong>${i === 0 ? ' <span style="color:#8A5200;font-size:11px">· Primary</span>' : ""}<br/><span style="color:#64748b;font-size:12px">+91 ${esc(t.phone)} · Age ${esc(t.age)} · ${t.roomType === "single" ? "Single room" : "Shared room"}</span></td></tr>`)
@@ -75,7 +52,7 @@ export async function sendCustomerBookingEmail(booking: any, opts: { password?: 
     .join("");
 
   const html = layout({
-    preheader: `Your booking ${booking.bookingRef} is confirmed${opts.password ? " — your login details are inside" : ""}.`,
+    preheader: `Your booking ${booking.bookingRef} is confirmed.`,
     badge: "Booking confirmed",
     title: "You're going on",
     highlight: booking.tourTitle,
@@ -98,11 +75,11 @@ ${booking.specialRequests ? cell("Special requests", esc(booking.specialRequests
 </table>
 <p style="margin:0 0 4px;font-size:13px;color:#475569">Paid so far: <strong style="color:#059669">${inr(booking.amountPaidInr)}</strong>${balance > 0 ? ` · Balance: <strong style="color:#0f172a">${inr(balance)}</strong>` : " · Fully paid"}</p>
 ${credentials}
-<p style="margin:0 0 24px">${button(opts.password ? loginUrl : bookingUrl, opts.password ? "Log in & view booking" : "View my booking")} &nbsp; <a href="${bookingUrl}/invoice" style="display:inline-block;border:2px solid #0f172a;color:#0f172a;font-weight:800;text-decoration:none;padding:11px 24px;font-size:15px">View invoice</a></p>${opts.invoicePdf ? '<p style="margin:0 0 20px;font-size:12px;color:#94a3b8">Your invoice is attached to this email as a PDF.</p>' : ""}
+<p style="margin:0 0 24px">${button(loginUrl, "Log in & view booking")} &nbsp; <a href="${bookingUrl}/invoice" style="display:inline-block;border:2px solid #0f172a;color:#0f172a;font-weight:800;text-decoration:none;padding:11px 24px;font-size:15px">View invoice</a></p>${opts.invoicePdf ? '<p style="margin:0 0 20px;font-size:12px;color:#94a3b8">Your invoice is attached to this email as a PDF.</p>' : ""}
 ${opts.partner?.name ? `<p style="margin:0 0 6px;font-weight:800;color:#0f172a">Your local contact</p><p style="margin:0 0 16px">${esc(opts.partner.name)}${opts.partner.phone ? ` · +91 ${esc(opts.partner.phone)}` : ""}${opts.partner.email ? ` · ${esc(opts.partner.email)}` : ""}</p>` : ""}
 <p style="margin:0">Pack your bags — we can't wait to see you on the road!</p>`,
   });
 
-  const text = `Hi ${booking.customerName}, your booking ${booking.bookingRef} for ${booking.tourTitle} (${fmt(booking.travelDate)}) is confirmed.\nTotal ${inr(booking.totalAmountInr)}, paid ${inr(booking.amountPaidInr)}.\n${opts.password ? `\nLogin: ${loginUrl}\nEmail: ${booking.customerEmail}\nPassword: ${opts.password}\n` : `\nView booking: ${bookingUrl}\n`}`;
+  const text = `Hi ${booking.customerName}, your booking ${booking.bookingRef} for ${booking.tourTitle} (${fmt(booking.travelDate)}) is confirmed.\nTotal ${inr(booking.totalAmountInr)}, paid ${inr(booking.amountPaidInr)}.\n\nLog in with your mobile number (${booking.customerPhone || ""}) at ${loginUrl} to see your booking: ${bookingUrl}\n`;
   await send(booking.customerEmail, `Booking confirmed: ${booking.tourTitle} (${booking.bookingRef})`, html, text, opts.invoicePdf ? [{ filename: `INV-${String(booking.bookingRef).replace(/^EJ-/, "")}.pdf`, content: opts.invoicePdf, contentType: "application/pdf" }] : undefined);
 }

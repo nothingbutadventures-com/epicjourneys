@@ -32,6 +32,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (!user.password) {
+      return NextResponse.json({ error: "This account signs in with a mobile number. Use the mobile number option on the login page." }, { status: 401 });
+    }
     const isMatch = await comparePassword(password, user.password as string);
     if (!isMatch) {
       return NextResponse.json(

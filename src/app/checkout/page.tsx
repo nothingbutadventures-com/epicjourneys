@@ -383,7 +383,12 @@ function CheckoutInner() {
                     sx={fieldSx}
                     required
                   />
-                  {i === 0 && (
+                  {i === 0 && !user?.email && (
+                    <Typography sx={{ gridColumn: { sm: "1 / -1" }, fontSize: "0.78rem", color: "#64748b" }}>
+                      No email on your account, so booking confirmations stay on this site. You can add one any time in your profile.
+                    </Typography>
+                  )}
+                  {i === 0 && user?.email && (
                     <TextField
                       label="Email (from your account)"
                       value={user?.email ?? ""}
