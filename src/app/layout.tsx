@@ -35,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${font.variable} ${manrope.variable} ${logoFont.variable}`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${font.variable} ${manrope.variable} ${logoFont.variable}`}>
       <head>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
       </head>
