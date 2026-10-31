@@ -258,6 +258,17 @@ export default function TourDetailPage() {
     window.history.replaceState(null, "", url.toString());
   };
 
+  // Remember this tour so the homepage can offer "Pick up where you left off".
+  useEffect(() => {
+    if (!tour?._id) return;
+    try {
+      const item = { id: String(tour._id), slug: tour.slug || String(tour._id), title: tour.title, image: tour.coverImage, days: tour.durationDays, nights: tour.durationNights, price: tour.priceInr };
+      const prev = JSON.parse(localStorage.getItem("ej_recent") || "[]");
+      const next = [item, ...(Array.isArray(prev) ? prev.filter((x: any) => x?.id !== item.id) : [])].slice(0, 4);
+      localStorage.setItem("ej_recent", JSON.stringify(next));
+    } catch {}
+  }, [tour?._id]);
+
   const fetchTour = async () => {
     setLoading(true);
     try {

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Manrope, Mochiy_Pop_P_One } from "next/font/google";
+import { Plus_Jakarta_Sans, Manrope, Baloo_2, Mochiy_Pop_P_One } from "next/font/google";
 import "./globals.css";
 import ThemeRegistry from "@/theme/ThemeRegistry";
 
@@ -13,6 +13,14 @@ const font = Plus_Jakarta_Sans({
 const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-manrope",
+  display: "swap",
+});
+
+// Display font for the homepage headings (Figma).
+const baloo = Baloo_2({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-baloo",
   display: "swap",
 });
 
@@ -35,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={`${font.variable} ${manrope.variable} ${logoFont.variable}`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${font.variable} ${manrope.variable} ${baloo.variable} ${logoFont.variable}`}>
       <head>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
       </head>

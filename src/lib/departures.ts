@@ -86,11 +86,11 @@ export function deriveFromDepartures(deps: any[], cities: Map<string, any>) {
 }
 
 /** Travellers booked per departure (pending + confirmed; cancelled bookings free their seats). */
-export async function bookedSeatsByDeparture(tourId: string | mongoose.Types.ObjectId): Promise<Record<string, number>> {
+export async function bookedSeatsByDeparture(tourId: string | mongoose.Types.ObjectId | (string | mongoose.Types.ObjectId)[]): Promise<Record<string, number>> {
   const rows = await Booking.aggregate([
     {
       $match: {
-        tourId: new mongoose.Types.ObjectId(String(tourId)),
+        tourId: Array.isArray(tourId) ? { $in: tourId.map((t) => new mongoose.Types.ObjectId(String(t))) } : new mongoose.Types.ObjectId(String(tourId)),
         departureId: { $exists: true, $ne: null },
         status: { $ne: "cancelled" },
         // Unpaid checkouts only hold seats until their hold expires.

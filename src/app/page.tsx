@@ -7,18 +7,15 @@ import {
   Typography,
   Grid,
   Chip,
-  TextField,
   Button,
   CircularProgress,
   Paper,
   Alert,
   Dialog,
-  Autocomplete,
   DialogTitle,
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
@@ -30,7 +27,10 @@ import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
 import SupportAgentOutlinedIcon from "@mui/icons-material/SupportAgentOutlined";
 import Link from "next/link";
 import { Reveal } from "@/components/home/HomeSections";
-import Navbar from "@/components/Navbar";
+import HeroSection from "@/components/home/HeroSection";
+import OfferSection from "@/components/home/OfferSection";
+import ContinueSection from "@/components/home/ContinueSection";
+import HomeHeader from "@/components/home/HomeHeader";
 import Footer from "@/components/Footer";
 import TourCard from "@/components/TourCard";
 import { calculateDistanceKm, formatDistance } from "@/lib/geo";
@@ -63,6 +63,10 @@ export default function HomePage() {
   // Search: start & end city (From) and target city (To)
   const [fromCity, setFromCity] = useState<CityOption | null>(null);
   const [toCity, setToCity] = useState<CityOption | null>(null);
+
+  // Free-text search from the hero box: what is typed, and what was last submitted.
+  const [searchText, setSearchText] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Filters
   const [selectedRadius, setSelectedRadius] = useState<string>("all");
@@ -148,7 +152,7 @@ export default function HomePage() {
   // 2. Fetch tours from MongoDB with distance calculation
   useEffect(() => {
     fetchTours();
-  }, [userLocation, selectedRadius, selectedState, fromCity?.id, toCity?.id]);
+  }, [userLocation, selectedRadius, selectedState, fromCity?.id, toCity?.id, searchQuery]);
 
   const fetchTours = async () => {
     setLoading(true);
@@ -169,6 +173,8 @@ export default function HomePage() {
       if (selectedState && selectedState !== "All") {
         queryParams.set("state", selectedState);
       }
+
+      if (searchQuery) queryParams.set("search", searchQuery);
 
       if (fromCity) queryParams.set("from", fromCity.id);
       if (toCity) queryParams.set("to", toCity.id);
@@ -215,33 +221,6 @@ export default function HomePage() {
       .catch(() => {});
   }, []);
 
-  // "From" = every start & end city used by a tour date; "To" = every tour's target city.
-  const fromOptions = useMemo<CityOption[]>(() => {
-    const map = new Map<string, CityOption>();
-    for (const t of allTours) {
-      for (const d of t.departures || []) {
-        const c = d.cityId;
-        if (c?._id && !map.has(c._id)) {
-          map.set(c._id, { id: c._id, name: c.name, state: c.state, lat: c.coordinates?.lat, lng: c.coordinates?.lng });
-        }
-      }
-    }
-    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
-  }, [allTours]);
-
-  const toOptions = useMemo<CityOption[]>(() => {
-    const map = new Map<string, CityOption>();
-    for (const t of allTours) {
-      // Where the tour is based plus every city on its itinerary.
-      for (const c of [t.destinationId, ...(t.itineraryCities || [])]) {
-        if (c?._id && !map.has(c._id)) {
-          map.set(c._id, { id: c._id, name: c.name, state: c.state, lat: c.coordinates?.lat, lng: c.coordinates?.lng });
-        }
-      }
-    }
-    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
-  }, [allTours]);
-
   // Start & end cities (departure cities) with the number of tours departing from each.
   const nearbyDestinations = useMemo(() => {
     const map = new Map<string, { id: string; name: string; state: string; tourCount: number; lat?: number; lng?: number }>();
@@ -273,29 +252,7 @@ export default function HomePage() {
     return entries.slice(0, 8);
   }, [allTours, dbDestinations, userLocation]);
 
-  const statsData = useMemo(() => {
-    const withTours = dbDestinations.filter((d) => d.tourCount > 0);
-    return {
-      tours: allTours.length,
-      destinations: withTours.length,
-      states: new Set(withTours.map((d) => d.state)).size,
-      cities: fromOptions.length,
-    };
-  }, [allTours, dbDestinations, fromOptions]);
-
-  const heroPhotos = useMemo(
-    () => [...new Set<string>(allTours.map((t) => t.coverImage).filter(Boolean))].slice(0, 3),
-    [allTours]
-  );
-
   const scrollToResults = () => document.getElementById("tour-results")?.scrollIntoView({ behavior: "smooth" });
-
-  const selectFromCity = (c: CityOption | null) => {
-    setFromCity(c);
-    if (c && c.lat !== undefined && c.lng !== undefined) {
-      setUserLocation({ lat: c.lat, lng: c.lng, name: `${c.name}, ${c.state}`, source: "manual" });
-    }
-  };
 
   const radiusOptions = [
     { label: "Within 50 km", value: "50" },
@@ -312,11 +269,6 @@ export default function HomePage() {
     "Uttarakhand",
     "Kerala",
     "Goa",
-  ];
-
-  const searchFields = [
-    { label: "From", placeholder: "Select starting point", value: fromCity, options: fromOptions, icon: <MyLocationRoundedIcon sx={{ color: "#E68A00" }} />, onChange: selectFromCity },
-    { label: "To", placeholder: "Select destination", value: toCity, options: toOptions, icon: <LocationOnIcon sx={{ color: "#ef4444" }} />, onChange: setToCity },
   ];
 
   const sectionTitle = (title: React.ReactNode, sub?: string, action?: React.ReactNode) => (
@@ -340,94 +292,24 @@ export default function HomePage() {
 
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: "#ffffff" }}>
-      <Navbar
+      <HomeHeader
         userLocationName={userLocation?.name}
         onLocationClick={() => setLocationDialogOpen(true)}
       />
 
-      {/* Hero */}
-      <Box sx={{ bgcolor: "#FFF3DB", borderBottom: "1px solid #FFD699" }}>
-        <Container maxWidth="lg" sx={{ py: { xs: 4, md: 7 } }}>
-          <Grid container spacing={{ xs: 4, md: 6 }} sx={{ alignItems: "center" }}>
-            <Grid size={{ xs: 12, md: heroPhotos.length >= 2 ? 7 : 12 }}>
-              <Typography component="h1" sx={{ fontSize: { xs: "2.1rem", md: "3.2rem" }, fontWeight: 500, color: "#0f172a", lineHeight: 1.1, letterSpacing: "-0.03em" }}>
-                Group tours across India, starting{" "}
-                <Box component="span" sx={{ bgcolor: "#FF9900", px: 1, boxDecorationBreak: "clone", WebkitBoxDecorationBreak: "clone" }}>
-                  {userLocation ? `near ${userLocation.name.split(",")[0]}` : "near you"}
-                </Box>
-              </Typography>
-              <Typography sx={{ mt: 2, color: "#475569", fontSize: { xs: "1rem", md: "1.1rem" }, maxWidth: 560, lineHeight: 1.6 }}>
-                Pick where you&apos;re leaving from and where you want to go. Compare dates, prices and seats left, then book online.
-              </Typography>
+      <HeroSection
+        city={userLocation ? userLocation.name.split(",")[0].replace(/^Near\s+/i, "") : "your town"}
+        onCityClick={() => setLocationDialogOpen(true)}
+        query={searchText}
+        onQueryChange={setSearchText}
+        onSearch={() => {
+          setSearchQuery(searchText.trim());
+          scrollToResults();
+        }}
+      />
 
-              <Paper
-                elevation={0}
-                id="journey-search"
-                sx={{ mt: 4, p: { xs: 1.5, md: 1 }, borderRadius: "4px", border: "1px solid #E2E2E2", display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: "stretch", gap: { xs: 2, md: 0 } }}
-              >
-                {searchFields.map((f, i) => (
-                  <Box key={f.label} sx={{ flex: 1, display: "flex", alignItems: "center", gap: 1.5, px: { md: 2 }, borderLeft: { md: i ? "1px solid #E2E2E2" : "none" }, minWidth: 0 }}>
-                    {f.icon}
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>{f.label}</Typography>
-                      <Autocomplete
-                        options={f.options}
-                        value={f.value}
-                        getOptionLabel={(o) => o.name}
-                        isOptionEqualToValue={(o, v) => o.id === v.id}
-                        noOptionsText="No cities available"
-                        onChange={(_, v) => f.onChange(v)}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            variant="standard"
-                            placeholder={f.placeholder}
-                            slotProps={{ ...params.slotProps, input: { ...params.slotProps.input, disableUnderline: true } }}
-                            sx={{ "& input": { fontSize: "1rem", fontWeight: 600, color: "#0f172a", py: 0.5 } }}
-                          />
-                        )}
-                      />
-                    </Box>
-                  </Box>
-                ))}
-                <Button
-                  variant="contained"
-                  startIcon={<SearchRoundedIcon />}
-                  onClick={() => {
-                    fetchTours();
-                    scrollToResults();
-                  }}
-                  sx={{ minWidth: { md: 150 }, py: 1.2, bgcolor: "#FF9900", color: "#0f172a", fontSize: "0.95rem", fontWeight: 700, borderRadius: "4px", boxShadow: "none", "&:hover": { bgcolor: "#E68A00" } }}
-                >
-                  Search
-                </Button>
-              </Paper>
-
-              {statsData.tours > 0 && (
-                <Typography sx={{ mt: 2.5, color: "#64748b", fontSize: "0.9rem", fontWeight: 600 }}>
-                  {statsData.tours} tours · {statsData.cities} departure cities · {statsData.states} states
-                </Typography>
-              )}
-            </Grid>
-
-            {heroPhotos.length >= 2 && (
-              <Grid size={{ xs: 12, md: 5 }} sx={{ display: { xs: "none", md: "block" } }}>
-                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr", gap: 1.5, height: 400 }}>
-                  {heroPhotos.map((src, i) => (
-                    <Box
-                      key={src}
-                      component="img"
-                      src={src}
-                      alt=""
-                      sx={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "4px", gridRow: i === 0 ? "1 / span 2" : "auto" }}
-                    />
-                  ))}
-                </Box>
-              </Grid>
-            )}
-          </Grid>
-        </Container>
-      </Box>
+      <OfferSection tours={allTours} city={nearbyDestinations[0] ? { id: nearbyDestinations[0].id, name: nearbyDestinations[0].name } : null} />
+      <ContinueSection />
 
       {/* Tours starting near you */}
       {nearbyDestinations.length > 0 && (

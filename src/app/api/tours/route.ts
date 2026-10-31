@@ -7,6 +7,7 @@ import { getAuthFromRequest } from "@/lib/auth";
 import { loadLiveSpecials, specialForTour } from "@/lib/special-discounts";
 import { applyBaseDepartures, cleanItinerary } from "@/lib/launch";
 import { calculateDistanceKm } from "@/lib/geo";
+import { bookedSeatsByDeparture } from "@/lib/departures";
 
 export async function GET(req: NextRequest) {
   try {
@@ -84,6 +85,7 @@ export async function GET(req: NextRequest) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const bookedSeats = await bookedSeatsByDeparture((tours as any[]).map((t) => t._id));
     let processedTours = tours.map((tour: any) => {
       const special = specialForTour(tour, live);
       if (special && !showStored) {
@@ -102,7 +104,11 @@ export async function GET(req: NextRequest) {
           tour = { ...tour, listPriceInr: cheapest.price ?? tour.priceInr, priceInr: unit(cheapest), discountPercentage: Math.max(...upcoming.map((d: any) => d.discountPercentage || 0)) };
         }
       }
-      tour = { ...tour, specialOffer: special };
+      tour = {
+        ...tour,
+        specialOffer: special,
+        departures: (tour.departures || []).map((d: any) => ({ ...d, seatsLeft: Math.max(0, (d.seats || 0) - (bookedSeats[String(d._id)] || 0)) })),
+      };
       let distanceKm: number | null = null;
       if (userLat !== null && userLng !== null) {
         let cities = (tour.departures || [])

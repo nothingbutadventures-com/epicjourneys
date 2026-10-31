@@ -21,6 +21,7 @@ export interface LiveSpecial {
   name: string;
   travelStyle: string;
   percentage: number;
+  startsAt: string;
   endsAt: string;
 }
 
@@ -30,7 +31,7 @@ export async function loadLiveSpecials(now = new Date()): Promise<Map<string, Li
   const map = new Map<string, LiveSpecial>();
   for (const c of list) {
     const cur = map.get(c.travelStyle);
-    if (!cur || c.percentage > cur.percentage) map.set(c.travelStyle, { id: String(c._id), name: c.name, travelStyle: c.travelStyle, percentage: c.percentage, endsAt: new Date(c.endDate).toISOString() });
+    if (!cur || c.percentage > cur.percentage) map.set(c.travelStyle, { id: String(c._id), name: c.name, travelStyle: c.travelStyle, percentage: c.percentage, startsAt: new Date(c.startDate).toISOString(), endsAt: new Date(c.endDate).toISOString() });
   }
   return map;
 }
