@@ -3,7 +3,7 @@ import Booking from "@/models/Booking";
 import User from "@/models/User";
 import { partnerLocation } from "@/lib/location-access";
 import { getAuthFromRequest } from "@/lib/auth";
-import { createRazorpayOrder, razorpayConfigured, razorpayKeyId } from "@/lib/razorpay";
+import { createRazorpayOrder, razorpayConfigured } from "@/lib/razorpay";
 
 export const HOLD_MINUTES = 20;
 
@@ -49,7 +49,7 @@ export async function startInstallmentPayment(booking: any, index: number, auth:
     prefill,
   };
 
-  if (!razorpayConfigured()) return { mode: "simulator" as const, ...base };
+  if (!(await razorpayConfigured())) return { mode: "simulator" as const, ...base };
 
   const order = await createRazorpayOrder({
     amountInr: inst.amountInr,
@@ -62,7 +62,7 @@ export async function startInstallmentPayment(booking: any, index: number, auth:
   return {
     mode: "razorpay" as const,
     ...base,
-    keyId: razorpayKeyId(),
+    keyId: order.keyId,
     orderId: order.id,
     amountPaise: order.amount,
     currency: order.currency,

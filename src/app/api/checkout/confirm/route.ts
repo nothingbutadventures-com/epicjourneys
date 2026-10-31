@@ -21,12 +21,12 @@ export async function POST(req: NextRequest) {
     if (!inst) return NextResponse.json({ error: "Instalment not found" }, { status: 404 });
     if (inst.status === "paid") return NextResponse.json({ success: true, alreadyPaid: true, bookingRef: booking.bookingRef });
 
-    if (razorpayConfigured()) {
+    if (await razorpayConfigured()) {
       const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = razorpay || {};
       if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || razorpay_order_id !== inst.razorpayOrderId) {
         return NextResponse.json({ error: "Payment details don't match this instalment." }, { status: 400 });
       }
-      if (!verifyRazorpaySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
+      if (!(await verifyRazorpaySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature))) {
         return NextResponse.json({ error: "Payment verification failed." }, { status: 400 });
       }
       inst.razorpayPaymentId = razorpay_payment_id;

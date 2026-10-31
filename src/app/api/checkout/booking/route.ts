@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       data: { ...found.booking.toObject(), tour, startAddress },
-      gatewayConfigured: razorpayConfigured(),
+      gatewayConfigured: await razorpayConfigured(),
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

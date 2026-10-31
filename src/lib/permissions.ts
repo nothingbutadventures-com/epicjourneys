@@ -40,8 +40,8 @@ export const PERMISSIONS: PermissionDef[] = [
 ];
 
 /** Role Management itself is only for super admins, so it is not a grantable permission. */
-export const SUPER_ONLY_PAGES = ["/admin/roles"];
-export const SUPER_ONLY_APIS = ["/api/roles", "/api/staff"];
+export const SUPER_ONLY_PAGES = ["/admin/roles", "/admin/integrations"];
+export const SUPER_ONLY_APIS = ["/api/roles", "/api/staff", "/api/integrations"];
 
 export const PERMISSION_KEYS = PERMISSIONS.map((p) => p.key);
 export const PERMISSION_GROUPS = [...new Set(PERMISSIONS.map((p) => p.group))];

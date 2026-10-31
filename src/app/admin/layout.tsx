@@ -56,6 +56,7 @@ import WorkRoundedIcon from "@mui/icons-material/WorkRounded";
 import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
 import AssignmentIndRoundedIcon from "@mui/icons-material/AssignmentIndRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
+import ExtensionRoundedIcon from "@mui/icons-material/ExtensionRounded";
 
 const DRAWER_WIDTH = 230;
 
@@ -229,6 +230,11 @@ const NAV_ITEMS: NavItem[] = [
     text: "Queries",
     href: "/admin/queries",
     icon: <ContactSupportRoundedIcon sx={{ fontSize: 18 }} />,
+  },
+  {
+    text: "Integrations",
+    href: "/admin/integrations",
+    icon: <ExtensionRoundedIcon sx={{ fontSize: 18 }} />,
   },
 ];
 
