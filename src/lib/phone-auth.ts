@@ -1,6 +1,4 @@
 import crypto from "crypto";
-import { cert, getApps, initializeApp } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
 
 // Customers sign in with their mobile number. Firebase sends and checks the SMS code in the browser and gives us
 // a signed ID token; the server only trusts that token. When Firebase isn't configured (local development) a
@@ -18,6 +16,9 @@ export function toLocalPhone(input: string): string | null {
 
 /** Verifies a Firebase ID token and returns the phone number it was issued for. */
 export async function phoneFromFirebaseToken(idToken: string): Promise<string> {
+  // Loaded only here, so a problem loading the admin library can never take down the pages that merely check the config.
+  const { cert, getApps, initializeApp } = await import("firebase-admin/app");
+  const { getAuth } = await import("firebase-admin/auth");
   const app =
     getApps()[0] ||
     initializeApp({
