@@ -91,7 +91,11 @@ export function firebaseMessage(e: any): string {
   // Firebase puts the real reason (e.g. which API or key setting refused the request) in the server response.
   const detail: string = e?.customData?._serverResponse?.error?.message || e?.customData?._serverResponse?.error?.status || lastRefusal || "";
   console.error("Firebase phone auth error:", e?.code, e?.message, e?.customData);
-  return process.env.NODE_ENV !== "production" && e?.code ? `${msg} (${e.code}${detail ? ` — ${detail}` : ""})` : msg;
+  // Development shows the code and reason on every error. Live, an error the page has no wording for also shows its code,
+  // so a failure can be reported precisely.
+  const generic = msg.startsWith("Couldn't send the code") || msg.startsWith("Something went wrong");
+  if (e?.code && (process.env.NODE_ENV !== "production" || generic)) return `${msg} (${e.code}${detail && process.env.NODE_ENV !== "production" ? ` — ${detail}` : ""})`;
+  return msg;
 }
 
 function friendly(e: any): string {
