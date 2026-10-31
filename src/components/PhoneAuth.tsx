@@ -222,7 +222,7 @@ export default function PhoneAuth({
                 {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
               </Box>
               {" · "}
-              <Box component="button" type="button" onClick={() => { setStep("phone"); setError(null); }} sx={{ border: 0, bgcolor: "transparent", p: 0, font: "inherit", fontWeight: 700, color: "#475569", cursor: "pointer" }}>
+              <Box component="button" type="button" onClick={() => { setStep("phone"); setError(null); setCheckbox(false); }} sx={{ border: 0, bgcolor: "transparent", p: 0, font: "inherit", fontWeight: 700, color: "#475569", cursor: "pointer" }}>
                 Change number
               </Box>
             </Typography>
