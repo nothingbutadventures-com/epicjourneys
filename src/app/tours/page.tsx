@@ -110,7 +110,7 @@ function ToursExplorer() {
   const [fromId, setFromId] = useState<string | null>(params.get("from"));
   const [toId, setToId] = useState<string | null>(params.get("to"));
   const [state, setState] = useState(params.get("state") || "All");
-  const [styles, setStyles] = useState<string[]>(params.get("style") ? [params.get("style") as string] : []);
+  const [styles, setStyles] = useState<string[]>(params.get("style") ? (params.get("style") as string).split(",").filter(Boolean) : []);
   const [ratings, setRatings] = useState<string[]>([]);
   const [radius, setRadius] = useState(params.get("radius") || "all");
   const [onlyDiscounted, setOnlyDiscounted] = useState(params.get("sale") === "1");

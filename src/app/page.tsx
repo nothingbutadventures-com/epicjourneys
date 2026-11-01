@@ -30,6 +30,10 @@ import { Reveal } from "@/components/home/HomeSections";
 import HeroSection from "@/components/home/HeroSection";
 import OfferSection from "@/components/home/OfferSection";
 import ContinueSection from "@/components/home/ContinueSection";
+import RibbonSection from "@/components/home/RibbonSection";
+import CategoriesSection from "@/components/home/CategoriesSection";
+import WhySection from "@/components/home/WhySection";
+import ToursSection from "@/components/home/ToursSection";
 import HomeHeader from "@/components/home/HomeHeader";
 import Footer from "@/components/Footer";
 import TourCard from "@/components/TourCard";
@@ -310,6 +314,9 @@ export default function HomePage() {
 
       <OfferSection tours={allTours} city={nearbyDestinations[0] ? { id: nearbyDestinations[0].id, name: nearbyDestinations[0].name } : null} />
       <ContinueSection />
+      <RibbonSection />
+      <CategoriesSection />
+      <WhySection />
 
       {/* Tours starting near you */}
       {nearbyDestinations.length > 0 && (
@@ -365,96 +372,24 @@ export default function HomePage() {
         </Container>
       )}
 
-      {/* Tours */}
-      <Container maxWidth="lg" id="tour-results" sx={{ pt: { xs: 6, md: 8 }, pb: { xs: 6, md: 8 }, flexGrow: 1 }}>
-        {sectionTitle(
-          selectedRadius !== "all" ? `Tours starting within ${selectedRadius} km` : "Upcoming tours",
-          `${tours.length} ${tours.length === 1 ? "tour" : "tours"}, nearest to ${userLocation?.name || "your location"} first.`,
-          <Button size="small" startIcon={<RefreshRoundedIcon sx={{ fontSize: 16 }} />} onClick={fetchTours} sx={{ color: "#64748b" }}>
-            Refresh
-          </Button>
-        )}
-
-        <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, justifyContent: "space-between", gap: 2, mb: 3, pb: 3, borderBottom: "1px solid #E2E2E2" }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-            <LocationOnIcon sx={{ fontSize: 18, color: "#E68A00" }} />
-            <Typography sx={{ fontWeight: 700, fontSize: "0.88rem" }}>{userLocation?.name || "Detecting location…"}</Typography>
-            <Box component="span" onClick={() => setLocationDialogOpen(true)} sx={{ color: "#B36B00", fontWeight: 700, cursor: "pointer", fontSize: "0.85rem", textDecoration: "underline" }}>
-              Change city
-            </Box>
-          </Box>
-          <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
-            {radiusOptions.map((opt) => {
-              const active = selectedRadius === opt.value;
-              return (
-                <Chip
-                  key={opt.value}
-                  label={opt.label}
-                  onClick={() => setSelectedRadius(opt.value)}
-                  size="small"
-                  sx={{ fontWeight: 600, bgcolor: active ? "#FF9900" : "#fff", color: "#0f172a", border: "1px solid", borderColor: active ? "#FF9900" : "#E2E2E2", "&:hover": { bgcolor: active ? "#E68A00" : "#FDF9EC" } }}
-                />
-              );
-            })}
-          </Box>
-        </Box>
-
-        <Box sx={{ mb: 3, display: "flex", gap: 0.75, overflowX: "auto", pb: 0.5 }}>
-          {popularStates.map((st) => {
-            const active = selectedState === st;
-            return (
-              <Chip
-                key={st}
-                label={st === "All" ? "All states" : st}
-                onClick={() => setSelectedState(st)}
-                sx={{ fontWeight: 600, bgcolor: active ? "#0f172a" : "#fff", color: active ? "#fff" : "#334155", border: "1px solid", borderColor: active ? "#0f172a" : "#E2E2E2", "&:hover": { bgcolor: active ? "#1e293b" : "#FDF9EC" } }}
-              />
-            );
-          })}
-        </Box>
-
-        {loading && (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-            <CircularProgress size={32} sx={{ color: "#0f172a" }} />
-          </Box>
-        )}
-        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-
-        {!loading && tours.length > 0 && (
-          <Grid container spacing={2.5}>
-            {tours.map((tour) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={tour._id}>
-                <TourCard tour={tour} fromCityId={fromCity?.id} />
-              </Grid>
-            ))}
-          </Grid>
-        )}
-
-        {!loading && tours.length === 0 && (
-          <Paper elevation={0} sx={{ p: 5, textAlign: "center", border: "1px dashed #d1d5db", my: 3 }}>
-            <Typography sx={{ fontWeight: 700, fontSize: "1.05rem", mb: 1 }}>
-              No tours found within {selectedRadius} km of {userLocation?.name || "your location"}
-            </Typography>
-            <Typography sx={{ color: "#64748b", maxWidth: 460, mx: "auto", mb: 2.5, fontSize: "0.88rem" }}>
-              Try a wider distance to see tours from other cities.
-            </Typography>
-            <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
-              <Button variant="outlined" onClick={() => setSelectedRadius("250")}>Try 250 km</Button>
-              <Button variant="contained" onClick={() => setSelectedRadius("all")} sx={{ bgcolor: "#FF9900", color: "#0f172a", "&:hover": { bgcolor: "#E68A00" } }}>
-                View all India
-              </Button>
-            </Box>
-          </Paper>
-        )}
-
-        {!loading && tours.length > 0 && (
-          <Box sx={{ textAlign: "center", mt: 4 }}>
-            <Button component={Link} href="/tours" variant="outlined" endIcon={<ArrowForwardRoundedIcon />} sx={{ px: 4, py: 1.1, fontWeight: 700, color: "#0f172a", borderColor: "#0f172a" }}>
-              Browse all tours with filters
-            </Button>
-          </Box>
-        )}
-      </Container>
+      <ToursSection
+        tours={tours}
+        allTours={allTours}
+        loading={loading}
+        error={error}
+        cityName={userLocation ? userLocation.name.split(",")[0].replace(/^Near\s+/i, "") : "your town"}
+        fromCity={fromCity}
+        userLocation={userLocation}
+        onFromChange={(c) => {
+          setFromCity(c);
+          if (c && c.lat !== undefined && c.lng !== undefined) setUserLocation({ lat: c.lat, lng: c.lng, name: `${c.name}, ${c.state}`, source: "manual" });
+        }}
+        onUseMyLocation={() => {
+          setFromCity(null);
+          resolveUserLocation();
+        }}
+        onRetry={fetchTours}
+      />
 
       {/* Why us */}
       <Box sx={{ bgcolor: "#FFF6E5", borderTop: "1px solid #FFD699" }}>
