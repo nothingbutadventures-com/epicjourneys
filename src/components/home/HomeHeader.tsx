@@ -9,7 +9,7 @@ const MANROPE = "var(--font-manrope), Manrope, sans-serif";
 const BALOO = "var(--font-baloo), 'Baloo 2', sans-serif";
 
 const NAV = [
-  { label: "Destinations", href: "/#destinations", caret: true },
+  { label: "Destinations", href: "/#tour-results", caret: true },
   { label: "Tours", href: "/tours" },
   { label: "Themes", href: "/tours" },
   { label: "Winter Sale", href: "/tours?sale=1" },
@@ -17,6 +17,8 @@ const NAV = [
 ];
 
 interface HomeHeaderProps {
+  /** Float transparently over a hero photo (homepage). Everywhere else the header is a solid dark bar. */
+  overlay?: boolean;
   userLocationName?: string;
   onLocationClick?: () => void;
 }
@@ -30,10 +32,17 @@ const utilityLink = { ...utilityText, textDecoration: "none", cursor: "pointer",
  * Once the page scrolls past the utility bar the header pins to the top on a dark background so the menu stays reachable.
  * (Other pages keep the standard white Navbar.)
  */
-export default function HomeHeader({ userLocationName, onLocationClick }: HomeHeaderProps) {
+export default function HomeHeader({ overlay = false, userLocationName, onLocationClick }: HomeHeaderProps) {
   const [mobileAnchor, setMobileAnchor] = useState<null | HTMLElement>(null);
   const [account, setAccount] = useState<{ name: string; role: string } | null>(null);
   const [pinned, setPinned] = useState(false);
+  // Pages that don't track the visitor's city show the one the homepage saved.
+  const [savedPlace, setSavedPlace] = useState("");
+  useEffect(() => {
+    try {
+      setSavedPlace(JSON.parse(localStorage.getItem("ej_location") || "{}")?.name || "");
+    } catch {}
+  }, []);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -55,7 +64,8 @@ export default function HomeHeader({ userLocationName, onLocationClick }: HomeHe
     window.location.href = "/";
   };
 
-  const place = userLocationName ? (/^near\s/i.test(userLocationName) ? userLocationName : `Near ${userLocationName}`) : "Choose your city";
+  const cityName = userLocationName || savedPlace;
+  const place = cityName ? (/^near\s/i.test(cityName) ? cityName : `Near ${cityName}`) : "Choose your city";
   const firstName = account?.name.split(" ")[0];
 
   return (
@@ -66,7 +76,7 @@ export default function HomeHeader({ userLocationName, onLocationClick }: HomeHe
           <Box sx={{ display: "flex", alignItems: "center", minWidth: 0 }}>
             <Box component="span" sx={{ ...utilityText, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
               📍 {place} ·{" "}
-              <Box component="button" type="button" onClick={onLocationClick} sx={{ all: "unset", ...utilityLink, "&:focus-visible": { outline: "1px solid #fff", outlineOffset: 2 } }}>
+              <Box component="button" type="button" onClick={onLocationClick || (() => { window.location.href = "/"; })} sx={{ all: "unset", ...utilityLink, "&:focus-visible": { outline: "1px solid #fff", outlineOffset: 2 } }}>
                 Change
               </Box>
             </Box>
@@ -106,17 +116,18 @@ export default function HomeHeader({ userLocationName, onLocationClick }: HomeHe
         </Box>
       </Box>
 
-      {/* Header: floats over the hero photo */}
+      {/* Header: floats over the hero photo on the homepage, a solid bar elsewhere */}
+      <Box sx={{ position: "relative", height: overlay ? 0 : 71 }}>
       <Box
         component="header"
         sx={{
           position: pinned ? "fixed" : "absolute",
-          top: pinned ? 0 : 38,
+          top: 0,
           left: 0,
           right: 0,
           height: 71,
           zIndex: 30,
-          bgcolor: pinned ? "rgba(12,12,12,0.94)" : "transparent",
+          bgcolor: pinned ? "rgba(12,12,12,0.94)" : overlay ? "transparent" : "#0C0C0C",
           transition: "background-color .2s",
         }}
       >
@@ -197,6 +208,7 @@ export default function HomeHeader({ userLocationName, onLocationClick }: HomeHe
             </Menu>
           </Box>
         </Box>
+      </Box>
       </Box>
     </Box>
   );

@@ -3,30 +3,19 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
-  Container,
   Typography,
-  Grid,
   Chip,
   Button,
-  CircularProgress,
-  Paper,
-  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
 import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
-import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import LocationCityRoundedIcon from "@mui/icons-material/LocationCityRounded";
-import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import Groups2OutlinedIcon from "@mui/icons-material/Groups2Outlined";
 import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
 import SupportAgentOutlinedIcon from "@mui/icons-material/SupportAgentOutlined";
-import Link from "next/link";
-import { Reveal } from "@/components/home/HomeSections";
 import HeroSection from "@/components/home/HeroSection";
 import OfferSection from "@/components/home/OfferSection";
 import ContinueSection from "@/components/home/ContinueSection";
@@ -34,10 +23,17 @@ import RibbonSection from "@/components/home/RibbonSection";
 import CategoriesSection from "@/components/home/CategoriesSection";
 import WhySection from "@/components/home/WhySection";
 import ToursSection from "@/components/home/ToursSection";
+import OnTourSection from "@/components/home/OnTourSection";
+import ScheduleSection from "@/components/home/ScheduleSection";
+import ClipsSection from "@/components/home/ClipsSection";
+import BlogSection from "@/components/home/BlogSection";
+import ReviewsSection from "@/components/home/ReviewsSection";
+import FaqSection from "@/components/home/FaqSection";
+import CompareSection from "@/components/home/CompareSection";
+import LeadSection from "@/components/home/LeadSection";
 import HomeHeader from "@/components/home/HomeHeader";
 import Footer from "@/components/Footer";
-import TourCard from "@/components/TourCard";
-import { calculateDistanceKm, formatDistance } from "@/lib/geo";
+import { calculateDistanceKm } from "@/lib/geo";
 import { KNOWN_DESTINATION_COORDINATES } from "@/lib/constants";
 
 interface CityOption {
@@ -258,45 +254,10 @@ export default function HomePage() {
 
   const scrollToResults = () => document.getElementById("tour-results")?.scrollIntoView({ behavior: "smooth" });
 
-  const radiusOptions = [
-    { label: "Within 50 km", value: "50" },
-    { label: "100 km", value: "100" },
-    { label: "250 km", value: "250" },
-    { label: "500 km", value: "500" },
-    { label: "All India", value: "all" },
-  ];
-
-  const popularStates = [
-    "All",
-    "Himachal Pradesh",
-    "Rajasthan",
-    "Uttarakhand",
-    "Kerala",
-    "Goa",
-  ];
-
-  const sectionTitle = (title: React.ReactNode, sub?: string, action?: React.ReactNode) => (
-    <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 2, mb: 3, flexWrap: "wrap" }}>
-      <Box>
-        <Typography component="h2" sx={{ fontSize: { xs: "1.5rem", md: "1.9rem" }, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
-          {title}
-        </Typography>
-        {sub && <Typography sx={{ color: "#64748b", fontSize: "0.95rem", mt: 0.5 }}>{sub}</Typography>}
-      </Box>
-      {action}
-    </Box>
-  );
-
-  const reasons = [
-    { icon: VerifiedUserOutlinedIcon, title: "Verified tours", text: "Every itinerary is checked by our team before it is listed." },
-    { icon: Groups2OutlinedIcon, title: "Local operators", text: "Trips are run by partners who live and work in the destination." },
-    { icon: PaymentsOutlinedIcon, title: "Clear pricing", text: "Per-person prices in rupees. Reserve with a small deposit on many tours." },
-    { icon: SupportAgentOutlinedIcon, title: "Help when you need it", text: "Questions before or during your trip? Our team is a message away." },
-  ];
-
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: "#ffffff" }}>
       <HomeHeader
+        overlay
         userLocationName={userLocation?.name}
         onLocationClick={() => setLocationDialogOpen(true)}
       />
@@ -318,60 +279,6 @@ export default function HomePage() {
       <CategoriesSection />
       <WhySection />
 
-      {/* Tours starting near you */}
-      {nearbyDestinations.length > 0 && (
-        <Container maxWidth="lg" id="destinations" sx={{ pt: { xs: 6, md: 8 } }}>
-          <Reveal>
-            {sectionTitle(
-              <>Tours starting near {userLocation ? userLocation.name.split(",")[0] : "you"}</>,
-              "Departure cities, nearest first.",
-              <Button component={Link} href="/tours" endIcon={<ArrowForwardRoundedIcon />} sx={{ color: "#0f172a", fontWeight: 700 }}>
-                View all tours
-              </Button>
-            )}
-          </Reveal>
-          <Grid container spacing={2.5}>
-            {nearbyDestinations.map(({ id, name, state, distance, tourCount }) => (
-              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={id}>
-                <Box
-                  component={Link}
-                  href={`/tours?${new URLSearchParams({
-                    from: id,
-                    ...(selectedState !== "All" ? { state: selectedState } : {}),
-                    ...(selectedRadius !== "all" ? { radius: selectedRadius } : {}),
-                  }).toString()}`}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.75,
-                    p: 2,
-                    height: "100%",
-                    bgcolor: "#fff",
-                    border: "1px solid #E2E2E2",
-                    borderRadius: "4px",
-                    transition: "border-color .2s, box-shadow .2s",
-                    "&:hover": { borderColor: "#FF9900", boxShadow: "0 6px 16px -10px rgba(15,23,42,0.25)" },
-                    "&:hover .city-arrow": { transform: "translateX(3px)", color: "#0f172a" },
-                  }}
-                >
-                  <Box sx={{ width: 46, height: 46, borderRadius: "4px", bgcolor: "#FFF0D1", color: "#B36B00", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <LocationCityRoundedIcon />
-                  </Box>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography sx={{ fontWeight: 800, fontSize: "1.05rem", lineHeight: 1.25 }} noWrap>{name}</Typography>
-                    <Typography sx={{ fontSize: "0.8rem", color: "#64748b" }} noWrap>
-                      {tourCount} {tourCount === 1 ? "tour" : "tours"}
-                      {distance !== null ? ` · ${formatDistance(distance)} away` : ` · ${state}`}
-                    </Typography>
-                  </Box>
-                  <ArrowForwardRoundedIcon className="city-arrow" sx={{ fontSize: 20, color: "#94a3b8", transition: "all .2s" }} />
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      )}
-
       <ToursSection
         tours={tours}
         allTours={allTours}
@@ -391,21 +298,14 @@ export default function HomePage() {
         onRetry={fetchTours}
       />
 
-      {/* Why us */}
-      <Box sx={{ bgcolor: "#FFF6E5", borderTop: "1px solid #FFD699" }}>
-        <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
-          {sectionTitle("Why travel with EpicJourneys")}
-          <Grid container spacing={4}>
-            {reasons.map(({ icon: Icon, title, text }) => (
-              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={title}>
-                <Icon sx={{ fontSize: 34, color: "#B36B00", mb: 1.25 }} />
-                <Typography sx={{ fontWeight: 800, fontSize: "1.05rem", mb: 0.5 }}>{title}</Typography>
-                <Typography sx={{ color: "#475569", fontSize: "0.92rem", lineHeight: 1.65 }}>{text}</Typography>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
+      <OnTourSection />
+      <ScheduleSection tours={allTours} />
+      <ClipsSection />
+      <BlogSection />
+      <ReviewsSection tours={allTours} />
+      <FaqSection />
+      <CompareSection />
+      <LeadSection />
 
       {/* Location Change Dialog */}
       <Dialog
