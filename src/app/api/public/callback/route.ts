@@ -33,6 +33,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    if (body.type === "dates") {
+      const name = clean(body.name, 80);
+      const phone = String(body.phone ?? "").replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
+      const town = clean(body.city, 80);
+      if (name.length < 2) return NextResponse.json({ error: "Enter your name." }, { status: 400 });
+      if (!/^[6-9]\d{9}$/.test(phone)) return NextResponse.json({ error: "Enter a valid 10-digit mobile number." }, { status: 400 });
+      if (!town) return NextResponse.json({ error: "Tell us your town." }, { status: 400 });
+      const tour = clean(body.tour, 160);
+      await Lead.create({
+        title: `Dates request: ${town}${tour ? ` · ${tour}` : ""}`,
+        customerName: name,
+        customerPhone: `+91${phone}`,
+        tourTitle: tour,
+        stage: "new",
+        priority: "medium",
+        source: "website",
+        requirements: `Asked for dates or a lounge near ${town}${tour ? ` for "${tour}"` : ""}. Wants to go: ${clean(body.when, 40) || "Any time"}.`,
+      });
+      return NextResponse.json({ success: true });
+    }
+
     const name = clean(body.name, 80);
     const phone = String(body.phone ?? "").replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
     const city = clean(body.city, 80);
