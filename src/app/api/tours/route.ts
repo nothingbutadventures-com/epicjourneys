@@ -1,3 +1,5 @@
+import { cleanFaqs } from "@/lib/faqs";
+import { cleanFoodPlan } from "@/lib/food-plans";
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import Tour from "@/models/Tour";
@@ -241,6 +243,8 @@ export async function POST(req: NextRequest) {
       exclusions: Array.isArray(exclusions) ? exclusions : [],
       travelStyles: Array.isArray(body.travelStyles) ? body.travelStyles : [],
       physicalRating: body.physicalRating || "Easy / Relaxed",
+      foodPlan: cleanFoodPlan(body.foodPlan),
+      faqs: cleanFaqs(body.faqs),
       discountPercentage: 0,
       maxGroupSize: Number(maxGroupSize) || 15,
       singleRoomPriceInr: Math.max(0, Number(body.singleRoomPriceInr) || 0),

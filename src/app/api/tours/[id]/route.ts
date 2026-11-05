@@ -1,3 +1,5 @@
+import { cleanFaqs } from "@/lib/faqs";
+import { cleanFoodPlan } from "@/lib/food-plans";
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import Tour from "@/models/Tour";
@@ -94,7 +96,7 @@ export async function GET(
     // Where travellers can start: the basic tour's own location, plus every city that has a partner.
     const baseCityId = (tour as any).baseStartCityId || (tour.destinationId as any)?._id || tour.destinationId;
     const baseCity: any = baseCityId ? await Destination.findById(baseCityId).select("name state").lean() : null;
-    const partnerCities: any[] = await Destination.find({ partnerId: { $ne: null }, isActive: true }).select("name state").sort({ name: 1 }).lean();
+    const partnerCities: any[] = await Destination.find({ partnerId: { $ne: null }, isActive: true }).select("name state partnerId").populate("partnerId", "name companyName address").sort({ name: 1 }).lean();
 
     // Day cities: show current names (cities can be renamed) and upgrade old single-city days.
     const tourObj: any = tour.toObject();
@@ -120,7 +122,13 @@ export async function GET(
         departures,
         distanceKm,
         baseStartCity: baseCity ? { id: String(baseCity._id), name: baseCity.name, state: baseCity.state } : null,
-        startCities: partnerCities.map((c) => ({ id: String(c._id), name: c.name, state: c.state })),
+        startCities: partnerCities.map((c) => ({
+          id: String(c._id),
+          name: c.name,
+          state: c.state,
+          // Public business details of the partner running this city's lounge (no phone or email).
+          partner: c.partnerId ? { name: c.partnerId.companyName || c.partnerId.name || "", address: c.partnerId.address || "" } : null,
+        })),
       },
     });
   } catch (error: any) {
@@ -159,6 +167,8 @@ export async function PUT(
       }
     }
 
+    if (body.faqs !== undefined) body.faqs = cleanFaqs(body.faqs);
+    if (body.foodPlan !== undefined) body.foodPlan = cleanFoodPlan(body.foodPlan);
     if (body.itinerary !== undefined) body.itinerary = cleanItinerary(body.itinerary);
 
     // Dates are managed through partner launches, never through the tour form. Derived fields are protected too.

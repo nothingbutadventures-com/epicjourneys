@@ -249,8 +249,13 @@ export default function AdminLayout({
   // What this admin may open: "all" for super admins, a page list for staff, null until we know.
   const [access, setAccess] = useState<"all" | string[] | null>(null);
 
+  const onLogin = pathname === "/admin/login";
   useEffect(() => {
-    if (pathname === "/admin/login") return;
+    if (onLogin) {
+      // Reset so the next visit after logging in re-checks access instead of showing a blank page.
+      setAccess(null);
+      return;
+    }
     const token = localStorage.getItem("epic_token");
     fetch("/api/auth/me", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
       .then(async (r) => ({ ok: r.ok, data: await r.json().catch(() => ({})) }))
@@ -265,9 +270,9 @@ export default function AdminLayout({
         setAccess(data.permissions ?? "all");
       })
       .catch(() => setAccess("all"));
-    // Re-check on every full page load of the admin panel; route changes reuse the result.
+    // Re-check on every full page load and after leaving the login page; other route changes reuse the result.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [onLogin]);
 
   const nav = useMemo(() => {
     if (access === null) return [];

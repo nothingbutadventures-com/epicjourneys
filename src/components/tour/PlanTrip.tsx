@@ -49,7 +49,7 @@ export default function PlanTrip(p: PlanProps) {
   const tabs = [
     { key: "home", icon: <HomeOutlinedIcon />, t: home ? `From ${home.short}` : "From your town", s: "Pickup at your lounge", disabled: !home, go: () => home && p.onCity(home.id), rec: true },
     { key: "near", icon: <AirlineSeatReclineNormalOutlinedIcon />, t: "From nearby towns", s: "Free feeder, under 100 km", disabled: others.length === 0, go: () => others[0] && p.onCity(others[0].id) },
-    { key: "base", icon: <NearMeOutlinedIcon />, t: "Standard departures", s: "From metro cities", disabled: !base || base.disabled, go: () => p.onCity("base") },
+    { key: "base", icon: <NearMeOutlinedIcon />, t: "Standard departures", s: "Joining / Leaving", disabled: !base || base.disabled, go: () => p.onCity("base") },
   ];
   const sel = p.selected;
   const date = (iso: string) => ({ d: utc(iso, { day: "2-digit" }), m: utc(iso, { month: "short", year: "numeric" }), w: utc(iso, { weekday: "short" }) });

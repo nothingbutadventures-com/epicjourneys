@@ -19,6 +19,8 @@ interface Props {
   tour: any;
   city: string;
   partner: string;
+  /** Set when the visitor leaves from a partner city; null for Joining / Leaving at the tour's own start. */
+  lounge?: { city: string; name?: string; address?: string } | null;
   rating: { avg: number; n: number };
   from: number;
   was: number | null;
@@ -29,7 +31,7 @@ interface Props {
   nights: number;
 }
 
-export default function Aside({ tour, city, partner, rating, from, was, discount, dateLabel, depositPerPerson, days, nights }: Props) {
+export default function Aside({ tour, city, partner, lounge, rating, from, was, discount, dateLabel, depositPerPerson, days, nights }: Props) {
   const [saved, setSaved] = useState(false);
   useEffect(() => {
     try { setSaved((JSON.parse(localStorage.getItem(WISH) || "[]") as string[]).includes(tour._id)); } catch {}
@@ -115,13 +117,16 @@ export default function Aside({ tour, city, partner, rating, from, was, discount
       <Box sx={{ border: `1px solid ${LINE}`, p: "20px", bgcolor: "#fff" }}>
         <Box sx={{ fontFamily: BALOO, fontWeight: 500, fontSize: 24, lineHeight: "30px", letterSpacing: "-0.02em" }}>Who you&apos;re booking with</Box>
         <Box sx={{ mt: "14px", display: "grid", rowGap: "16px" }}>
-          <Box sx={{ display: "flex", gap: "12px" }}>
-            <StorefrontOutlinedIcon sx={{ fontSize: 24, flexShrink: 0 }} />
-            <Box>
-              <Box sx={{ ...b14, fontWeight: 800 }}>{partner || `Your LocalStart Lounge in ${city}`}</Box>
-              <Box sx={{ ...b14, fontSize: 13, lineHeight: "19px" }}>Your LocalStart Lounge in {city}. Drop in before you book to meet the team.</Box>
+          {lounge && (
+            <Box sx={{ display: "flex", gap: "12px" }}>
+              <StorefrontOutlinedIcon sx={{ fontSize: 24, flexShrink: 0 }} />
+              <Box>
+                <Box sx={{ ...b14, fontWeight: 800 }}>{lounge.name || partner || `Your LocalStart Lounge in ${lounge.city}`}</Box>
+                <Box sx={{ ...b14, fontSize: 13, lineHeight: "19px" }}>Your LocalStart Lounge in {lounge.city}. Drop in before you book to meet the team.</Box>
+                {lounge.address && <Box sx={{ ...b14, fontSize: 13, lineHeight: "19px", color: MUTED, mt: "4px" }}>{lounge.address}</Box>}
+              </Box>
             </Box>
-          </Box>
+          )}
           <Box sx={{ display: "flex", gap: "12px" }}>
             <VerifiedUserOutlinedIcon sx={{ fontSize: 24, flexShrink: 0 }} />
             <Box>

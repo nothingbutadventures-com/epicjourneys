@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { FOOD_PLANS, DEFAULT_FOOD_PLAN } from "@/lib/food-plans";
 import { Box } from "@mui/material";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import AirlineSeatReclineNormalOutlinedIcon from "@mui/icons-material/AirlineSeatReclineNormalOutlined";
@@ -290,12 +291,9 @@ export function Safety({ place }: { place: string }) {
 }
 
 /* ───────── Food ───────── */
-export function Food() {
-  const cards = [
-    { t: "Pure veg", d: "Separate veg kitchen at every hotel. Eggs on request only.", on: true },
-    { t: "Strict Jain", d: "No onion, garlic or root vegetables, confirmed with each kitchen before the trip." },
-    { t: "Home comfort", d: "Dal, roti and rice every day, plus North and South Indian breakfasts." },
-  ];
+export function Food({ plan }: { plan?: string }) {
+  const selected = FOOD_PLANS.some((p) => p.id === plan) ? plan : DEFAULT_FOOD_PLAN;
+  const cards = FOOD_PLANS.map((p) => ({ t: p.title, d: p.description, on: p.id === selected }));
   return (
     <Box>
       <SectionHead id="food" eyebrow="Food planner" title="Food that tastes" red="like home" sub="Tell us once when you book. Every kitchen on the route gets your list before you arrive." />
@@ -355,16 +353,18 @@ const FAQS = [
   { q: "How do I book?", a: "Pick a departure, choose how many travellers, and continue to checkout. You can reserve seats with a small deposit and pay the rest in instalments before departure." },
   { q: "What if I have to cancel?", a: "You can request a cancellation from your booking. Our team reviews it and gets back to you, and the refund follows the terms for your tour." },
 ];
-export function Faqs() {
+export function Faqs({ faqs }: { faqs?: { question: string; answer: string }[] }) {
   const [open, setOpen] = useState<number | null>(0);
+  // Custom FAQs from the admin replace the standard ones entirely.
+  const list = faqs && faqs.length ? faqs.map((x) => ({ q: x.question, a: x.answer })) : FAQS;
   return (
     <Box>
       <SectionHead id="faqs" eyebrow="Questions" title="Before" red="you book" />
       <Box sx={{ mt: "24px", borderTop: `1px solid ${INK}` }}>
-        {FAQS.map((f, i) => {
+        {list.map((f, i) => {
           const on = open === i;
           return (
-            <Box key={f.q} sx={{ borderBottom: `1px solid ${LINE}` }}>
+            <Box key={`${i}-${f.q}`} sx={{ borderBottom: `1px solid ${LINE}` }}>
               <Box component="button" type="button" aria-expanded={on} onClick={() => setOpen(on ? null : i)} sx={{ all: "unset", boxSizing: "border-box", width: "100%", minHeight: 48, py: "14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, cursor: "pointer", fontFamily: MANROPE, fontWeight: 800, fontSize: 16, lineHeight: "24px", "&:focus-visible": { outline: `2px solid ${RED}`, outlineOffset: -2 } }}>
                 <span>{f.q}</span>
                 <Box component="span" aria-hidden="true" sx={{ fontWeight: 700, fontSize: 20 }}>{on ? "–" : "+"}</Box>

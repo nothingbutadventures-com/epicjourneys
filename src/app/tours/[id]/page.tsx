@@ -3,12 +3,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Box, Button, CircularProgress } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import { combinedItinerary } from "@/lib/launch-shared";
 import { depositAmount } from "@/lib/deposit";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TourHero from "@/components/tour/TourHero";
+import TourSkeleton from "@/components/tour/TourSkeleton";
 import PlanTrip from "@/components/tour/PlanTrip";
 import Aside from "@/components/tour/Aside";
 import { OtherTours, DatesRequest } from "@/components/tour/Bottom";
@@ -138,15 +139,7 @@ export default function TourDetailPage() {
     return [...rest.filter(here), ...rest.filter((t) => !here(t))].slice(0, 4);
   }, [allTours, tour, selectedCityId]);
 
-  if (loading) {
-    return (
-      <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-        <Navbar />
-        <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center", alignItems: "center" }}><CircularProgress sx={{ color: "#0C0C0C" }} /></Box>
-        <Footer />
-      </Box>
-    );
-  }
+  if (loading) return <TourSkeleton />;
   if (error || !tour) {
     return (
       <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -245,10 +238,10 @@ export default function TourDetailPage() {
           <Rule />
           <Safety place={place} />
           <Rule />
-          <Food />
+          <Food plan={tour.foodPlan} />
           {reviewsForTour.length > 0 && (<><Rule /><Reviews reviews={reviewsForTour} city={cityName} /></>)}
           <Rule />
-          <Faqs />
+          <Faqs faqs={tour.faqs} />
         </Box>
 
         <Box sx={{ pt: { lg: "40px" }, pb: { xs: 6, lg: 0 }, minWidth: 0, alignSelf: "stretch" }}>
@@ -256,6 +249,7 @@ export default function TourDetailPage() {
             tour={tour}
             city={cityName}
             partner=""
+            lounge={selectedCityId && selectedCityId !== "base" ? { city: cityName, ...((tour.startCities || []).find((c: any) => c.id === selectedCityId)?.partner || {}) } : null}
             rating={rating}
             from={unitPrice}
             was={discount > 0 ? basePrice : null}

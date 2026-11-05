@@ -22,7 +22,11 @@ import {
   Divider,
   Alert,
   CircularProgress,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
+import type { Faq } from "@/lib/faqs";
+import { FOOD_PLANS, DEFAULT_FOOD_PLAN, type FoodPlanId } from "@/lib/food-plans";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
@@ -84,6 +88,9 @@ export default function TourForm({ tourId }: { tourId?: string }) {
   const [exclusions, setExclusions] = useState<string[]>([]);
   const [newExclusion, setNewExclusion] = useState("");
 
+  const [faqs, setFaqs] = useState<Faq[]>([]);
+  const [foodPlan, setFoodPlan] = useState<FoodPlanId>(DEFAULT_FOOD_PLAN);
+
   // Itinerary Days
   const [itinerary, setItinerary] = useState<ItineraryDay[]>([]);
 
@@ -126,6 +133,8 @@ export default function TourForm({ tourId }: { tourId?: string }) {
         setHighlights(t.highlights || []);
         setInclusions(t.inclusions || []);
         setExclusions(t.exclusions || []);
+        setFaqs(Array.isArray(t.faqs) ? t.faqs.map((x: any) => ({ question: x.question || "", answer: x.answer || "" })) : []);
+        setFoodPlan(FOOD_PLANS.some((p) => p.id === t.foodPlan) ? t.foodPlan : DEFAULT_FOOD_PLAN);
         setItinerary(t.itinerary || []);
         setSelectedTravelStyles(t.travelStyles || []);
         setSelectedPhysicalRating(t.physicalRating || "");
@@ -305,6 +314,8 @@ export default function TourForm({ tourId }: { tourId?: string }) {
           itinerary,
           inclusions,
           exclusions,
+          foodPlan,
+          faqs: faqs.filter((x) => x.question.trim() && x.answer.trim()),
           travelStyles: selectedTravelStyles,
           physicalRating: selectedPhysicalRating,
         }),
@@ -857,6 +868,68 @@ export default function TourForm({ tourId }: { tourId?: string }) {
           </Box>
         </Paper>
 
+        {/* Section 6: Food plan */}
+        <Paper elevation={0} sx={{ p: 2.5, mb: 3, borderRadius: "4px", border: "1px solid #e2e8f0", bgcolor: "#ffffff" }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5, color: "#0f172a" }}>
+            6. Food Plan
+          </Typography>
+          <Typography variant="caption" sx={{ color: "#64748b", display: "block", mb: 1.5 }}>
+            Choose one. It is highlighted in the &quot;Food planner&quot; section of the tour page.
+          </Typography>
+          <ToggleButtonGroup
+            exclusive
+            fullWidth
+            size="small"
+            value={foodPlan}
+            onChange={(_, v: FoodPlanId | null) => v && setFoodPlan(v)}
+            sx={{ flexDirection: { xs: "column", sm: "row" }, gap: 1, "& .MuiToggleButtonGroup-grouped": { border: "1px solid #e2e8f0 !important", borderRadius: "4px !important", m: 0 } }}
+          >
+            {FOOD_PLANS.map((p) => (
+              <ToggleButton key={p.id} value={p.id} sx={{ flexDirection: "column", alignItems: "flex-start", textAlign: "left", textTransform: "none", p: 1.5, color: "#0f172a", "&.Mui-selected": { bgcolor: "#f1f5f9", borderColor: "#0f172a !important" } }}>
+                <Typography variant="body2" sx={{ fontWeight: 700 }}>{p.title}</Typography>
+                <Typography variant="caption" sx={{ color: "#64748b" }}>{p.description}</Typography>
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        </Paper>
+
+        {/* Section 7: FAQs */}
+        <Paper elevation={0} sx={{ p: 2.5, mb: 3, borderRadius: "4px", border: "1px solid #e2e8f0", bgcolor: "#ffffff" }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5, color: "#0f172a" }}>
+            7. FAQs (Questions before you book)
+          </Typography>
+          <Typography variant="caption" sx={{ color: "#64748b", display: "block", mb: 1.5 }}>
+            Optional. With none added, the tour page shows the standard FAQs. Add even one and only your FAQs are shown.
+          </Typography>
+          {faqs.map((f, i) => (
+            <Box key={i} sx={{ display: "flex", gap: 1, alignItems: "flex-start", mb: 1.5 }}>
+              <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label={`Question ${i + 1}`}
+                  value={f.question}
+                  onChange={(e) => setFaqs(faqs.map((x, j) => (j === i ? { ...x, question: e.target.value } : x)))}
+                />
+                <TextField
+                  size="small"
+                  fullWidth
+                  multiline
+                  minRows={2}
+                  label="Answer"
+                  value={f.answer}
+                  onChange={(e) => setFaqs(faqs.map((x, j) => (j === i ? { ...x, answer: e.target.value } : x)))}
+                />
+              </Box>
+              <IconButton size="small" aria-label="Remove FAQ" onClick={() => setFaqs(faqs.filter((_, j) => j !== i))} sx={{ color: "#ef4444" }}>
+                <DeleteRoundedIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Box>
+          ))}
+          <Button size="small" startIcon={<AddRoundedIcon sx={{ fontSize: 16 }} />} onClick={() => setFaqs([...faqs, { question: "", answer: "" }])} sx={{ color: "#0f172a", textTransform: "none" }}>
+            Add FAQ
+          </Button>
+        </Paper>
 
         {/* Action bar */}
         <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1.5, mb: 4 }}>

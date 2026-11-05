@@ -72,21 +72,24 @@ export default function HomeHeader({ overlay = false, userLocationName, onLocati
     <Box sx={{ position: "relative", zIndex: 20 }}>
       {/* Utility bar */}
       <Box sx={{ bgcolor: "#0C0C0C", height: 38 }}>
-        <Box sx={{ maxWidth: 1440, mx: "auto", height: "100%", px: { xs: 2, md: "60px" }, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Box sx={{ display: "flex", alignItems: "center", minWidth: 0 }}>
+        <Box sx={{ maxWidth: 1440, mx: "auto", height: "100%", px: { xs: 2, md: "60px" }, display: "flex", alignItems: "center" }}>
+          {/* Left: email */}
+          <Box sx={{ flex: 1, display: { xs: "none", md: "flex" }, alignItems: "center", minWidth: 0 }}>
+            <Box component="a" href="mailto:support@epicjourneys.in" sx={utilityLink}>✉️ support@epicjourneys.in</Box>
+          </Box>
+
+          {/* Center: location */}
+          <Box sx={{ flex: { xs: 1, md: "0 1 auto" }, display: "flex", justifyContent: "center", minWidth: 0 }}>
             <Box component="span" sx={{ ...utilityText, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
               📍 {place} ·{" "}
               <Box component="button" type="button" onClick={onLocationClick || (() => { window.location.href = "/"; })} sx={{ all: "unset", ...utilityLink, "&:focus-visible": { outline: "1px solid #fff", outlineOffset: 2 } }}>
                 Change
               </Box>
             </Box>
-            <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center" }}>
-              <Dot />
-              <Box component="a" href="mailto:support@epicjourneys.in" sx={utilityLink}>✉️ support@epicjourneys.in</Box>
-            </Box>
           </Box>
 
-          <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center" }}>
+          {/* Right: currency + account links */}
+          <Box sx={{ flex: 1, display: { xs: "none", md: "flex" }, alignItems: "center", justifyContent: "flex-end" }}>
             {/* Prices are in rupees only, so USD is shown as in the design but not selectable yet. */}
             <Box sx={{ display: "flex", alignItems: "center", boxSizing: "border-box", height: 28, p: "2px", border: "1px solid #444" }} role="group" aria-label="Currency">
               <Box component="button" type="button" aria-pressed="true" sx={{ all: "unset", boxSizing: "border-box", width: 46, height: 22, textAlign: "center", lineHeight: "22px", bgcolor: "#fff", color: "#0C0C0C", fontFamily: MANROPE, fontSize: 12, fontWeight: 400, cursor: "default" }}>
