@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EpicJourneys — Group Tours Across India, Starting Near You</title>
+  <meta name="description" content="EpicJourneys: India's trusted online travel network, operating right out of your neighborhood. Group tours across India, Nepal, Bhutan and Sri Lanka that start at a LocalStart Lounge in your own town.">
+  <link rel="icon" type="image/svg+xml" href="img/brand/e-mark.svg?v=260">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=275">
+</head>
+<body>
+
+<!-- Intro: logo reveal on first visit -->
+<div class="intro" id="intro" aria-hidden="true">
+  <div class="intro__logo"><svg class="brandword brandword--svg" viewBox="0 0 671 142" aria-hidden="true" focusable="false"><use href="img/brand/logo.svg?v=260#logo"/></svg></div>
+  <span class="intro__line"></span>
+</div>
+
+<div class="progress" id="progress"></div>
+
+<!-- 01 · Utility bar -->
+<div class="utility">
+  <div class="container utility__inner">
+    <div class="utility__left">
+      <div class="currency lang-switch" role="group" aria-label="Language">
+        <button type="button" data-lang="en" lang="en" aria-pressed="true" class="active">English</button>
+        <button type="button" data-lang="hi" lang="hi" aria-pressed="false">हिंदी</button>
+      </div>
+      <span class="dot">·</span><a href="#tours">📍 Near Meerut, Uttar Pradesh · <u>Change</u></a>
+      <span class="dot">·</span><a href="mailto:support@epicjourneys.in">✉ support@epicjourneys.in</a>
+    </div>
+    <div class="utility__right">
+      <a href="/login">Login</a>
+      <span class="dot">·</span><a href="/register">Register</a>
+    </div>
+  </div>
+</div>
+
+<!-- 01 · Sticky header + mega menu -->
+<header class="header" id="header" data-tone="photo">
+  <div class="container header__inner">
+    <a href="#" class="logo logo--word logo--swap" aria-label="EpicJourneys.in home"><span class="logo__mark" aria-hidden="true"><img src="img/brand/e-mark.svg?v=260" alt="" width="40" height="40"></span><svg class="brandword brandword--svg" viewBox="0 0 671 142" aria-hidden="true" focusable="false"><use href="img/brand/logo.svg?v=260#logo"/></svg></a>
+    <nav class="nav">
+      <div class="nav__item" data-mega="dest"><a href="#tours">Destinations <i>▾</i></a></div>
+      <div class="nav__item"><a href="#tours">Tours</a></div>
+      <div class="nav__item"><a href="#categories">Themes</a></div>
+      <div class="nav__item"><a data-search="Sale">Winter Sale</a></div>
+      <div class="nav__item"><a href="partners.html">Partners</a></div>
+    </nav>
+    <div class="header__actions">
+      <a href="#faq" class="header__phone">Help</a>
+      <a class="btn btn--accent" href="#tours">Find a tour</a>
+      <!-- Phone menu: shown only on small screens, no script needed -->
+      <details class="mnav">
+        <summary aria-label="Menu"><span></span><span></span><span></span></summary>
+        <nav class="mnav__panel" aria-label="Menu">
+          <a href="#tours">Tours near you</a><a href="#categories">Tour categories</a><a href="#schedule">Departing soon</a>
+          <a href="#reviews">Reviews</a><a href="#faq">Help &amp; FAQs</a><a href="#lead">Talk to an expert</a>
+          <a href="tour.html?t=bhutan-7-days">Bhutan, 7 days</a><a href="partners.html">Become a partner</a>
+        </nav>
+      </details>
+    </div>
+  </div>
+
+  <div class="mega" id="mega-dest">
+    <div class="container mega__inner">
+      <div class="mega__col"><h4>Uttarakhand</h4><a>Haridwar</a><a>Rishikesh</a><a>Mussoorie</a></div>
+      <div class="mega__col"><h4>Rajasthan</h4><a>Jaipur</a><a>Udaipur</a><a>Pushkar</a></div>
+      <div class="mega__col"><h4>Himachal Pradesh</h4><a>Manali</a><a>Solang Valley</a></div>
+      <div class="mega__col"><h4>Goa & Kerala</h4><a>North Goa</a><a>Munnar</a></div>
+      <a class="mega__promo" data-view="Rishikesh Ganges Rafting & Yoga Retreat">
+        <div class="mega__img" style="background-image:url(img/rishikesh.jpg?v=244)"></div>
+        <strong>Rishikesh Rafting & Yoga</strong><span>3D / 2N · from <b data-price="8999"></b></span>
+      </a>
+    </div>
+  </div>
+</header>
+<div class="mega-scrim" aria-hidden="true"></div>
+
+<main>
+<!-- 02 · Hero + search -->
+<section class="hero hero--slides" id="hero" aria-roledescription="carousel" aria-label="Destinations">
+  <div class="hero__slides" id="hero-slides" aria-hidden="true"></div>
+  <i class="hero__shade" aria-hidden="true"></i>
+  <div class="container hero__inner">
+    <p class="hero__kicker"><span class="hero__kicker-dot" aria-hidden="true"></span>India&rsquo;s trusted online travel network, operating right out of your neighborhood.</p>
+    <h1 class="hero__title">Group tours made easy. <em class="hero__line" id="hero-line" aria-live="polite">Depart directly from <span class="hero__hl">your own city.</span></em></h1>
+    <p class="hero__sub">No exhausting 200 km journeys to catch a bus or train. Comfortable, budget-friendly group tours across India, Nepal, Bhutan and Sri Lanka, starting at the EpicJourneys LocalStart Lounge in your town.</p>
+
+    <form class="search search--simple" id="search" autocomplete="off" role="search">
+      <label class="search__field">
+        <svg class="ico-line ico-line--search" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="27" cy="27" r="17" stroke-dasharray="96 10.8"/><path d="M39.5 39.5l3 3"/><path d="M42 45l3-3 11 11a2.1 2.1 0 0 1-3 3z"/><path class="a pin" d="M27 38s-7.5-6.6-7.5-12.6a7.5 7.5 0 0 1 15 0C34.5 31.4 27 38 27 38z"/><circle class="pin-dot" cx="27" cy="25.2" r="2.6"/></svg>
+        <input name="q" type="search" placeholder="Search tours, places or themes" aria-label="Search tours" aria-controls="search-drop" aria-expanded="false">
+      </label>
+      <button class="btn btn--accent btn--lg" type="submit">Search</button>
+      <div class="search__drop" id="search-drop" role="listbox" data-lenis-prevent hidden></div>
+    </form>
+  </div>
+  <div class="hero__nav" id="hero-nav" role="tablist" aria-label="Choose a destination slide"></div>
+  <p class="hero__place" id="hero-place" aria-hidden="true"></p>
+</section>
+
+<!-- Festive offer + live countdowns to the next departures from the visitor's city -->
+<section class="offer" id="offer" aria-label="Offers and next departures">
+  <div class="container offer__inner">
+    <div class="offer__deal">
+      <span class="offer__tag" id="offer-tag"></span>
+      <h2 class="offer__title"><span id="offer-title"></span> <em id="offer-detail"></em></h2>
+      <p class="offer__note" id="offer-note"></p>
+      <div class="offer__row">
+        <div class="offer__ends"><span>Offer ends in</span><b class="cd" id="offer-cd" data-until=""></b></div>
+        <button class="btn btn--accent offer__cta" type="button" id="offer-cta">See spiritual tours</button>
+      </div>
+    </div>
+    <div class="offer__deps">
+      <div class="offer__head"><strong>Next direct departures from <span class="js-city">your city</span></strong><span>Sample dates</span></div>
+      <ol class="offer__list" id="offer-deps"></ol>
+    </div>
+  </div>
+</section>
+
+<!-- Search results (hidden until a search) -->
+<section class="results container" id="results" hidden>
+  <div class="section-head"><h2 id="results-title">Results</h2><button class="link" id="results-clear">Clear search ✕</button></div>
+  <p class="results__note" id="results-note" hidden></p>
+  <div class="grid grid--4" id="results-grid"></div>
+  <div class="request" id="results-request" hidden></div>
+</section>
+
+<!-- 03 · Continue your plan (returning visitors) -->
+<section class="continue" id="continue" hidden>
+  <div class="container">
+    <div class="section-head section-head--sm"><h3>Pick up <em>where you left off</em></h3><button class="link" id="recent-clear">Clear history</button></div>
+    <div class="continue__row" id="continue-row"></div>
+  </div>
+</section>
+
+<!-- 04 · Trust ribbon -->
+<section class="ribbon" id="ribbon" aria-label="Why book with EpicJourneys">
+  <div class="container ribbon__inner">
+    <div class="ribbon__item">
+      <svg class="ico-line ico-line--hometown-boarding" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 47V18a7 7 0 0 1 7-7h22a7 7 0 0 1 7 7v29"/><path d="M14 47h12M30 47h20"/><rect x="19" y="19" width="26" height="12" rx="2"/><path d="M26 15h12"/><circle cx="21.5" cy="40" r="2"/><circle cx="42.5" cy="40" r="2"/><path d="M29 40h6"/><path d="M18 47v4.5a1.5 1.5 0 0 0 1.5 1.5h3a1.5 1.5 0 0 0 1.5-1.5V47M40 47v4.5a1.5 1.5 0 0 0 1.5 1.5h3a1.5 1.5 0 0 0 1.5-1.5V47"/><path d="M14 22h-3v7M50 22h3v7"/><path class="a" d="M6 59h52" stroke-dasharray="0.1 5"/></svg>
+      <div><strong>Hometown Boarding</strong><span>No travelling to distant hub cities just to join the main tour.</span></div>
+    </div>
+    <div class="ribbon__item">
+      <svg class="ico-line ico-line--localstart-lounge" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 32V22a5 5 0 0 1 5-5h14a5 5 0 0 1 5 5v10"/><path d="M9 33a3.5 3.5 0 0 1 7 0v5h18v-5a3.5 3.5 0 0 1 7 0v10a2 2 0 0 1-2 2H11a2 2 0 0 1-2-2z"/><path d="M14 45v4M36 45v4"/><path d="M45 37h12v5a6 6 0 0 1-6 6 6 6 0 0 1-6-6z"/><path d="M57 39h1a2.5 2.5 0 0 1 0 5h-1.4"/><path d="M43 52h16"/><path class="a" d="M49 32c-1.6-2 1.6-3 0-5M54 32c-1.6-2 1.6-3 0-5"/></svg>
+      <div><strong>LocalStart Lounges</strong><span>Wait in a comfortable, seated partner venue in your town until your transport arrives.</span></div>
+    </div>
+    <div class="ribbon__item">
+      <svg class="ico-line ico-line--verified-partner" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="32" cy="27" r="17" stroke-dasharray="92 6.8 4 4"/><circle cx="32" cy="27" r="11.5"/><path class="a" d="M26.5 27.5l4 4 7.5-8"/><path d="M23.5 41.5L18 55l6-2 4 5 3.4-10.2M40.5 41.5L46 55l-6-2-4 5-3.4-10.2"/><path class="a" d="M54 8v5M51.5 10.5h5"/></svg>
+      <div><strong>Verified Local Partners</strong><span>Book online, or walk into a certified partner office in your city.</span></div>
+    </div>
+    <div class="ribbon__item">
+      <svg class="ico-line ico-line--fixed-budget" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 26h42a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4z"/><path d="M13 26l25-11.5a3 3 0 0 1 4 1.4L46 26"/><path d="M54 35h-9a4 4 0 0 0 0 8h9"/><circle cx="45.5" cy="39" r="0.6"/><circle class="a" cx="52" cy="13" r="7.5" stroke-dasharray="40 7.1"/><path class="a" d="M49 9.8h6M49 12.4h6M50.6 9.8c2.4 0 3 1.3 3 2.6s-1 2.5-3 2.5h-1l3.6 3" stroke-width="1.8"/><path d="M14 47h8" /></svg>
+      <div><strong>100% Fixed Budget</strong><span>Pocket-friendly, all-inclusive prices with zero hidden costs.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Tour categories: five cards -->
+<section class="section cats" id="categories">
+  <div class="container">
+    <div class="section-head">
+      <div><span class="eyebrow">Tour categories</span><h2>Explore by <em>tour category</em></h2></div>
+      <p class="sub">Pick the kind of trip you want. Every category starts from a LocalStart Lounge near you.</p>
+    </div>
+    <div class="cats__grid">
+      <a class="cat cat--spiritual" data-cat="spiritual" tabindex="0">
+        <i class="cat__img" style="background-image:url(img/haridwar.jpg?v=244)"></i>
+        <span class="cat__body"><strong class="cat__title">Spiritual &amp; Pilgrimage</strong><span class="cat__text">Hassle-free sacred journeys for your parents.</span><span class="cat__more">See tours <i aria-hidden="true">→</i></span></span>
+      </a>
+      <a class="cat cat--women" data-cat="women" tabindex="0">
+        <i class="cat__img" style="background-image:url(img/udaipur.jpg?v=244)"></i>
+        <span class="cat__body"><strong class="cat__title">Women's Special</strong><span class="cat__text">Safe, liberating escapes with direct local departure.</span><span class="cat__more">See tours <i aria-hidden="true">→</i></span></span>
+      </a>
+      <a class="cat cat--culture" data-cat="culture" tabindex="0">
+        <i class="cat__img" style="background-image:url(img/bhutan.jpg?v=244)"></i>
+        <span class="cat__body"><strong class="cat__title">Cultural Wonders</strong><span class="cat__text">Explore the heritage of India, Bhutan and Sri Lanka.</span><span class="cat__more">See tours <i aria-hidden="true">→</i></span></span>
+      </a>
+      <a class="cat cat--adventure" data-cat="adventure" tabindex="0">
+        <i class="cat__img" style="background-image:url(img/solang.jpg?v=244)"></i>
+        <span class="cat__body"><strong class="cat__title">Easy Adventures</strong><span class="cat__text">Budget-friendly hill stations, wildlife and nature trails.</span><span class="cat__more">See tours <i aria-hidden="true">→</i></span></span>
+      </a>
+      <a class="cat cat--family" data-cat="family" tabindex="0">
+        <i class="cat__img" style="background-image:url(img/kerala.jpg?v=244)"></i>
+        <span class="cat__body"><strong class="cat__title">Family Bonanza</strong><span class="cat__text">Kid-friendly plans designed to keep everyone smiling.</span><span class="cat__more">See tours <i aria-hidden="true">→</i></span></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- 04b · Why travel 200 km? -->
+<!-- Family voice: why starting in your own town matters, told the way people say it at home -->
+<section class="section ugc" id="why" aria-labelledby="ugc-title">
+  <div class="container">
+    <div class="ugc__head">
+      <img class="doodle doodle--bus" src="img/doodles/bus.svg" alt="" aria-hidden="true">
+      <span class="eyebrow">Heard at home</span>
+      <h2 class="ugc__quote" id="ugc-title"><span class="ugc__q">“Delhi tak jaana padega?”</span><span class="ugc__a">“Nahi, Maa. Bus <span class="js-city">your city</span> se hi niklegi.”</span></h2>
+      <p class="ugc__sub" id="ugc-sub">Every tour starts at a LocalStart Lounge in your own town, so the holiday begins with chai, not a 4 am bus.</p>
+    </div>
+    <div class="ugc__wall" id="ugc-wall"></div>
+    <p class="ugc__note">Sample stories, shown until real traveller posts are added with their permission.</p>
+  </div>
+</section>
+
+<!-- Popular tours near you: filters + results -->
+<section class="section tours" id="tours">
+  <div class="container">
+    <div class="section-head">
+      <div><span class="eyebrow">Popular tours near you</span><h2>Popular tours from <em id="dep-city">Meerut</em></h2><p class="sub" id="dep-sub">Tours closest to Meerut first. Filter by destination, type of trip, length, budget or month.</p></div>
+    </div>
+    <!-- Filter bar: one row of pills, sort on the right -->
+    <form class="tourbar" id="tour-filters" aria-label="Filter tours">
+      <div class="tourbar__pills">
+        <label class="tpill tpill--city"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>From</span><select id="dep-select" form="tq-standalone" aria-label="Starting city"></select></label>
+        <button class="tourbar__locate dep-locate" type="button" id="dep-locate">Use my location</button>
+        <span class="tourbar__sep" aria-hidden="true"></span>
+        <details class="fdrop tpill" data-kind="multi" data-any="Destination" data-many="{n} destinations"><summary><b class="fdrop__val">Destination</b></summary><div class="fdrop__panel" data-lenis-prevent><div id="f-state"></div></div></details>
+        <details class="fdrop tpill" data-kind="multi" data-any="Trip type" data-many="{n} trip types"><summary><b class="fdrop__val">Trip type</b></summary><div class="fdrop__panel" data-lenis-prevent><div id="f-cat"></div></div></details>
+        <details class="fdrop tpill" data-kind="one" data-any="Duration"><summary><b class="fdrop__val">Duration</b></summary><div class="fdrop__panel" data-lenis-prevent><div id="f-len"></div></div></details>
+        <details class="fdrop tpill" data-kind="one" data-any="Budget"><summary><b class="fdrop__val">Budget</b></summary><div class="fdrop__panel" data-lenis-prevent><div id="f-budget"></div></div></details>
+        <label class="tpill fdrop--select"><select id="f-month" aria-label="Travel month"><option value="">Month</option></select></label>
+        <label class="tpill tpill--toggle"><input type="checkbox" id="f-sale"><span>Deals</span></label>
+        <button type="reset" class="tourbar__clear filters__reset" id="filters-reset">Clear</button>
+      </div>
+      <div class="tourbar__right">
+        <span class="tours__count" id="tour-count" aria-live="polite"></span>
+        <label class="tpill tpill--sort"><span>Sort</span><select id="tour-sort" form="tq-standalone" aria-label="Sort tours">
+          <option value="near">Nearest</option><option value="popular">Most popular</option><option value="soon">Departing soon</option><option value="price">Lowest price</option>
+        </select></label>
+      </div>
+    </form>
+    <div class="tours__body">
+      <div class="tours__results">
+        <div class="tours__chips" id="tour-chips"></div>
+        <div class="tours__grid" id="tour-grid"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Map section goes here (being built separately) -->
+
+<!-- A day on tour: numbered tabs over full-width photos -->
+<section class="ontour" id="ontour">
+  <div class="ontour__bgs" aria-hidden="true">
+    <i class="ontour__bg on" style="background-image:url(img/mussoorie.jpg?v=244)"></i>
+    <i class="ontour__bg" style="background-image:url(img/himachal.jpg?v=244)"></i>
+    <i class="ontour__bg" style="background-image:url(img/udaipur.jpg?v=244)"></i>
+    <i class="ontour__bg" style="background-image:url(img/kerala.jpg?v=244)"></i>
+  </div>
+  <div class="container ontour__inner">
+    <h2 class="ontour__title">What a day on tour <em>feels like</em></h2>
+    <div class="ontour__panels">
+      <div class="ontour__panel on" role="tabpanel" id="ontour-0"><span>Start in your own town</span><h3>LocalStart Lounge</h3><p>Arrive at a partner lounge a short ride from home. Take a seat, have a glass of water and hand your bags to the coordinator, who checks you in before the transport collects the group.</p></div>
+      <div class="ontour__panel" role="tabpanel" id="ontour-1"><span>Comfortable, coordinated transport</span><h3>The journey</h3><p>Your lounge is connected to the main group by transport we arrange, with planned stops for meals and rest. Elders and children travel at an easy pace, with no crowded platforms.</p></div>
+      <div class="ontour__panel" role="tabpanel" id="ontour-2"><span>Clean, checked hotels</span><h3>Stays</h3><p>Every itinerary, including its hotels, is checked by our team before it's listed. Rooms are chosen for families and small groups, close to the sights.</p></div>
+      <div class="ontour__panel" role="tabpanel" id="ontour-3"><span>Sights, with nothing extra to pay</span><h3>Days out</h3><p>Guided sightseeing, the evening Ganga Aarti, a boat on Lake Pichola or snow at Solang. The price is fixed and all-inclusive, so there are no hidden costs on the day.</p></div>
+    </div>
+    <div class="ontour__tabs" role="tablist" aria-label="A day on tour">
+      <button class="ontour__tab on" role="tab" aria-selected="true" aria-controls="ontour-0" data-i="0"><b>01</b><span>LocalStart Lounge</span><i></i></button>
+      <button class="ontour__tab" role="tab" aria-selected="false" aria-controls="ontour-1" data-i="1"><b>02</b><span>The journey</span><i></i></button>
+      <button class="ontour__tab" role="tab" aria-selected="false" aria-controls="ontour-2" data-i="2"><b>03</b><span>Stays</span><i></i></button>
+      <button class="ontour__tab" role="tab" aria-selected="false" aria-controls="ontour-3" data-i="3"><b>04</b><span>Days out</span><i></i></button>
+    </div>
+  </div>
+</section>
+
+<!-- Ongoing tours schedule: state filter + upcoming departures -->
+<section class="section sched" id="schedule">
+  <div class="container">
+    <div class="section-head">
+      <div><span class="eyebrow">Ongoing tours schedule</span><h2>Tours by state, <em>departing soon</em></h2></div>
+      <p class="sub">Pick a state to see its next departures and how many seats are left. Dates shown are samples until the live schedule is connected.</p>
+    </div>
+    <div class="sched__body">
+      <div class="sched__states" id="sched-states" role="tablist" aria-label="Filter by state"></div>
+      <div class="sched__list">
+        <div class="sched__label"><span>Next departures</span><span id="sched-count"></span></div>
+        <ol class="sched__rows" id="sched-rows"></ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Short muted clips: what the trip actually looks like -->
+<section class="section clips" id="clips">
+  <div class="container">
+    <div class="section-head">
+      <div><span class="eyebrow">See it before you book</span><h2>This is what <em>your trip</em> looks like</h2></div>
+      <p class="sub">Families, friends and small groups on the road with us: the coach, the sights and the slow moments in between.</p>
+    </div>
+    <div class="clips__grid">
+      <figure class="clip clip--wide"><video muted playsinline preload="none" data-src="video/snippets/varanasi-dusk.mp4" data-start="0" data-end="16" aria-label="The ghats of Varanasi at dusk, lamps lit along the river"></video><figcaption><b>Evenings on the ghats</b><span>Aarti hour, Varanasi</span></figcaption></figure>
+      <figure class="clip"><video muted loop playsinline preload="none" data-src="video/snippets/kerala-houseboat.mp4" aria-label="A houseboat drifting through the Kerala backwaters"></video><figcaption><b>Slow days on the water</b><span>Houseboat cruise, Kerala</span></figcaption></figure>
+      <figure class="clip"><video muted playsinline preload="none" data-src="video/snippets/rishikesh-rafting.mp4" data-start="2" data-end="16" aria-label="Rafts on the Ganga at Rishikesh"></video><figcaption><b>A little adventure</b><span>Rafting on the Ganga, Rishikesh</span></figcaption></figure>
+      <figure class="clip"><video muted loop playsinline preload="none" data-src="video/snippets/temple-visit.mp4" aria-label="Visitors at a temple"></video><figcaption><b>Unhurried visits</b><span>Temple trail, Karnataka</span></figcaption></figure>
+    </div>
+    <p class="clips__credit">Clips: Amit Gupta, Mayank Dixit, Nitin Khajotia and Suhas Hanjar on Pexels. Placeholder footage until our own trips are filmed.</p>
+  </div>
+</section>
+
+<!-- 17 · Blog -->
+<section class="section blog" id="blog">
+  <div class="container">
+    <div class="section-head"><div><span class="eyebrow">Travel guides</span><h2>From the <em>journal</em></h2><p class="sub">Short guides to the places our tours go: when to visit, what to expect and what to pack.</p></div></div>
+    <div class="blog__grid" id="blog-grid"></div>
+  </div>
+</section>
+
+<!-- 13 · Reviews (samples for now) -->
+<section class="section stories" id="reviews">
+  <div class="container">
+    <div class="section-head">
+      <div><span class="eyebrow">Traveller reviews</span><h2>Look who's travelling <em>stress-free from their hometowns</em></h2></div>
+    </div>
+    <div class="rv">
+      <aside class="rv__summary">
+        <div class="rv__score"><strong id="rv-avg">0.0</strong><div><span class="rv__stars" id="rv-stars" aria-hidden="true"></span><span id="rv-count"></span></div></div>
+        <ul class="rv__bars" id="rv-bars"></ul>
+        <ul class="rv__promise">
+          <li>Only travellers who booked can leave a review</li>
+          <li>Posted after the trip, and never edited by us</li>
+          <li>Name, hometown and tour shown on every review</li>
+        </ul>
+        <button class="btn btn--primary rv__share" type="button" data-modal="enquire" data-topic="Share my trip">Travelled with us? Share your trip</button>
+        <p class="rv__note">Sample reviews and photos, shown until our first travellers share theirs.</p>
+      </aside>
+      <div class="rv__main">
+        <div class="rv__filters" id="rv-filters" role="tablist" aria-label="Show reviews from"></div>
+        <div id="rv-list" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 15 · FAQ -->
+<section class="section faq2" id="faq">
+  <div class="container faq2__inner">
+    <div class="section-head section-head--center"><span class="eyebrow">Help &amp; support</span><h2>Questions? <em>We've got answers.</em></h2></div>
+    <div class="faq2__list">
+      <details class="qa2" open>
+        <summary><span>What is a LocalStart Lounge?</span><i aria-hidden="true"></i></summary>
+        <p>A certified partner office or café in your own town where your group meets. You wait seated, hand over your bags, and our coordinated transport takes you to the main tour.</p>
+      </details>
+      <details class="qa2">
+        <summary><span>Who runs the tours?</span><i aria-hidden="true"></i></summary>
+        <p>Each trip is run by a local partner who lives and works in the destination. Our team checks every itinerary, including the hotels, before it's listed.</p>
+      </details>
+      <details class="qa2">
+        <summary><span>How do I find tours that start near me?</span><i aria-hidden="true"></i></summary>
+        <p>In “Popular tours near you”, choose your city or tap “Use my location”. Tours are sorted nearest first, and you can filter by destination, type of trip, length, budget or month.</p>
+      </details>
+      <details class="qa2">
+        <summary><span>Are prices per person and all-inclusive?</span><i aria-hidden="true"></i></summary>
+        <p>Yes. Prices are per person, in rupees, and include local transport from your lounge to the main tour. Anything not included is listed on the tour before you pay.</p>
+      </details>
+      <details class="qa2">
+        <summary><span>Do I pay the full amount upfront?</span><i aria-hidden="true"></i></summary>
+        <p>No. Many tours can be reserved with a small deposit, with the balance paid before departure.</p>
+      </details>
+      <details class="qa2">
+        <summary><span>Is it comfortable for elders and women travelling alone?</span><i aria-hidden="true"></i></summary>
+        <p>Every group travels with a coordinator, the pace is easy, and we run Women's Special departures. Tell us about any mobility needs when you book and we'll suggest a suitable tour.</p>
+      </details>
+      <details class="qa2">
+        <summary><span>What if I need to cancel?</span><i aria-hidden="true"></i></summary>
+        <p>Cancellation terms are shown on each tour before you pay, and in our Cancellation Policy.</p>
+      </details>
+      <details class="qa2">
+        <summary><span>My city isn't listed. What can I do?</span><i aria-hidden="true"></i></summary>
+        <p>Request a callback using the form below. We add new partner points in Tier-2 and Tier-3 towns based on demand.</p>
+      </details>
+    </div>
+    <p class="faq2__more">Still have a question? Email <a href="mailto:support@epicjourneys.in">support@epicjourneys.in</a> or <a href="#lead">request a callback</a>.</p>
+  </div>
+</section>
+
+<!-- 12b · Comparison table -->
+<section class="section" id="compare">
+  <div class="container">
+    <div class="section-head section-head--center"><span class="eyebrow">Compare</span><h2>The usual tour operator <em>vs EpicJourneys</em></h2><p class="sub">The same holiday, without the hard journey to reach it.</p></div>
+    <table class="compare">
+      <thead><tr><th scope="col">Feature</th><th scope="col">Legacy tour operators</th><th scope="col" class="compare__us"><span class="logo logo--word" role="img" aria-label="EpicJourneys"><svg class="brandword brandword--svg" viewBox="0 0 671 142" aria-hidden="true" focusable="false"><use href="img/brand/logo.svg?v=260#logo"/></svg></span><small>Smart middle-class travel</small></th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Departure point</th><td><i class="no"><svg class="ico-line ico-line--cross" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="32" cy="32" r="22" stroke-dasharray="126 12.2"/><path class="a" d="M24 24l16 16M40 24L24 40"/></svg></i>Major Tier-1 metros only, so you travel 100–200 km before the tour starts.</td><td class="compare__us"><i class="yes"><svg class="ico-line ico-line--tick" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="32" cy="32" r="22" stroke-dasharray="126 12.2"/><path class="a" d="M22.5 32.5l7 7 13.5-15"/><path class="a" d="M53 6v5M50.5 8.5h5"/></svg></i>Your own Tier-2 or Tier-3 city, directly or via a local partner point.</td></tr>
+        <tr><th scope="row">Pre-tour waiting</th><td><i class="no"><svg class="ico-line ico-line--cross" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="32" cy="32" r="22" stroke-dasharray="126 12.2"/><path class="a" d="M24 24l16 16M40 24L24 40"/></svg></i>Crowded bus stands or chaotic railway platforms.</td><td class="compare__us"><i class="yes"><svg class="ico-line ico-line--tick" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="32" cy="32" r="22" stroke-dasharray="126 12.2"/><path class="a" d="M22.5 32.5l7 7 13.5-15"/><path class="a" d="M53 6v5M50.5 8.5h5"/></svg></i>Partner comfort points: clean, seated local partner offices and cafés.</td></tr>
+        <tr><th scope="row">Hidden costs</th><td><i class="no"><svg class="ico-line ico-line--cross" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="32" cy="32" r="22" stroke-dasharray="126 12.2"/><path class="a" d="M24 24l16 16M40 24L24 40"/></svg></i>You pay extra for the bus or train just to reach the tour.</td><td class="compare__us"><i class="yes"><svg class="ico-line ico-line--tick" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="32" cy="32" r="22" stroke-dasharray="126 12.2"/><path class="a" d="M22.5 32.5l7 7 13.5-15"/><path class="a" d="M53 6v5M50.5 8.5h5"/></svg></i>All-inclusive: local transit to the main tour is built into the budget.</td></tr>
+        <tr><th scope="row">Who it's for</th><td><i class="no"><svg class="ico-line ico-line--cross" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="32" cy="32" r="22" stroke-dasharray="126 12.2"/><path class="a" d="M24 24l16 16M40 24L24 40"/></svg></i>Mass market with little comfort, or premium and overpriced.</td><td class="compare__us"><i class="yes"><svg class="ico-line ico-line--tick" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="32" cy="32" r="22" stroke-dasharray="126 12.2"/><path class="a" d="M22.5 32.5l7 7 13.5-15"/><path class="a" d="M53 6v5M50.5 8.5h5"/></svg></i>The sweet spot: affordable pricing with Tier-1 convenience.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Lead form: callback request -->
+<section class="section leadform" id="lead">
+  <div class="container leadform__inner">
+    <div class="leadform__intro">
+      <span class="eyebrow">Talk to a travel expert</span>
+      <h2>Can't find your city listed? <em>Or planning a group departure?</em></h2>
+      <p>Tell us where you are. We frequently add new Tier-2 and Tier-3 partner network points based on demand.</p>
+      <ul class="leadform__points">
+        <li><i aria-hidden="true">✓</i>A local expert calls you back within 24 hours</li>
+        <li><i aria-hidden="true">✓</i>No obligation, and no spam calls</li>
+        <li><i aria-hidden="true">✓</i>Group and family departures planned from your town</li>
+      </ul>
+    </div>
+    <form class="leadform__card" id="lead-form" novalidate>
+      <h3 class="leadform__title">Request a callback</h3>
+      <p class="leadform__hint">Takes under a minute. Fields marked * are required.</p>
+      <div class="field"><label for="lf-name">Your name *</label><input id="lf-name" name="name" placeholder="e.g. Sunita Rao" autocomplete="name" required></div>
+      <div class="field"><label for="lf-phone">Phone number *</label><div class="field__phone"><span>+91</span><input id="lf-phone" name="phone" placeholder="10-digit mobile number" inputmode="numeric" maxlength="10" autocomplete="tel-national" required></div></div>
+      <div class="field"><label for="lf-city">Your city *</label><input id="lf-city" name="city" placeholder="e.g. Jhansi" autocomplete="address-level2" required></div>
+      <div class="field"><label for="lf-dest">Where do you want to go? *</label><input id="lf-dest" name="dest" placeholder="e.g. Haridwar, Manali, not sure yet" list="lf-dest-list" required><datalist id="lf-dest-list"><option value="Haridwar &amp; Rishikesh"><option value="Rajasthan"><option value="Manali &amp; Himachal"><option value="Goa"><option value="Kerala"><option value="Not sure yet"></datalist></div>
+      <label class="leadform__check"><input type="checkbox" name="group"><span>I'm planning a group departure (10 or more people)</span></label>
+      <button class="btn btn--accent leadform__submit" type="submit">Request a callback</button>
+      <p class="form-msg" id="lead-msg" role="status"></p>
+      <p class="leadform__privacy">We'll only use your number to call you about this trip.</p>
+    </form>
+  </div>
+</section>
+
+
+</main>
+
+<!-- 18 · Footer -->
+<footer class="footer" id="footer">
+  <div class="container">
+    <div class="footer__top">
+      <div class="footer__contact">
+        <a href="#" class="logo logo--light logo--word" aria-label="EpicJourneys.in home"><svg class="brandword brandword--svg" viewBox="0 0 671 142" aria-hidden="true" focusable="false"><use href="img/brand/logo.svg?v=260#logo"/></svg></a>
+        <p class="footer__tagline"><strong>EpicJourneys:</strong> India&rsquo;s trusted online travel network, operating right out of your neighborhood.</p>
+        <p>Curated Indian journeys starting closest to you. Verified local partners, transparent pricing in ₹ and round-trip itineraries.</p>
+        <p><a href="mailto:support@epicjourneys.in">support@epicjourneys.in</a></p>
+        <p>+91 00000 00000</p>
+      </div>
+      <div class="footer__col"><h4>Explore</h4><a href="#tours">Destinations</a><a href="#categories">Tour categories</a><a href="#tours">Popular tours</a><a data-search="Sale">Winter Sale</a></div>
+      <div class="footer__col"><h4>Company</h4><a href="#faq">FAQs</a><a href="#" data-modal="lounges">LocalStart Lounges</a><a href="partners.html">Partner registration (local agents)</a><a href="#faq">Help &amp; support</a></div>
+      <div class="footer__col"><h4>Popular states</h4><a data-search="Himachal">Himachal Pradesh</a><a data-search="Rajasthan">Rajasthan</a><a data-search="Uttarakhand">Uttarakhand</a><a data-search="Kerala">Kerala</a><a data-search="Goa">Goa</a></div>
+      <form class="footer__news" id="news-form" novalidate>
+        <h4>New tours & sale alerts</h4>
+        <input type="email" name="email" placeholder="Email address" required>
+        <button class="btn btn--accent" type="submit">Subscribe</button>
+        <p class="form-msg" id="news-msg"></p>
+      </form>
+    </div>
+    <div class="footer__regions">
+      <div><h5>Uttarakhand</h5><a data-search="Haridwar">Haridwar tours</a><a data-search="Rishikesh">Rishikesh tours</a></div>
+      <div><h5>Rajasthan</h5><a data-search="Jaipur">Jaipur tours</a><a data-search="Udaipur">Udaipur tours</a><a data-search="Pushkar">Pushkar tours</a></div>
+      <div><h5>Himachal Pradesh</h5><a data-search="Manali">Manali tours</a><a data-search="Solang">Solang Valley</a></div>
+      <div><h5>Goa</h5><a data-search="Goa">North Goa tours</a></div>
+      <div><h5>Kerala</h5><a data-search="Munnar">Munnar tours</a></div>
+    </div>
+    <div class="footer__pay" aria-label="Payment methods">
+      <span class="footer__pay-label">Secure payments</span>
+      <span class="pay"><svg class="ico-line ico-line--upi" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="19" y="6" width="26" height="52" rx="5"/><path d="M29 11h6M29 53h6"/><rect data-d="1" x="24.5" y="18" width="6" height="6" rx="1"/><rect data-d="1" x="33.5" y="18" width="6" height="6" rx="1"/><rect data-d="1" x="24.5" y="27" width="6" height="6" rx="1"/><path data-d="1" d="M33.5 27h1.5M38 27h1.5M33.5 31.5h6"/><path class="a" d="M27 40l3.5 3.5-3.5 3.5M33 40l3.5 3.5-3.5 3.5"/><path class="a" d="M50 26a7 7 0 0 1 0 10M54.5 22a13 13 0 0 1 0 18"/></svg>UPI</span>
+      <span class="pay"><svg class="ico-line ico-line--cards" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 22v-9a3 3 0 0 1 3-3h32a3 3 0 0 1 3 3v18a3 3 0 0 1-3 3h-5"/><rect x="8" y="22" width="40" height="27" rx="3"/><path d="M8 30h40"/><rect class="a" x="13" y="36" width="8" height="6.5" rx="1.5"/><path d="M27 40h4M34.5 40h4M42 40h1.5"/><path class="a" d="M8 56h10" stroke-dasharray="0.1 4.5"/></svg>Credit &amp; debit cards</span>
+      <span class="pay"><svg class="ico-line ico-line--netbanking" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 24L32 10l24 14z"/><circle class="a" cx="32" cy="18.5" r="2.4"/><path d="M10 28h44"/><path d="M15 31v13M24.5 31v13M39.5 31v13M49 31v13"/><path d="M10 47h44M7 53h50"/><path class="a" d="M30 31v5M34 31v5" stroke-dasharray="0.1 4"/></svg>NetBanking</span>
+      <span class="pay"><svg class="ico-line ico-line--secure-checkout" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 28v-7a11 11 0 0 1 22 0v7"/><path d="M27 28v-7a5 5 0 0 1 10 0v7"/><rect x="14" y="28" width="36" height="26" rx="5"/><circle class="a" cx="32" cy="39" r="3.2"/><path class="a" d="M32 42.2v5"/><path class="a" d="M55 9v5M52.5 11.5h5M9 13l2.2 2.2"/></svg>256-bit SSL checkout</span>
+    </div>
+    <div class="footer__warn">⚠ Beware of fake offers. We only contact you from @epicjourneys.in email addresses.</div>
+    <div class="footer__legal">
+      <span>© 2026 EpicJourneys. All rights reserved.</span>
+      <span><a>Privacy Policy</a> · <a>Terms &amp; Conditions</a> · <a>Cancellation Policy</a> · <a href="#faq">FAQs</a> · <a href="#" data-modal="credits">Photo credits</a></span>
+    </div>
+  </div>
+  <div class="wordmark" id="wordmark" aria-hidden="true">EPIC JOURNEYS</div>
+</footer>
+
+<!-- Trip cost calculator: opens from the floating button, closes back out of the way -->
+<button class="calc-fab" id="calc-open" type="button" aria-haspopup="dialog" aria-controls="calc"><span aria-hidden="true">₹</span>Trip cost calculator</button>
+<div class="calc-drawer" id="calc" role="dialog" aria-modal="true" aria-labelledby="calc-title" hidden>
+  <div class="calc-drawer__scrim" data-calc-close></div>
+  <aside class="calc-drawer__panel" data-lenis-prevent>
+    <header class="calc-drawer__head">
+      <div><span class="eyebrow">Zero hidden costs</span><h2 id="calc-title">Work out the whole trip</h2><p>Pick a tour and who’s coming. The total includes everything from your town and back.</p></div>
+      <button class="calc-drawer__close" type="button" data-calc-close aria-label="Close calculator">×</button>
+    </header>
+    <form class="calc__card" id="calc-form" autocomplete="off">
+      <label class="calc__field"><span>Tour</span><select id="calc-tour"></select></label>
+      <label class="calc__field"><span>Starting from</span><select id="calc-city"></select></label>
+      <div class="calc__people">
+        <div class="calc__step"><span>Adults<small>12+ years</small></span><div class="stepper"><button type="button" data-step="adults:-1" aria-label="One fewer adult">−</button><output id="calc-adults">2</output><button type="button" data-step="adults:1" aria-label="One more adult">+</button></div></div>
+        <div class="calc__step"><span>Children<small>5–11 years</small></span><div class="stepper"><button type="button" data-step="kids:-1" aria-label="One fewer child">−</button><output id="calc-kids">0</output><button type="button" data-step="kids:1" aria-label="One more child">+</button></div></div>
+        <div class="calc__step"><span>Infants<small>under 5, free</small></span><div class="stepper"><button type="button" data-step="infants:-1" aria-label="One fewer infant">−</button><output id="calc-infants">0</output><button type="button" data-step="infants:1" aria-label="One more infant">+</button></div></div>
+      </div>
+      <ul class="calc__lines" id="calc-lines"></ul>
+      <div class="calc__total"><span>You pay, all in</span><strong id="calc-total">₹0</strong></div>
+      <p class="calc__small" id="calc-small"></p>
+      <button class="btn btn--accent calc__cta" type="button" id="calc-cta" data-modal="book">Hold these seats</button>
+      <p class="calc__note">Sample rates until live pricing is connected. Children 5–11 pay 75% of the adult price.</p>
+    </form>
+  </aside>
+</div>
+
+
+<!-- Modal -->
+<div class="modal" id="modal" hidden>
+  <div class="modal__box" role="dialog" aria-modal="true">
+    <button class="modal__close" aria-label="Close">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<button class="to-top" id="to-top" aria-label="Back to top">↑</button>
+
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="js/data.js?v=276"></script>
+<script src="js/tour-hi.js?v=276"></script>
+<script src="js/home-hi.js?v=275"></script>
+<script src="js/i18n.js?v=275"></script>
+<script src="js/app.js?v=275"></script>
+<script src="js/extras.js?v=244"></script>
+<script src="js/scroll.js?v=265"></script>
+</body>
+</html>

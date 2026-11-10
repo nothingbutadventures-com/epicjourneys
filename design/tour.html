@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tour · EpicJourneys</title>
+  <meta name="description" content="Group tours that start at a LocalStart Lounge in your own town.">
+  <link rel="icon" type="image/svg+xml" href="img/brand/e-mark.svg?v=260">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=274">
+  <link rel="stylesheet" href="css/tour.css?v=276">
+</head>
+<body class="page-tour">
+<!-- Intro: logo reveal on every page load (same as the homepage) -->
+<div class="intro" id="intro" aria-hidden="true">
+  <div class="intro__logo"><svg class="brandword brandword--svg" viewBox="0 0 671 142" aria-hidden="true" focusable="false"><use href="img/brand/logo.svg?v=260#logo"/></svg></div>
+  <span class="intro__line"></span>
+</div>
+<div class="progress" id="progress"></div>
+
+<div class="utility">
+  <div class="container utility__inner">
+    <div class="utility__left">
+      <span>India&rsquo;s trusted online travel network, operating right out of your neighborhood.</span>
+      <span class="dot">·</span><a href="mailto:support@epicjourneys.in">support@epicjourneys.in</a>
+    </div>
+    <div class="utility__right">
+      <a href="/tours">All tours</a>
+      <span class="dot">·</span><a href="/login">Login</a>
+    </div>
+  </div>
+</div>
+
+<header class="header" id="header" data-tone="photo">
+  <div class="container header__inner">
+    <a href="index.html" class="logo logo--word logo--swap" aria-label="EpicJourneys.in home"><span class="logo__mark" aria-hidden="true"><img src="img/brand/e-mark.svg?v=260" alt="" width="40" height="40"></span><svg class="brandword brandword--svg" viewBox="0 0 671 142" aria-hidden="true" focusable="false"><use href="img/brand/logo.svg?v=260#logo"/></svg></a>
+    <nav class="nav">
+      <div class="nav__item" data-mega="dest"><a href="index.html#tours">Destinations <i>▾</i></a></div>
+      <div class="nav__item"><a href="index.html#tours">Tours</a></div>
+      <div class="nav__item"><a href="index.html#categories">Themes</a></div>
+    </nav>
+    <div class="header__actions tp-actions">
+      <label class="tp-from"><span>Departing from</span><select id="tp-city" aria-label="Departing from"></select></label>
+      <a class="tp-hbtn" id="tp-wa-head" target="_blank" rel="noopener"></a>
+      <a class="tp-hbtn tp-hbtn--call" href="tel:+910000000000"></a>
+    </div>
+  </div>
+  <div class="mega" id="mega-dest">
+    <div class="container mega__inner">
+      <div class="mega__col"><h4>Uttarakhand</h4><a>Haridwar</a><a>Rishikesh</a><a>Mussoorie</a></div>
+      <div class="mega__col"><h4>Rajasthan</h4><a>Jaipur</a><a>Udaipur</a><a>Pushkar</a></div>
+      <div class="mega__col"><h4>Himachal Pradesh</h4><a>Manali</a><a>Solang Valley</a></div>
+      <div class="mega__col"><h4>Goa & Kerala</h4><a>North Goa</a><a>Munnar</a></div>
+      <a class="mega__promo" href="index.html#tours">
+        <div class="mega__img" style="background-image:url(img/rishikesh.jpg?v=243)"></div>
+        <strong>Rishikesh Rafting & Yoga</strong><span>3D / 2N · from <b data-price="8999"></b></span>
+      </a>
+    </div>
+  </div>
+</header>
+<div class="mega-scrim" aria-hidden="true"></div>
+
+<main id="tp"></main>
+<div class="tp-mbar" id="tp-mbar" aria-label="Book this tour"></div>
+<!-- Language switch: always on screen, bottom-left -->
+<div class="tp-lang" role="group" aria-label="Language">
+  <svg class="tp-lang__globe" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.8 5.7 3.8 9s-1.2 6.3-3.8 9c-2.6-2.7-3.8-5.7-3.8-9S9.4 5.7 12 3z"/></svg>
+  <button type="button" data-lang="en" lang="en" aria-pressed="true">English</button>
+  <button type="button" data-lang="hi" lang="hi" aria-pressed="false">हिंदी</button>
+  <button type="button" class="tp-lang__hint" id="tp-lang-hint" lang="hi" hidden>हिंदी में पढ़ना है? यहाँ दबाएँ</button>
+</div>
+
+<footer class="footer" id="footer">
+  <div class="container">
+    <div class="footer__top">
+      <div class="footer__contact">
+        <a href="index.html" class="logo logo--light logo--word" aria-label="EpicJourneys.in home"><svg class="brandword brandword--svg" viewBox="0 0 671 142" aria-hidden="true" focusable="false"><use href="img/brand/logo.svg?v=260#logo"/></svg></a>
+        <p class="footer__tagline"><strong>EpicJourneys:</strong> India&rsquo;s trusted online travel network, operating right out of your neighborhood.</p>
+        <p>Curated Indian journeys starting closest to you. Verified local partners, transparent pricing in ₹ and round-trip itineraries.</p>
+        <p><a href="mailto:support@epicjourneys.in">support@epicjourneys.in</a></p>
+        <p>+91 00000 00000</p>
+      </div>
+      <div class="footer__col"><h4>Explore</h4><a href="index.html#tours">Destinations</a><a href="index.html#categories">Tour categories</a><a href="index.html#tours">Popular tours</a><a data-search="Sale">Winter Sale</a></div>
+      <div class="footer__col"><h4>Company</h4><a href="index.html#faq">FAQs</a><a href="#" data-modal="lounges">LocalStart Lounges</a><a data-modal="enquire" data-topic="Partner registration">Partner registration (local agents)</a><a href="index.html#faq">Help &amp; support</a></div>
+      <div class="footer__col"><h4>Popular states</h4><a data-search="Himachal">Himachal Pradesh</a><a data-search="Rajasthan">Rajasthan</a><a data-search="Uttarakhand">Uttarakhand</a><a data-search="Kerala">Kerala</a><a data-search="Goa">Goa</a></div>
+      <form class="footer__news" id="news-form" novalidate>
+        <h4>New tours & sale alerts</h4>
+        <input type="email" name="email" placeholder="Email address" required>
+        <button class="btn btn--accent" type="submit">Subscribe</button>
+        <p class="form-msg" id="news-msg"></p>
+      </form>
+    </div>
+    <div class="footer__regions">
+      <div><h5>Uttarakhand</h5><a data-search="Haridwar">Haridwar tours</a><a data-search="Rishikesh">Rishikesh tours</a></div>
+      <div><h5>Rajasthan</h5><a data-search="Jaipur">Jaipur tours</a><a data-search="Udaipur">Udaipur tours</a><a data-search="Pushkar">Pushkar tours</a></div>
+      <div><h5>Himachal Pradesh</h5><a data-search="Manali">Manali tours</a><a data-search="Solang">Solang Valley</a></div>
+      <div><h5>Goa</h5><a data-search="Goa">North Goa tours</a></div>
+      <div><h5>Kerala</h5><a data-search="Munnar">Munnar tours</a></div>
+    </div>
+    <div class="footer__pay" aria-label="Payment methods">
+      <span class="footer__pay-label">Secure payments</span>
+      <span class="pay"><svg class="ico-line ico-line--upi" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="19" y="6" width="26" height="52" rx="5"/><path d="M29 11h6M29 53h6"/><rect data-d="1" x="24.5" y="18" width="6" height="6" rx="1"/><rect data-d="1" x="33.5" y="18" width="6" height="6" rx="1"/><rect data-d="1" x="24.5" y="27" width="6" height="6" rx="1"/><path data-d="1" d="M33.5 27h1.5M38 27h1.5M33.5 31.5h6"/><path class="a" d="M27 40l3.5 3.5-3.5 3.5M33 40l3.5 3.5-3.5 3.5"/><path class="a" d="M50 26a7 7 0 0 1 0 10M54.5 22a13 13 0 0 1 0 18"/></svg>UPI</span>
+      <span class="pay"><svg class="ico-line ico-line--cards" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 22v-9a3 3 0 0 1 3-3h32a3 3 0 0 1 3 3v18a3 3 0 0 1-3 3h-5"/><rect x="8" y="22" width="40" height="27" rx="3"/><path d="M8 30h40"/><rect class="a" x="13" y="36" width="8" height="6.5" rx="1.5"/><path d="M27 40h4M34.5 40h4M42 40h1.5"/><path class="a" d="M8 56h10" stroke-dasharray="0.1 4.5"/></svg>Credit &amp; debit cards</span>
+      <span class="pay"><svg class="ico-line ico-line--netbanking" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 24L32 10l24 14z"/><circle class="a" cx="32" cy="18.5" r="2.4"/><path d="M10 28h44"/><path d="M15 31v13M24.5 31v13M39.5 31v13M49 31v13"/><path d="M10 47h44M7 53h50"/><path class="a" d="M30 31v5M34 31v5" stroke-dasharray="0.1 4"/></svg>NetBanking</span>
+      <span class="pay"><svg class="ico-line ico-line--secure-checkout" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 28v-7a11 11 0 0 1 22 0v7"/><path d="M27 28v-7a5 5 0 0 1 10 0v7"/><rect x="14" y="28" width="36" height="26" rx="5"/><circle class="a" cx="32" cy="39" r="3.2"/><path class="a" d="M32 42.2v5"/><path class="a" d="M55 9v5M52.5 11.5h5M9 13l2.2 2.2"/></svg>256-bit SSL checkout</span>
+    </div>
+    <div class="footer__warn">⚠ Beware of fake offers. We only contact you from @epicjourneys.in email addresses.</div>
+    <div class="footer__legal">
+      <span>© 2026 EpicJourneys. All rights reserved.</span>
+      <span><a>Privacy Policy</a> · <a>Terms &amp; Conditions</a> · <a>Cancellation Policy</a> · <a href="index.html#faq">FAQs</a> · <a href="#" data-modal="credits">Photo credits</a></span>
+    </div>
+  </div>
+  <div class="wordmark" id="wordmark" aria-hidden="true">EPIC JOURNEYS</div>
+</footer>
+
+<div class="toast" id="toast" role="status"></div>
+
+<button class="to-top" id="to-top" aria-label="Back to top">↑</button>
+
+<script src="js/data.js?v=276"></script>
+<script src="js/tour-hi.js?v=276"></script>
+<script src="js/live-tour.js?v=1"></script>
+<script src="js/tour.js?v=276"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="js/scroll.js?v=265"></script>
+</body>
+</html>

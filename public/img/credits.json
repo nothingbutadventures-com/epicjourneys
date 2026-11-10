@@ -1,0 +1,352 @@
+{
+  "hero": {
+    "title": "Pangong Tso 2.jpg",
+    "author": "KennyOMG",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Pangong_Tso_2.jpg"
+  },
+  "kashmir": {
+    "title": "Empty shikara on Dal Lake, Srinagar, India 2013-08-23 (flickr 9967093983).jpg",
+    "author": "Fulvio Spada from Torino, Italy",
+    "license": "CC BY-SA 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Empty_shikara_on_Dal_Lake,_Srinagar,_India_2013-08-23_(flickr_9967093983).jpg"
+  },
+  "europe": {
+    "title": "Lauterbrunnen-valley.jpg",
+    "author": "Keith Halstead",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Lauterbrunnen-valley.jpg"
+  },
+  "sea": {
+    "title": "Skylines of the Central Business District, Singapore at dusk.jpg",
+    "author": "Basile Morin",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Skylines_of_the_Central_Business_District,_Singapore_at_dusk.jpg"
+  },
+  "japan": {
+    "title": "Chureito Pagoda and Mount Fuji 2023-03-07.jpg",
+    "author": "Stjepko Krehula",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Chureito_Pagoda_and_Mount_Fuji_2023-03-07.jpg"
+  },
+  "dubai": {
+    "title": "Dubai Skyline mit Burj Khalifa (18241030269).jpg",
+    "author": "Tim Reckmann from Hamm, Deutschland",
+    "license": "CC BY 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Dubai_Skyline_mit_Burj_Khalifa_(18241030269).jpg"
+  },
+  "australia": {
+    "title": "Sydney Opera House - Dec 2008.jpg",
+    "author": "Diliff",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Sydney_Opera_House_-_Dec_2008.jpg"
+  },
+  "america": {
+    "title": "Grand Canyon South Rim at Sunset.jpg",
+    "author": "Mgimelfarb",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Grand_Canyon_South_Rim_at_Sunset.jpg"
+  },
+  "africa": {
+    "title": "Wildebeest Jumping Into the Mara River.jpg",
+    "author": "Danijel Mihajlovic",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Wildebeest_Jumping_Into_the_Mara_River.jpg"
+  },
+  "bhutan": {
+    "title": "Tigers nest monastery built into a cliffside in bhutan",
+    "author": "Aswin",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/tigers-nest-monastery-built-into-a-cliffside-in-bhutan-jTGLCKWsyCE"
+  },
+  "rajasthan": {
+    "title": "Men riding decorated horses past hawa mahal",
+    "author": "Aditya Siva",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/men-riding-decorated-horses-past-hawa-mahal-6rDbvXzIVpQ"
+  },
+  "kerala": {
+    "title": "A houseboat floats on a calm river surrounded by greenery 8",
+    "author": "Usha Kiran",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/a-houseboat-floats-on-a-calm-river-surrounded-by-greenery-8-2p9xkHYEU"
+  },
+  "northeast": {
+    "title": "Kanchenjunga range viewed from Zoological Park, Gangtok, Sikkim, India.jpg",
+    "author": "Dinesh Valke from Thane, India\n\nDerivative work:  UnpetitproleX",
+    "license": "CC BY-SA 2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Kanchenjunga_range_viewed_from_Zoological_Park,_Gangtok,_Sikkim,_India.jpg"
+  },
+  "himachal": {
+    "title": "People on snow covered mountain during daytime",
+    "author": "Iftekhar Nibir",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/people-on-snow-covered-mountain-during-daytime-PKHwl4CK7j8"
+  },
+  "andaman": {
+    "title": "Havelock Island, Radhanagar Beach before sunset, Andaman Islands.jpg",
+    "author": "Vyacheslav Argenberg",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Havelock_Island,_Radhanagar_Beach_before_sunset,_Andaman_Islands.jpg"
+  },
+  "goa": {
+    "title": "Beach huts and palm trees",
+    "author": "Sumit Sourav",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/beach-huts-and-palm-trees-eSRtxPd9q1c"
+  },
+  "varanasi": {
+    "title": "Varanasi Munshi Ghat3.jpg",
+    "author": "Marcin Białek",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Varanasi_Munshi_Ghat3.jpg"
+  },
+  "turkey": {
+    "title": "Blue Mosque Courtyard Dusk Wikimedia Commons.jpg",
+    "author": "Benh LIEU SONG (Flickr)",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Blue_Mosque_Courtyard_Dusk_Wikimedia_Commons.jpg"
+  },
+  "iceland": {
+    "title": "Church of light.jpg",
+    "author": "AstroAnthony",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Church_of_light.jpg"
+  },
+  "norway": {
+    "title": "Tromso banner Aurora Borealis.jpg",
+    "author": "Arctic light - Frank Olsen",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Tromso_banner_Aurora_Borealis.jpg"
+  },
+  "arctic": {
+    "title": "Nathorst glacier, Svalbard, at midnight sun.jpg",
+    "author": "AWeith",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Nathorst_glacier,_Svalbard,_at_midnight_sun.jpg"
+  },
+  "scandinavia": {
+    "title": "Geirangerfjord from Ørnesvingen, 2013 June.jpg",
+    "author": "Ximonic (Simo Räsänen)",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Geirangerfjord_from_%C3%98rnesvingen,_2013_June.jpg"
+  },
+  "women": {
+    "title": "East facade Hawa Mahal Jaipur from ground level (July 2022) - img 01.jpg",
+    "author": "Chainwit.",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:East_facade_Hawa_Mahal_Jaipur_from_ground_level_(July_2022)_-_img_01.jpg"
+  },
+  "seniors": {
+    "title": "Ganga Arti At Triveni Ghat In Rishikesh.jpg",
+    "author": "Bhuvi Uniyal",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Ganga_Arti_At_Triveni_Ghat_In_Rishikesh.jpg"
+  },
+  "honeymoon": {
+    "title": "Diamonds Thudufushi Beach and Water Villas, May 2017 -03.jpg",
+    "author": "Martin Falbisoner",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Diamonds_Thudufushi_Beach_and_Water_Villas,_May_2017_-03.jpg"
+  },
+  "family": {
+    "title": "Supertree Grove, Gardens by the Bay, Singapore1.jpg",
+    "author": "Mustang Joe",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Supertree_Grove,_Gardens_by_the_Bay,_Singapore1.jpg"
+  },
+  "sikkim": {
+    "title": "Tsomgo Lake, Sikkim, India.jpg",
+    "author": "Anupam Manur",
+    "license": "Public domain",
+    "source": "https://commons.wikimedia.org/wiki/File:Tsomgo_Lake,_Sikkim,_India.jpg"
+  },
+  "bali": {
+    "title": "Rice terraces, Bali.jpg",
+    "author": "Vyacheslav Argenberg",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Rice_terraces,_Bali.jpg"
+  },
+  "vietnam": {
+    "title": "Halong Bay in Vietnam.jpg",
+    "author": "Thomas Hirsch / User:Ravn",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Halong_Bay_in_Vietnam.jpg"
+  },
+  "thailand": {
+    "title": "Isla Phi Phi Lay, Tailandia, 2013-08-19, DD 04.JPG",
+    "author": "Diego Delso",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Isla_Phi_Phi_Lay,_Tailandia,_2013-08-19,_DD_04.JPG"
+  },
+  "swiss": {
+    "title": "CH.VS.Zermatt 2021-10-17 Matterhorn 8726.jpg",
+    "author": "Roy Egloff",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:CH.VS.Zermatt_2021-10-17_Matterhorn_8726.jpg"
+  },
+  "ladakh": {
+    "title": "Thiksey Monastery, Ladakh 14.jpg",
+    "author": "Bernard Gagnon Canon EOS REBEL T4i",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Thiksey_Monastery,_Ladakh_14.jpg"
+  },
+  "pushkar": {
+    "title": "A body of water with buildings along it wlm",
+    "author": "Anuj Bansal",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/a-body-of-water-with-buildings-along-it-WlM-gMrLlTg"
+  },
+  "udaipur": {
+    "title": "Historic palace complex on a clear blue sky day lbgkfhu",
+    "author": "Aditya Parikh",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/historic-palace-complex-on-a-clear-blue-sky-day-LBgkfHU-_mY"
+  },
+  "munnar": {
+    "title": "Green grass field near mountain under blue sky during daytime",
+    "author": "gaurav kumar",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/green-grass-field-near-mountain-under-blue-sky-during-daytime-vAFqjkz0oPQ"
+  },
+  "rishikesh": {
+    "title": "A very tall building sitting on the side of a river",
+    "author": "Saurabh Kumar",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/a-very-tall-building-sitting-on-the-side-of-a-river-qDvc3Q2G7lo"
+  },
+  "solang": {
+    "title": "A group of people standing on top of a snow covered slope",
+    "author": "Aditya Chache",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/a-group-of-people-standing-on-top-of-a-snow-covered-slope-Aherxmet82o"
+  },
+  "mussoorie": {
+    "title": "A small village on a hill with a blue sky in the background",
+    "author": "Sahaj Patel",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/a-small-village-on-a-hill-with-a-blue-sky-in-the-background-J1kVMr85PcI"
+  },
+  "haridwar": {
+    "title": "People in park surrounded by body of water during daytime qtk",
+    "author": "Jyotirmoy Gupta",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/people-in-park-surrounded-by-body-of-water-during-daytime-Qtk-1cN1EJY"
+  },
+  "video-haridwar": {
+    "title": "Ganga Aarti in Haridwar.webm",
+    "author": "Bhaiyaji Smile 123",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Ganga_Aarti_in_Haridwar.webm"
+  },
+  "video-rishikesh": {
+    "title": "Rama Jhula Rishikesh Uttarakhand, India.ogv",
+    "author": "Subhashish Panigrahi",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Rama_Jhula_Rishikesh_Uttarakhand,_India.ogv"
+  },
+  "video-mussoorie": {
+    "title": "Mussoorie Uttarakhand India.ogv",
+    "author": "Subhashish Panigrahi",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Mussoorie_Uttarakhand_India.ogv"
+  },
+  "video-jaipur": {
+    "title": "Top view of Hawa Mahal Jaipur.webm",
+    "author": "Baap8969",
+    "license": "CC0",
+    "source": "https://commons.wikimedia.org/wiki/File:Top_view_of_Hawa_Mahal_Jaipur.webm"
+  },
+  "video-munnar": {
+    "title": "Munnar road and tea gardens 02.webm",
+    "author": "Vinayaraj",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Munnar_road_and_tea_gardens_02.webm"
+  },
+  "hero-jaipur": {
+    "title": "Hawa Mahal, Jaipur at dusk",
+    "author": "Tony Sebastian",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/RyvJsrEaLeo"
+  },
+  "hero-srilanka": {
+    "title": "Coconut Tree Hill, Mirissa",
+    "author": "Dinuka Lankaloka",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/iduEaeBB_rQ"
+  },
+  "hero-kathmandu": {
+    "title": "Stupa square, Kathmandu",
+    "author": "daniel castillo",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/DFC1w-vcnfg"
+  },
+  "clip-coach": {
+    "author": "Bhupal Das Shrestha",
+    "license": "Pexels License",
+    "source": "https://www.pexels.com/video/37932726/"
+  },
+  "clip-family": {
+    "author": "Mike Sangma",
+    "license": "Pexels License",
+    "source": "https://www.pexels.com/video/4466904/"
+  },
+  "clip-ganga": {
+    "author": "Arto Suraj",
+    "license": "Pexels License",
+    "source": "https://www.pexels.com/video/31883178/"
+  },
+  "clip-temple": {
+    "author": "Suhas Hanjar",
+    "license": "Pexels License",
+    "source": "https://www.pexels.com/video/36819977/"
+  },
+  "tour/tour-room": {
+    "title": "Hotel room in Gurgaon, India.jpg",
+    "author": "Sahil Dhiman",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Hotel_room_in_Gurgaon,_India.jpg"
+  },
+  "tour/tour-coach": {
+    "title": "Hyderabad volvo.JPG",
+    "author": "Nikkul at English Wikipedia",
+    "license": "CC BY-SA 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Hyderabad_volvo.JPG"
+  },
+  "tour/tour-meal": {
+    "title": "North Indian Vegetarian Thali-MB51.jpg",
+    "author": "Rajeeb Dutta",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:North_Indian_Vegetarian_Thali-MB51.jpg"
+  },
+  "tour/tour-lounge": {
+    "title": "Entrance Lobby - Regenta Almeida - Royal Orchid Hotels Ltd - Zirakpur - Chandigarh 2016-08-08 9149.JPG",
+    "author": "Biswarup Ganguly",
+    "license": "CC BY 3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Entrance_Lobby_-_Regenta_Almeida_-_Royal_Orchid_Hotels_Ltd_-_Zirakpur_-_Chandigarh_2016-08-08_9149.JPG"
+  },
+  "tour/pushkar-ghats": {
+    "title": "Pushkar, India, Pushkar Lake and Ghats, Twilight.jpg",
+    "author": "Vyacheslav Argenberg",
+    "license": "CC BY 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Pushkar,_India,_Pushkar_Lake_and_Ghats,_Twilight.jpg"
+  },
+  "tour/pushkar-temple": {
+    "title": "Brahma Temple, Pushkar, RJ.jpg",
+    "author": "Adityavijayavargia",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Brahma_Temple,_Pushkar,_RJ.jpg"
+  },
+  "tour/pushkar-fair": {
+    "title": "Camels of Pushkar Camel Fair (2015).jpg",
+    "author": "Sudipta Dutta Chowdhury",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Camels_of_Pushkar_Camel_Fair_(2015).jpg"
+  },
+  "tour/pushkar-view": {
+    "title": "20191215 Widok na Puszkar ze Świątyni Savitri 1102 8697 DxO.jpg",
+    "author": "Jakub Hałun",
+    "license": "CC BY-SA 4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:20191215_Widok_na_Puszkar_ze_%C5%9Awi%C4%85tyni_Savitri_1102_8697_DxO.jpg"
+  }
+}

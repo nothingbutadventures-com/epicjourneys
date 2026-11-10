@@ -95,8 +95,8 @@ export async function GET(
 
     // Where travellers can start: the basic tour's own location, plus every city that has a partner.
     const baseCityId = (tour as any).baseStartCityId || (tour.destinationId as any)?._id || tour.destinationId;
-    const baseCity: any = baseCityId ? await Destination.findById(baseCityId).select("name state").lean() : null;
-    const partnerCities: any[] = await Destination.find({ partnerId: { $ne: null }, isActive: true }).select("name state partnerId").populate("partnerId", "name companyName address").sort({ name: 1 }).lean();
+    const baseCity: any = baseCityId ? await Destination.findById(baseCityId).select("name state coordinates").lean() : null;
+    const partnerCities: any[] = await Destination.find({ partnerId: { $ne: null }, isActive: true }).select("name state partnerId coordinates").populate("partnerId", "name companyName address").sort({ name: 1 }).lean();
 
     // Day cities: show current names (cities can be renamed) and upgrade old single-city days.
     const tourObj: any = tour.toObject();
@@ -121,11 +121,13 @@ export async function GET(
         specialOffer: special,
         departures,
         distanceKm,
-        baseStartCity: baseCity ? { id: String(baseCity._id), name: baseCity.name, state: baseCity.state } : null,
+        baseStartCity: baseCity ? { id: String(baseCity._id), name: baseCity.name, state: baseCity.state, lat: baseCity.coordinates?.lat, lng: baseCity.coordinates?.lng } : null,
         startCities: partnerCities.map((c) => ({
           id: String(c._id),
           name: c.name,
           state: c.state,
+          lat: c.coordinates?.lat,
+          lng: c.coordinates?.lng,
           // Public business details of the partner running this city's lounge (no phone or email).
           partner: c.partnerId ? { name: c.partnerId.companyName || c.partnerId.name || "", address: c.partnerId.address || "" } : null,
         })),
