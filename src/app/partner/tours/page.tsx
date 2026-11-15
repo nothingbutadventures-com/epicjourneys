@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Alert,
   Autocomplete,
@@ -28,6 +28,7 @@ import {
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import FilterAltOffRoundedIcon from "@mui/icons-material/FilterAltOffRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import LaunchRequestDialog from "@/components/launch/LaunchRequestDialog";
 import { LAUNCH_STATUS, type LaunchStatus } from "@/lib/launch-shared";
 import { StatusChip, authHeaders, inr } from "@/components/launch/LaunchParts";
@@ -43,6 +44,8 @@ const initialFilters = { search: "", states: [] as string[], cities: [] as strin
 
 export default function TourRequestPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tourCreated = searchParams?.get("created") === "1";
   const [tours, setTours] = useState<any[]>([]);
   const [launches, setLaunches] = useState<any[]>([]);
   const [city, setCity] = useState<any>(null);
@@ -154,12 +157,37 @@ export default function TourRequestPage() {
 
   return (
     <Box>
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem", lineHeight: 1.2 }}>Tour Requests</Typography>
-        <Typography variant="caption" sx={{ color: "#64748b", fontSize: "0.75rem" }}>
-          Find a tour and request to start it from {city?.name || "your city"}
-        </Typography>
+      <Box sx={{ mb: 2, display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 1 }}>
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem", lineHeight: 1.2 }}>Tour Requests</Typography>
+          <Typography variant="caption" sx={{ color: "#64748b", fontSize: "0.75rem" }}>
+            Find a tour and request to start it from {city?.name || "your city"}
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<AddRoundedIcon />}
+          onClick={() => router.push("/partner/tours/create")}
+          sx={{
+            bgcolor: "#ea384c",
+            "&:hover": { bgcolor: "#d32f2f" },
+            textTransform: "none",
+            fontWeight: 600,
+            fontSize: "0.82rem",
+            borderRadius: "4px",
+            boxShadow: "none",
+          }}
+        >
+          Create Tour
+        </Button>
       </Box>
+
+      {tourCreated && (
+        <Alert severity="success" sx={{ mb: 2, borderRadius: "4px" }}>
+          Your tour has been created and published live successfully!
+        </Alert>
+      )}
 
       {error && <Alert severity="error" sx={{ mb: 2, borderRadius: "4px" }} onClose={() => setError(null)}>{error}</Alert>}
       {!loading && !city && (

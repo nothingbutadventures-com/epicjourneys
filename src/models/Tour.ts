@@ -68,6 +68,8 @@ export interface ITour extends Document {
   coverImage: string;
   images: string[];
   isActive: boolean;
+  createdByPartner?: boolean;
+  partnerId?: mongoose.Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -171,6 +173,8 @@ const TourSchema = new Schema<ITour>(
     },
     images: [{ type: String }],
     isActive: { type: Boolean, default: true },
+    createdByPartner: { type: Boolean, default: false },
+    partnerId: { type: Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true }
 );

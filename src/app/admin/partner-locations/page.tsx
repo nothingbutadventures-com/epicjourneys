@@ -42,8 +42,20 @@ export default function AdminPartnerLocationsPage() {
     setLoading(true);
     try {
       const dRes = await fetch("/api/destinations?all=true", { headers: authHeaders() }).then((r) => r.json());
-      if (dRes.success) setDestinations(dRes.data || []);
-      else setError(dRes.error || "Failed to load destinations");
+      if (dRes.success) {
+        const data: any[] = dRes.data || [];
+        setDestinations(data);
+        // Auto-expand all country and state groups so cities are visible immediately.
+        const keys = new Set<string>();
+        const tree = groupByCountry(data);
+        for (const c of tree) {
+          keys.add(`c:${c.country}`);
+          for (const st of c.states) keys.add(`s:${c.country}|${st.state}`);
+        }
+        setOpenKeys(keys);
+      } else {
+        setError(dRes.error || "Failed to load destinations");
+      }
     } catch (e: any) {
       setError(e.message || "Network error loading destinations");
     } finally {

@@ -36,6 +36,7 @@ import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import SavingsRoundedIcon from "@mui/icons-material/SavingsRounded";
 import BookOnlineRoundedIcon from "@mui/icons-material/BookOnlineRounded";
 import MapRoundedIcon from "@mui/icons-material/MapRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 
 const DRAWER_WIDTH = 230;
@@ -73,6 +74,7 @@ const NAV_ITEMS: NavItem[] = [
     children: [
       { text: "Tour Requests", href: "/partner/tours", icon: <LuggageRoundedIcon sx={{ fontSize: 16 }} /> },
       { text: "My Requests", href: "/partner/requests", icon: <AssignmentRoundedIcon sx={{ fontSize: 16 }} /> },
+      { text: "Create Tour", href: "/partner/tours/create", icon: <AddRoundedIcon sx={{ fontSize: 16 }} /> },
     ],
   },
 ];
