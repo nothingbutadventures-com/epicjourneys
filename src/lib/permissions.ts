@@ -25,6 +25,7 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: "partners.accounts", label: "Partner Accounts", group: "Partners", href: "/admin/partners", api: ["/api/partners", "/api/destinations", "/api/discounts"] },
   { key: "partners.locations", label: "Partner Locations", group: "Partners", href: "/admin/partner-locations", api: ["/api/destinations"], hint: "Open locations for partner requests" },
   { key: "partners.requests", label: "Partner Requests", group: "Partners", href: "/admin/partner-requests", api: ["/api/partner-requests", "/api/partners", "/api/destinations"], hint: "Approve or reject partner applications" },
+  { key: "partners.commission", label: "Partner Commission", group: "Partners", href: "/admin/commission", api: ["/api/partner-commission"], hint: "Platform commission and partner payouts" },
   { key: "bookings.list", label: "Passenger Bookings", group: "Bookings", href: "/admin/bookings", api: ["/api/bookings", "/api/tours", "/api/invoice", "/api/checkout"] },
   { key: "bookings.cancellations", label: "Cancellations", group: "Bookings", href: "/admin/cancellations", api: ["/api/cancellations", "/api/bookings"] },
   { key: "categories.styles", label: "Travel Styles", group: "Categories", href: "/admin/travel-styles", api: ["/api/travel-styles"] },

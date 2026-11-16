@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import Booking from "@/models/Booking";
+import Integration from "@/models/Integration";
 import Tour from "@/models/Tour";
 import Destination from "@/models/Destination";
 import User from "@/models/User";
@@ -192,6 +193,7 @@ export async function POST(req: NextRequest) {
     const randomSuffix = Math.floor(100000 + Math.random() * 900000);
     const bookingRef = `EJ-${new Date().getFullYear()}-${randomSuffix}`;
 
+    const commissionConfig: any = await Integration.findOne({ provider: "partner-commission" }).select("partnerCommissionPercent").lean();
     const booking = await Booking.create({
       bookingRef,
       tourId: tour._id,
@@ -217,7 +219,8 @@ export async function POST(req: NextRequest) {
       specialRequests: specialRequests || "",
       status: "confirmed",
       bookedByRole,
-      partnerId,
+      partnerId: (tour as any).createdByPartner && (tour as any).partnerId ? (tour as any).partnerId : partnerId,
+      platformCommissionPercent: (tour as any).createdByPartner ? Math.max(0, Math.min(100, Number(commissionConfig?.partnerCommissionPercent) || 0)) : undefined,
       locationId,
     });
 

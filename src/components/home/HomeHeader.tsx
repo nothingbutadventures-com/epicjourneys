@@ -45,9 +45,19 @@ export default function HomeHeader({ overlay = false, userLocationName, onLocati
   }, []);
 
   useEffect(() => {
-    fetch("/api/auth/me")
+    let stored: { name?: string; role?: string } | null = null;
+    try {
+      const raw = localStorage.getItem("epic_user") || localStorage.getItem("epic_partner_user");
+      if (raw) stored = JSON.parse(raw);
+    } catch {}
+    if (stored?.name && stored.role) setAccount({ name: stored.name, role: stored.role });
+    const token = localStorage.getItem("epic_token") || localStorage.getItem("epic_partner_token");
+    fetch("/api/auth/me", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d?.authenticated && setAccount({ name: d.user.name, role: d.user.role }))
+      .then((d) => {
+        if (d?.authenticated) setAccount({ name: d.user.name, role: d.user.role });
+        else if (stored) setAccount(null);
+      })
       .catch(() => {});
   }, []);
 

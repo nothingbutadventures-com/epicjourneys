@@ -125,5 +125,40 @@
 <script src="js/tour.js?v=276"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 <script src="js/scroll.js?v=265"></script>
+<script>
+  (function () {
+    var token = localStorage.getItem("epic_token") || localStorage.getItem("epic_partner_token");
+    fetch("/api/auth/me", { headers: token ? { Authorization: "Bearer " + token } : {} })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !data.authenticated || !data.user) return;
+        var utility = document.querySelector(".utility__right");
+        if (!utility) return;
+        var link = utility.querySelector("a[href='/login']");
+        var register = utility.querySelector("a[href='/register']");
+        if (!link) return;
+        link.textContent = "Hi, " + (data.user.name || "there").split(" ")[0];
+        link.href = "/user/profile";
+        var dot = document.createElement("span");
+        dot.className = "dot";
+        dot.textContent = "·";
+        if (register) {
+          var registerDot = register.previousElementSibling;
+          if (registerDot && registerDot.classList.contains("dot")) registerDot.remove();
+          register.remove();
+        }
+        var logout = document.createElement("a");
+        logout.href = "#";
+        logout.textContent = "Logout";
+        logout.addEventListener("click", function (event) {
+          event.preventDefault();
+          fetch("/api/auth/me", { method: "POST" }).finally(function () { window.location.href = "/"; });
+        });
+        utility.appendChild(dot);
+        utility.appendChild(logout);
+      })
+      .catch(function (error) { console.warn("Could not load account status.", error); });
+  }());
+</script>
 </body>
 </html>

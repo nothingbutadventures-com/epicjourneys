@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { Alert, Box, Button, Chip, CircularProgress, IconButton, InputAdornment, Paper, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Alert, Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, InputAdornment, Paper, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
+import PercentRoundedIcon from "@mui/icons-material/PercentRounded";
 
 type Env = "test" | "live";
 interface Pair { keyId: string; hasSecret: boolean; unreadable: boolean; updatedAt: string | null }
@@ -24,6 +25,102 @@ const authHeaders = (): Record<string, string> => {
 const json = { "Content-Type": "application/json" };
 const API = "/api/integrations/razorpay";
 const fmt = (d: string) => new Date(d).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+function PartnerCommissionCard() {
+  const [percent, setPercent] = useState("0");
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const r = await fetch("/api/partner-commission", { headers: authHeaders(), cache: "no-store" });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Could not load the partner commission.");
+      setPercent(String(d.data?.percent ?? 0));
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openDialog = () => {
+    setError("");
+    setOpen(true);
+    load();
+  };
+
+  const save = async () => {
+    const value = Number(percent);
+    if (!Number.isFinite(value) || value < 0 || value > 100) {
+      setError("Enter a percentage from 0 to 100.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const r = await fetch("/api/partner-commission", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ percent: value }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Could not save commission.");
+      setOpen(false);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <Paper
+        onClick={openDialog}
+        sx={{ mt: 3, p: 2.5, maxWidth: 620, cursor: "pointer", border: "1px solid #e2e8f0", borderRadius: 2, "&:hover": { borderColor: "#2563eb", boxShadow: "0 5px 16px rgba(37,99,235,.10)" } }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.75 }}>
+          <PercentRoundedIcon sx={{ color: "#2563eb" }} />
+          <Typography sx={{ fontSize: 18, fontWeight: 700 }}>Partner tour commissions</Typography>
+        </Box>
+        <Typography sx={{ color: "text.secondary", fontSize: 13, mb: 1.5 }}>
+          Set one platform commission percentage that applies to every partner-managed tour.
+        </Typography>
+        <Button variant="outlined" size="small" startIcon={<PercentRoundedIcon />} onClick={(event) => { event.stopPropagation(); openDialog(); }}>
+          Manage commission
+        </Button>
+      </Paper>
+
+      <Dialog open={open} onClose={() => !saving && setOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle>Set partner commission</DialogTitle>
+        <DialogContent>
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {loading ? <Box sx={{ py: 3, textAlign: "center" }}><CircularProgress size={24} /></Box> : (
+            <Box sx={{ pt: 1 }}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Platform commission (%)"
+                value={percent}
+                onChange={(e) => setPercent(e.target.value)}
+                slotProps={{ htmlInput: { min: 0, max: 100, step: 0.5 } }}
+                helperText="This rate applies to every partner-managed tour. Partners receive the remaining amount."
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)} disabled={saving}>Cancel</Button>
+          <Button variant="contained" onClick={save} disabled={saving || loading}>{saving ? "Saving…" : "Save commission"}</Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+}
 
 function KeyCard({ env, pair, active, onChange, onError, onNotice }: {
   env: Env;
@@ -236,6 +333,7 @@ export default function IntegrationsPage() {
           </Box>
         </>
       )}
+      <PartnerCommissionCard />
     </Box>
   );
 }

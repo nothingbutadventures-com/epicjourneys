@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Alert, Box, Button, CircularProgress, IconButton, InputAdornment, Stack, TextField } from "@mui/material";
@@ -20,6 +20,16 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   // Customers log in with their mobile number; email + password stays for accounts created that way before.
   const [useEmail, setUseEmail] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("epic_token") || localStorage.getItem("epic_partner_token");
+    fetch("/api/auth/me", { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.authenticated) router.replace("/");
+      })
+      .catch(() => {});
+  }, [router]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

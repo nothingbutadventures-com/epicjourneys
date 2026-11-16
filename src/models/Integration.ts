@@ -9,6 +9,7 @@ export interface IKeyPair {
 
 export interface IIntegration extends Document {
   provider: string;
+  partnerCommissionPercent?: number;
   /** Which key pair checkout uses right now. */
   mode: "test" | "live";
   test: IKeyPair;
@@ -25,6 +26,7 @@ const KeyPairSchema = new Schema<IKeyPair>(
 const IntegrationSchema = new Schema<IIntegration>(
   {
     provider: { type: String, required: true, unique: true, trim: true },
+    partnerCommissionPercent: { type: Number, min: 0, max: 100, default: 0 },
     mode: { type: String, enum: ["test", "live"], default: "test" },
     test: { type: KeyPairSchema, default: {} },
     live: { type: KeyPairSchema, default: {} },

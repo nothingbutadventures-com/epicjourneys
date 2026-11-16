@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import Tour from "@/models/Tour";
 import Destination from "@/models/Destination";
 import Booking from "@/models/Booking";
+import Integration from "@/models/Integration";
 import User from "@/models/User";
 import { bookedSeatsByDeparture } from "@/lib/departures";
 import { computeQuote, type RoomType } from "@/lib/pricing";
@@ -133,6 +134,7 @@ export async function POST(req: NextRequest) {
     const bookingRef = `EJ-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
     const destination: any = tour.destinationId ? await Destination.findById(tour.destinationId).select("partnerId").lean() : null;
 
+    const commissionConfig: any = await Integration.findOne({ provider: "partner-commission" }).select("partnerCommissionPercent").lean();
     const booking = await Booking.create({
       bookingRef,
       tourId: tour._id,
@@ -158,7 +160,8 @@ export async function POST(req: NextRequest) {
       amountPaidInr: 0,
       status: "pending",
       bookedByRole: isPartner ? "partner" : "user",
-      partnerId: isPartner ? auth.userId : destination?.partnerId || null,
+      partnerId: tour.createdByPartner && tour.partnerId ? tour.partnerId : isPartner ? auth.userId : destination?.partnerId || null,
+      platformCommissionPercent: tour.createdByPartner ? Math.max(0, Math.min(100, Number(commissionConfig?.partnerCommissionPercent) || 0)) : undefined,
       // A launched departure belongs to the city it starts from; the tour's own dates to the tour's city.
       locationId: isPartner ? user.assignedDestination || departure.cityId?._id || departure.cityId : !departure.launchId ? tour.destinationId : departure.cityId?._id || departure.cityId,
       ...(isPartner ? {} : { userId: auth.userId }),

@@ -134,6 +134,11 @@ const NAV_ITEMS: NavItem[] = [
         href: "/admin/partner-requests",
         icon: <PersonAddAlt1RoundedIcon sx={{ fontSize: 16 }} />,
       },
+      {
+        text: "Partner Commission",
+        href: "/admin/commission",
+        icon: <PercentRoundedIcon sx={{ fontSize: 16 }} />,
+      },
     ],
   },
   {

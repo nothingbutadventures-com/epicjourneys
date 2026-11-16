@@ -61,6 +61,7 @@ export interface ITour extends Document {
   faqs?: { question: string; answer: string }[];
   discountPercentage?: number;
   maxGroupSize: number;
+  platformCommissionPercent?: number;
   singleRoomPriceInr?: number;
   depositType?: "amount" | "percentage";
   depositValue?: number;
@@ -160,6 +161,8 @@ const TourSchema = new Schema<ITour>(
     foodPlan: { type: String, enum: ["pure-veg", "strict-jain", "home-comfort"], default: "pure-veg" },
     discountPercentage: { type: Number, default: 0 },
     maxGroupSize: { type: Number, default: 15 },
+    // Platform's commission on bookings for partner-managed tours.
+    platformCommissionPercent: { type: Number, default: 0, min: 0, max: 100 },
     // Extra per-person charge for a private (single) room; shared rooms are included in the base price.
     singleRoomPriceInr: { type: Number, default: 0, min: 0 },
     // Minimum deposit to reserve a seat: ₹ per person (amount) or % of the total (percentage). 0 disables it.

@@ -1,34 +1,16 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  Alert,
-  Box,
-  Chip,
-  CircularProgress,
-  InputAdornment,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Alert, Box, Chip, CircularProgress, InputAdornment, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 
 const TOKEN = "epic_partner_token";
 const authHeaders = (): Record<string, string> => {
-  const t = typeof window !== "undefined" ? localStorage.getItem(TOKEN) : null;
-  return t ? { Authorization: `Bearer ${t}` } : {};
+  const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN) : null;
+  return token ? { Authorization: `Bearer ${token}` } : {};
 };
 const inr = (n: number) => `₹${Math.round(n || 0).toLocaleString("en-IN")}`;
 const fmt = (d: string) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-const monthLabel = (m: string) => new Date(`${m}-01`).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
-
-const statusColors: Record<string, [string, string]> = { confirmed: ["#ecfdf5", "#059669"], pending: ["#fffbeb", "#d97706"], cancelled: ["#fef2f2", "#dc2626"] };
 
 export default function PartnerCommissionPage() {
   const [data, setData] = useState<any>(null);
@@ -36,121 +18,87 @@ export default function PartnerCommissionPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetch("/api/partner/commission", { headers: authHeaders() })
-      .then((r) => r.json())
-      .then((d) => (d.success ? setData(d.data) : setError(d.error || "Couldn't load your commission")))
-      .catch(() => setError("Couldn't load your commission"));
+    fetch("/api/partner/commission", { headers: authHeaders(), cache: "no-store" })
+      .then(async (r) => {
+        const body = await r.json();
+        if (!r.ok) throw new Error(body.error || "Couldn't load your payouts.");
+        return body;
+      })
+      .then((body) => setData(body.data))
+      .catch((e) => setError(e.message || "Couldn't load your payouts."));
   }, []);
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return (data?.rows || []).filter((r: any) => !q || `${r.bookingRef} ${r.customer} ${r.tour}`.toLowerCase().includes(q));
+    return (data?.rows || []).filter((row: any) => !q || `${row.bookingRef} ${row.customer} ${row.tour} ${row.destination}`.toLowerCase().includes(q));
   }, [data, search]);
-
-  const cards = data
-    ? [
-        { label: "Commission earned", value: inr(data.totals.earned), sub: `on ${inr(data.totals.sales)} paid by customers`, color: "#059669" },
-        { label: "Pending commission", value: inr(data.totals.pending), sub: "when remaining balances are paid", color: "#d97706" },
-        { label: "Your commission rate", value: `${data.percent}%`, sub: "set by EpicJourneys", color: "#0f172a" },
-        { label: "Bookings counted", value: data.totals.bookings, sub: "for your location", color: "#0f172a" },
-      ]
-    : [];
 
   return (
     <Box>
       <Box sx={{ mb: 2.5 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem", lineHeight: 1.2 }}>Commission</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: "#0f172a", fontSize: "1.2rem" }}>Partner payouts</Typography>
         <Typography variant="caption" sx={{ color: "#64748b", fontSize: "0.75rem" }}>
-          You earn a share of every booking made for your location, whoever booked it. It grows as customers pay.
+          You manage the tour and receive the booking amount after the global platform commission.
         </Typography>
       </Box>
-
-      {error && <Alert severity="error" sx={{ mb: 2, borderRadius: "4px" }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {!data && !error && <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}><CircularProgress size={26} /></Box>}
-
       {data && (
         <>
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(4, 1fr)" }, gap: 1.5, mb: 2.5 }}>
-            {cards.map((c) => (
-              <Paper key={c.label} elevation={0} sx={{ p: 1.75, borderRadius: "4px", border: "1px solid #e2e8f0" }}>
-                <Typography sx={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{c.label}</Typography>
-                <Typography sx={{ fontSize: "1.4rem", fontWeight: 800, color: c.color, lineHeight: 1.3 }}>{c.value}</Typography>
-                <Typography sx={{ fontSize: "0.68rem", color: "#94a3b8" }}>{c.sub}</Typography>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(5, 1fr)" }, gap: 1.5, mb: 2.5 }}>
+            {[
+              ["Platform commission", `${data.platformCommissionPercent}%`, "#2563eb"],
+              ["Paid to you", inr(data.totals.payoutPaid), "#059669"],
+              ["Pending payout", inr(data.totals.payoutPending), "#d97706"],
+              ["Customer payments", inr(data.totals.paid), "#0f172a"],
+              ["Bookings counted", data.totals.bookings, "#0f172a"],
+            ].map(([label, value, color]) => (
+              <Paper key={String(label)} elevation={0} sx={{ p: 1.75, border: "1px solid #e2e8f0", borderRadius: "4px" }}>
+                <Typography sx={{ fontSize: "0.7rem", color: "#64748b", fontWeight: 600, textTransform: "uppercase" }}>{label}</Typography>
+                <Typography sx={{ fontSize: "1.4rem", fontWeight: 800, color }}>{value}</Typography>
               </Paper>
             ))}
           </Box>
 
-          <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", mb: 1 }}>By month</Typography>
-          <Paper elevation={0} sx={{ borderRadius: "4px", border: "1px solid #e2e8f0", mb: 3 }}>
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Month</TableCell>
-                    <TableCell align="right">Bookings</TableCell>
-                    <TableCell align="right">Customer payments</TableCell>
-                    <TableCell align="right">Commission earned</TableCell>
-                    <TableCell align="right">Pending</TableCell>
+          <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", mb: 1 }}>Your tours</Typography>
+          <Paper elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: "4px", mb: 3 }}>
+            <TableContainer><Table size="small">
+              <TableHead><TableRow><TableCell>Tour</TableCell><TableCell>Commission</TableCell><TableCell align="right">Bookings</TableCell><TableCell align="right">Paid</TableCell><TableCell align="right">Your payout</TableCell></TableRow></TableHead>
+              <TableBody>
+                {data.tours.map((tour: any) => (
+                  <TableRow key={tour.tourId} hover>
+                    <TableCell><Typography sx={{ fontSize: "0.8rem", fontWeight: 700 }}>{tour.title}</Typography><Typography sx={{ fontSize: "0.7rem", color: "#64748b" }}>{tour.destination}</Typography></TableCell>
+                    <TableCell><Chip label={`${tour.percent}% platform`} size="small" sx={{ height: 21, borderRadius: "4px", bgcolor: "#eff6ff", color: "#2563eb", fontWeight: 700 }} /></TableCell>
+                    <TableCell align="right">{tour.bookings}</TableCell><TableCell align="right">{inr(tour.paid)}</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700, color: "#059669" }}>{inr(tour.payoutPaid)}</TableCell>
                   </TableRow>
-                </TableHead>
-                <TableBody>
-                  {data.months.map((m: any) => (
-                    <TableRow key={m.month} hover sx={{ "&:last-child td": { borderBottom: 0 } }}>
-                      <TableCell sx={{ fontWeight: 600, fontSize: "0.82rem" }}>{monthLabel(m.month)}</TableCell>
-                      <TableCell align="right" sx={{ fontSize: "0.82rem" }}>{m.bookings}</TableCell>
-                      <TableCell align="right" sx={{ fontSize: "0.82rem" }}>{inr(m.sales)}</TableCell>
-                      <TableCell align="right" sx={{ fontSize: "0.82rem", fontWeight: 700, color: "#059669" }}>{inr(m.earned)}</TableCell>
-                      <TableCell align="right" sx={{ fontSize: "0.82rem", color: "#d97706" }}>{inr(m.pending)}</TableCell>
-                    </TableRow>
-                  ))}
-                  {data.months.length === 0 && <TableRow><TableCell colSpan={5} align="center" sx={{ py: 3.5, color: "#94a3b8", fontSize: "0.8rem" }}>No commission yet. It appears as soon as a booking is made for your location.</TableCell></TableRow>}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                ))}
+                {data.tours.length === 0 && <TableRow><TableCell colSpan={5} align="center" sx={{ py: 4, color: "#94a3b8" }}>No partner tour bookings yet.</TableCell></TableRow>}
+              </TableBody>
+            </Table></TableContainer>
           </Paper>
 
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1, gap: 1.5, flexWrap: "wrap" }}>
-            <Typography sx={{ fontWeight: 700, fontSize: "0.95rem" }}>Every booking</Typography>
-            <TextField size="small" placeholder="Search bookings…" value={search} onChange={(e) => setSearch(e.target.value)} sx={{ minWidth: 240 }}
+            <Typography sx={{ fontWeight: 700, fontSize: "0.95rem" }}>Booking details</Typography>
+            <TextField size="small" placeholder="Search bookings or tours…" value={search} onChange={(e) => setSearch(e.target.value)}
               slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchRoundedIcon sx={{ fontSize: 18, color: "#94a3b8" }} /></InputAdornment> } }} />
           </Box>
-          <Paper elevation={0} sx={{ borderRadius: "4px", border: "1px solid #e2e8f0" }}>
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Booking</TableCell>
-                    <TableCell>Customer</TableCell>
-                    <TableCell>Tour</TableCell>
-                    <TableCell>Travel date</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell align="right">Booking total</TableCell>
-                    <TableCell align="right">Paid</TableCell>
-                    <TableCell align="right">Earned ({data.percent}%)</TableCell>
-                    <TableCell align="right">Pending</TableCell>
+          <Paper elevation={0} sx={{ border: "1px solid #e2e8f0", borderRadius: "4px" }}>
+            <TableContainer><Table size="small">
+              <TableHead><TableRow><TableCell>Booking</TableCell><TableCell>Tour</TableCell><TableCell>Travel date</TableCell><TableCell>Status</TableCell><TableCell align="right">Paid</TableCell><TableCell align="right">Platform commission</TableCell><TableCell align="right">Your payout</TableCell></TableRow></TableHead>
+              <TableBody>
+                {rows.map((row: any) => (
+                  <TableRow key={row.bookingId} hover>
+                    <TableCell><Typography sx={{ fontSize: "0.78rem", fontWeight: 700 }}>{row.bookingRef}</Typography><Typography sx={{ fontSize: "0.7rem", color: "#64748b" }}>{row.customer}</Typography></TableCell>
+                    <TableCell><Typography noWrap sx={{ maxWidth: 220, fontSize: "0.78rem" }}>{row.tour}</Typography><Typography sx={{ fontSize: "0.7rem", color: "#64748b" }}>{row.destination}</Typography></TableCell>
+                    <TableCell sx={{ whiteSpace: "nowrap", fontSize: "0.78rem" }}>{fmt(row.travelDate)}</TableCell>
+                    <TableCell><Chip label={row.status} size="small" sx={{ height: 20, borderRadius: "4px", fontSize: "0.68rem", textTransform: "capitalize" }} /></TableCell>
+                    <TableCell align="right">{inr(row.paid)}</TableCell><TableCell align="right" sx={{ color: "#2563eb", fontWeight: 700 }}>{inr(row.platformCommission)}</TableCell><TableCell align="right" sx={{ color: "#059669", fontWeight: 700 }}>{inr(row.payoutPaid)}</TableCell>
                   </TableRow>
-                </TableHead>
-                <TableBody>
-                  {rows.map((r: any) => {
-                    const [bg, fg] = statusColors[r.status] || statusColors.pending;
-                    return (
-                      <TableRow key={r.bookingId} hover sx={{ "&:last-child td": { borderBottom: 0 } }}>
-                        <TableCell sx={{ fontWeight: 600, fontSize: "0.78rem", whiteSpace: "nowrap" }}>{r.bookingRef}</TableCell>
-                        <TableCell sx={{ fontSize: "0.8rem" }}>{r.customer}</TableCell>
-                        <TableCell sx={{ maxWidth: 220 }}><Typography noWrap sx={{ fontSize: "0.8rem" }}>{r.tour}</Typography></TableCell>
-                        <TableCell sx={{ fontSize: "0.78rem", whiteSpace: "nowrap" }}>{fmt(r.travelDate)}</TableCell>
-                        <TableCell><Chip label={r.status} size="small" sx={{ borderRadius: "4px", height: 20, fontSize: "0.68rem", fontWeight: 600, textTransform: "capitalize", bgcolor: bg, color: fg }} /></TableCell>
-                        <TableCell align="right" sx={{ fontSize: "0.8rem" }}>{inr(r.total)}</TableCell>
-                        <TableCell align="right" sx={{ fontSize: "0.8rem" }}>{inr(r.paid)}</TableCell>
-                        <TableCell align="right" sx={{ fontSize: "0.82rem", fontWeight: 700, color: r.status === "cancelled" ? "#94a3b8" : "#059669" }}>{inr(r.earned)}</TableCell>
-                        <TableCell align="right" sx={{ fontSize: "0.8rem", color: "#d97706" }}>{inr(r.pending)}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  {rows.length === 0 && <TableRow><TableCell colSpan={9} align="center" sx={{ py: 4, color: "#94a3b8", fontSize: "0.8rem" }}>{data.rows.length === 0 ? "No bookings yet" : "No bookings match your search"}</TableCell></TableRow>}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                ))}
+                {rows.length === 0 && <TableRow><TableCell colSpan={7} align="center" sx={{ py: 4, color: "#94a3b8" }}>{data.rows.length ? "No bookings match your search." : "No bookings yet."}</TableCell></TableRow>}
+              </TableBody>
+            </Table></TableContainer>
           </Paper>
         </>
       )}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Alert,
@@ -31,6 +31,8 @@ import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
+import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
+import EditNoteRoundedIcon from "@mui/icons-material/EditNoteRounded";
 import { FOOD_PLANS, DEFAULT_FOOD_PLAN, type FoodPlanId } from "@/lib/food-plans";
 
 const TOKEN = "epic_partner_token";
@@ -49,6 +51,28 @@ interface ItineraryDay {
   destinations?: { destinationId: string; name: string }[];
 }
 interface Faq { question: string; answer: string; }
+interface TourSuggestion {
+  title: string;
+  shortDescription: string;
+  description: string;
+  destination: string;
+  durationDays: number;
+  durationNights: number;
+  maxGroupSize: number;
+  basePrice: number;
+  singleRoomPrice: number;
+  depositType: "amount" | "percentage";
+  depositValue: number;
+  travelStyles: string[];
+  physicalRating: string;
+  foodPlan: FoodPlanId;
+  highlights: string[];
+  inclusions: string[];
+  exclusions: string[];
+  itinerary: ItineraryDay[];
+  faqs: Faq[];
+  whyItWorks: string;
+}
 
 // ── Step config ────────────────────────────────────────────────────────────────
 const STEPS = [
@@ -115,6 +139,11 @@ export default function PartnerCreateTourPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<TourSuggestion[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
+  const [manualMode, setManualMode] = useState(false);
+  const suggestionsStartedRef = useRef(false);
 
   // ── Meta ───────────────────────────────────────────────────────────────────
   const [destinations, setDestinations] = useState<any[]>([]);
@@ -184,6 +213,41 @@ export default function PartnerCreateTourPage() {
     }
   }, []);
 
+  const generateTourSuggestions = useCallback(async () => {
+    if (!destinations.length || !startCity) return;
+    setSuggestionsLoading(true);
+    setSuggestionsError(null);
+    try {
+      const res = await fetch("/api/partner/ai-suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          step: "tourSuggestions",
+          context: {
+            startCity,
+            availableDestinations: destinations.map((d) => ({ name: d.name, state: d.state })),
+          },
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success || !Array.isArray(json.data?.suggestions)) {
+        throw new Error(json.error || "Could not generate tour suggestions");
+      }
+      setSuggestions(json.data.suggestions.slice(0, 8));
+    } catch (e: any) {
+      setSuggestionsError(e.message || "Could not generate tour suggestions");
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  }, [destinations, startCity]);
+
+  useEffect(() => {
+    if (destinations.length && startCity && !suggestionsStartedRef.current) {
+      suggestionsStartedRef.current = true;
+      generateTourSuggestions();
+    }
+  }, [destinations.length, startCity, generateTourSuggestions]);
+
   // Auto-sync nights from days
   useEffect(() => {
     if (typeof durationDays === "number" && durationDays >= 1) {
@@ -197,6 +261,7 @@ export default function PartnerCreateTourPage() {
     startCity,
     days: durationDays,
     nights: durationNights,
+    maxGroupSize,
     price: basePrice,
     travelStyles: selectedTravelStyles,
     physicalRating,
@@ -224,11 +289,40 @@ export default function PartnerCreateTourPage() {
     }
   };
 
+  const applySuggestion = (suggestion: TourSuggestion) => {
+    const destination = destinations.find(
+      (d) => d.name.toLowerCase() === suggestion.destination.toLowerCase()
+        || `${d.name}, ${d.state}`.toLowerCase() === suggestion.destination.toLowerCase(),
+    );
+    setTitle(suggestion.title || "");
+    setShortDescription(suggestion.shortDescription || "");
+    setDescription(suggestion.description || "");
+    setDestinationId(destination?._id || "");
+    setDestinationName(destination ? `${destination.name}, ${destination.state}` : suggestion.destination || "");
+    setDurationDays(suggestion.durationDays || 3);
+    setDurationNights(suggestion.durationNights || Math.max(0, (suggestion.durationDays || 3) - 1));
+    setMaxGroupSize(suggestion.maxGroupSize || 15);
+    setBasePrice(suggestion.basePrice || "");
+    setSingleRoomPrice(suggestion.singleRoomPrice || 0);
+    setDepositType(suggestion.depositType === "amount" ? "amount" : "percentage");
+    setDepositValue(suggestion.depositValue || 30);
+    setSelectedTravelStyles(Array.isArray(suggestion.travelStyles) ? suggestion.travelStyles : []);
+    setPhysicalRating(suggestion.physicalRating || "");
+    setFoodPlan(suggestion.foodPlan || DEFAULT_FOOD_PLAN);
+    setHighlights(Array.isArray(suggestion.highlights) ? suggestion.highlights : []);
+    setInclusions(Array.isArray(suggestion.inclusions) ? suggestion.inclusions : []);
+    setExclusions(Array.isArray(suggestion.exclusions) ? suggestion.exclusions : []);
+    setItinerary(Array.isArray(suggestion.itinerary) ? suggestion.itinerary : []);
+    setFaqs(Array.isArray(suggestion.faqs) ? suggestion.faqs : []);
+    setManualMode(true);
+    setCurrentStep(0);
+  };
+
   // ── Navigation & validation ────────────────────────────────────────────────
   const stepErrors: Record<number, string | null> = {
-    0: !destinationId ? "Select a destination" : !basePrice ? "Enter a base price" : !durationDays ? "Enter duration" : null,
-    1: selectedTravelStyles.length === 0 ? "Select at least one travel style" : null,
-    2: !title ? "Enter a tour title" : !description ? "Enter a description" : null,
+    0: !destinationId ? "Select a destination" : selectedTravelStyles.length === 0 ? "Select at least one travel style" : null,
+    1: !basePrice ? "Enter a base price" : null,
+    2: !durationDays ? "Enter duration" : !maxGroupSize ? "Enter group size" : !title ? "Enter a tour title" : !description ? "Enter a description" : null,
     3: inclusions.length === 0 ? "Add at least one inclusion" : null,
     4: itinerary.length === 0 ? "Add at least one itinerary day" : null,
     5: null,
@@ -309,7 +403,7 @@ export default function PartnerCreateTourPage() {
       case 0:
         return (
           <Box>
-            <StepHeader step={1} total={STEPS.length} label="Tour Basics" desc="Where are you going, how long is it and what does it cost?" />
+            <StepHeader step={1} total={STEPS.length} label="Tour Basics" desc="Where are you going, how long is it and who is this tour for?" />
             <Grid container spacing={2}>
               {/* Destination */}
               <Grid size={{ xs: 12 }}>
@@ -350,68 +444,58 @@ export default function PartnerCreateTourPage() {
                 />
               </Grid>
 
-              {/* Duration */}
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <TextField
-                  label="Days"
-                  type="number"
-                  required
-                  fullWidth
-                  value={durationDays}
-                  onChange={(e) => setDurationDays(e.target.value === "" ? "" : Number(e.target.value))}
-                  slotProps={{ htmlInput: { min: 1, max: 30 } }}
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: "4px" } }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <TextField
-                  label="Nights"
-                  type="number"
-                  required
-                  fullWidth
-                  value={durationNights}
-                  onChange={(e) => setDurationNights(e.target.value === "" ? "" : Number(e.target.value))}
-                  slotProps={{ htmlInput: { min: 0 } }}
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: "4px" } }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <TextField
-                  label="Max Group Size"
-                  type="number"
-                  fullWidth
-                  value={maxGroupSize}
-                  onChange={(e) => setMaxGroupSize(e.target.value === "" ? "" : Number(e.target.value))}
-                  slotProps={{ htmlInput: { min: 1, max: 50 } }}
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: "4px" } }}
-                />
+              {/* Travel styles */}
+              <Grid size={{ xs: 12 }}>
+                <Typography sx={{ fontSize: "0.8rem", fontWeight: 700, color: "#334155", mb: 1.25 }}>
+                  Travel Styles <span style={{ color: "#ef4444" }}>*</span>
+                </Typography>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                  {travelStylesList.map((s) => {
+                    const on = selectedTravelStyles.includes(s.name);
+                    return (
+                      <Chip
+                        key={s._id}
+                        label={s.name}
+                        onClick={() =>
+                          setSelectedTravelStyles(on
+                            ? selectedTravelStyles.filter((x) => x !== s.name)
+                            : [...selectedTravelStyles, s.name])
+                        }
+                        icon={on ? <CheckRoundedIcon sx={{ fontSize: "14px !important" }} /> : undefined}
+                        sx={{
+                          borderRadius: "4px",
+                          fontWeight: 600,
+                          fontSize: "0.78rem",
+                          cursor: "pointer",
+                          bgcolor: on ? "#0f172a" : "#f1f5f9",
+                          color: on ? "#fff" : "#475569",
+                          border: on ? "1px solid #0f172a" : "1px solid #e2e8f0",
+                          "&:hover": { bgcolor: on ? "#1e293b" : "#e2e8f0" },
+                        }}
+                      />
+                    );
+                  })}
+                </Box>
               </Grid>
 
-              {/* Price */}
+              {/* Physical rating */}
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  label="Base Price per Person (₹)"
-                  type="number"
-                  required
-                  fullWidth
-                  value={basePrice}
-                  onChange={(e) => setBasePrice(e.target.value === "" ? "" : Number(e.target.value))}
-                  helperText="All-inclusive price per traveller from your city."
-                  slotProps={{ htmlInput: { min: 500 } }}
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: "4px" } }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  label="Single Room Supplement (₹)"
-                  type="number"
-                  fullWidth
-                  value={singleRoomPrice}
-                  onChange={(e) => setSingleRoomPrice(e.target.value === "" ? "" : Number(e.target.value))}
-                  helperText="Extra charge per person for a private room. 0 = not offered."
-                  slotProps={{ htmlInput: { min: 0 } }}
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: "4px" } }}
-                />
+                <FormControl fullWidth size="small">
+                  <InputLabel>Physical Difficulty</InputLabel>
+                  <Select
+                    value={physicalRating}
+                    label="Physical Difficulty"
+                    onChange={(e) => setPhysicalRating(e.target.value)}
+                    sx={{ borderRadius: "4px" }}
+                  >
+                    <MenuItem value=""><em>Not specified</em></MenuItem>
+                    {physicalRatingsList.map((r) => (
+                      <MenuItem key={r._id} value={r.name}>
+                        Level {r.level}: {r.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
 
               {/* Deposit */}
@@ -452,65 +536,62 @@ export default function PartnerCreateTourPage() {
         );
 
       // ════════════════════════════════════════════════════════════════════════
-      // STEP 2: STYLES
+      // STEP 2: PRICING & STYLE
       // ════════════════════════════════════════════════════════════════════════
       case 1:
         return (
           <Box>
-            <StepHeader step={2} total={STEPS.length} label="Style & Audience" desc="Help travellers find this tour by tagging it correctly." />
-            <Grid container spacing={3}>
-              {/* Travel Styles */}
-              <Grid size={{ xs: 12 }}>
-                <Typography sx={{ fontSize: "0.8rem", fontWeight: 700, color: "#334155", mb: 1.25 }}>
-                  Travel Styles <span style={{ color: "#ef4444" }}>*</span>
+            <StepHeader step={2} total={STEPS.length} label="Pricing & Style" desc="Set a fair price and describe the travellers this tour is for." />
+            <Paper
+              elevation={0}
+              sx={{ mb: 2.5, p: 1.75, bgcolor: "#f5f3ff", border: "1px solid #c4b5fd", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}
+            >
+              <Box>
+                <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "#4f46e5" }}>✨ AI recommends your pricing</Typography>
+                <Typography sx={{ fontSize: "0.74rem", color: "#6d28d9" }}>
+                  Based on {destinationName || "your destination"}, {durationDays}D/{durationNights}N, pickup from {startCity || "your city"} and your selected style.
                 </Typography>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                  {travelStylesList.map((s) => {
-                    const on = selectedTravelStyles.includes(s.name);
-                    return (
-                      <Chip
-                        key={s._id}
-                        label={s.name}
-                        onClick={() =>
-                          setSelectedTravelStyles(on
-                            ? selectedTravelStyles.filter((x) => x !== s.name)
-                            : [...selectedTravelStyles, s.name])
-                        }
-                        icon={on ? <CheckRoundedIcon sx={{ fontSize: "14px !important" }} /> : undefined}
-                        sx={{
-                          borderRadius: "4px",
-                          fontWeight: 600,
-                          fontSize: "0.78rem",
-                          cursor: "pointer",
-                          bgcolor: on ? "#0f172a" : "#f1f5f9",
-                          color: on ? "#fff" : "#475569",
-                          border: on ? "1px solid #0f172a" : "1px solid #e2e8f0",
-                          "&:hover": { bgcolor: on ? "#1e293b" : "#e2e8f0" },
-                        }}
-                      />
-                    );
-                  })}
-                </Box>
-              </Grid>
-
-              {/* Physical Rating */}
+              </Box>
+              <AISuggestionBadge
+                loading={aiLoading}
+                label="Recommend Price"
+                onClick={() =>
+                  callAI("pricing", (d) => {
+                    if (typeof d.basePrice === "number") setBasePrice(d.basePrice);
+                    if (typeof d.singleRoomPrice === "number") setSingleRoomPrice(d.singleRoomPrice);
+                    if (d.depositType === "amount" || d.depositType === "percentage") setDepositType(d.depositType);
+                    if (typeof d.depositValue === "number") setDepositValue(d.depositValue);
+                  })
+                }
+              />
+            </Paper>
+            {aiError && <Alert severity="error" sx={{ mb: 2, borderRadius: "4px" }} onClose={() => setAiError(null)}>{aiError}</Alert>}
+            <Grid container spacing={3}>
+              {/* Price */}
               <Grid size={{ xs: 12, sm: 6 }}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Physical Difficulty</InputLabel>
-                  <Select
-                    value={physicalRating}
-                    label="Physical Difficulty"
-                    onChange={(e) => setPhysicalRating(e.target.value)}
-                    sx={{ borderRadius: "4px" }}
-                  >
-                    <MenuItem value=""><em>Not specified</em></MenuItem>
-                    {physicalRatingsList.map((r) => (
-                      <MenuItem key={r._id} value={r.name}>
-                        Level {r.level}: {r.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <TextField
+                  label="Base Price per Person (₹)"
+                  type="number"
+                  required
+                  fullWidth
+                  value={basePrice}
+                  onChange={(e) => setBasePrice(e.target.value === "" ? "" : Number(e.target.value))}
+                  helperText="All-inclusive price per traveller from your city."
+                  slotProps={{ htmlInput: { min: 500 } }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: "4px" } }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  label="Single Room Supplement (₹)"
+                  type="number"
+                  fullWidth
+                  value={singleRoomPrice}
+                  onChange={(e) => setSingleRoomPrice(e.target.value === "" ? "" : Number(e.target.value))}
+                  helperText="Extra charge per person for a private room. 0 = not offered."
+                  slotProps={{ htmlInput: { min: 0 } }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: "4px" } }}
+                />
               </Grid>
 
               {/* Food Plan */}
@@ -590,6 +671,9 @@ export default function PartnerCreateTourPage() {
                     if (d.shortDescription) setShortDescription(d.shortDescription);
                     if (d.description) setDescription(d.description);
                     if (Array.isArray(d.highlights)) setHighlights(d.highlights);
+                    if (typeof d.durationDays === "number") setDurationDays(d.durationDays);
+                    if (typeof d.durationNights === "number") setDurationNights(d.durationNights);
+                    if (typeof d.maxGroupSize === "number") setMaxGroupSize(d.maxGroupSize);
                   })
                 }
               />
@@ -602,6 +686,43 @@ export default function PartnerCreateTourPage() {
             )}
 
             <Grid container spacing={2}>
+              {/* AI-filled trip size */}
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <TextField
+                  label="Days"
+                  type="number"
+                  required
+                  fullWidth
+                  value={durationDays}
+                  onChange={(e) => setDurationDays(e.target.value === "" ? "" : Number(e.target.value))}
+                  slotProps={{ htmlInput: { min: 1, max: 30 } }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: "4px" } }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <TextField
+                  label="Nights"
+                  type="number"
+                  required
+                  fullWidth
+                  value={durationNights}
+                  onChange={(e) => setDurationNights(e.target.value === "" ? "" : Number(e.target.value))}
+                  slotProps={{ htmlInput: { min: 0 } }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: "4px" } }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <TextField
+                  label="Max Group Size"
+                  type="number"
+                  required
+                  fullWidth
+                  value={maxGroupSize}
+                  onChange={(e) => setMaxGroupSize(e.target.value === "" ? "" : Number(e.target.value))}
+                  slotProps={{ htmlInput: { min: 1, max: 50 } }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: "4px" } }}
+                />
+              </Grid>
               <Grid size={{ xs: 12 }}>
                 <TextField
                   label="Tour Title"
@@ -1071,9 +1192,145 @@ export default function PartnerCreateTourPage() {
     }
   };
 
+  const renderSuggestionLanding = () => (
+    <Box sx={{ maxWidth: 1180, mx: "auto", pb: 8 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 2, mb: 3, flexWrap: "wrap" }}>
+        <Box>
+          <Typography sx={{ fontWeight: 800, fontSize: { xs: "1.35rem", sm: "1.6rem" }, color: "#0f172a" }}>
+            Turn your local knowledge into a tour
+          </Typography>
+          <Typography sx={{ fontSize: "0.86rem", color: "#64748b", mt: 0.5 }}>
+            AI suggestions built around departures from <strong>{startCity || "your city"}</strong>
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          startIcon={<EditNoteRoundedIcon />}
+          onClick={() => setManualMode(true)}
+          sx={{ borderColor: "#0f172a", color: "#0f172a", borderRadius: "6px", fontWeight: 700, whiteSpace: "nowrap" }}
+        >
+          Create manually
+        </Button>
+      </Box>
+
+      <Paper
+        elevation={0}
+        sx={{ p: { xs: 2, sm: 2.5 }, mb: 3, bgcolor: "#f5f3ff", border: "1px solid #c4b5fd", borderRadius: "10px" }}
+      >
+        <Box sx={{ display: "flex", alignItems: { xs: "flex-start", sm: "center" }, justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+          <Box sx={{ display: "flex", gap: 1.25, alignItems: "flex-start" }}>
+            <AutoAwesomeRoundedIcon sx={{ color: "#6366f1", mt: 0.15 }} />
+            <Box>
+              <Typography sx={{ fontWeight: 800, color: "#4338ca", fontSize: "0.95rem" }}>
+                Start with a smart tour idea
+              </Typography>
+              <Typography sx={{ color: "#6d28d9", fontSize: "0.78rem", mt: 0.35 }}>
+                Each idea includes a destination, pickup city, pricing, highlights and a ready-to-edit itinerary.
+                Use one to save time and launch a tour that fits your local customers.
+              </Typography>
+            </Box>
+          </Box>
+          <Button
+            variant="outlined"
+            startIcon={suggestionsLoading ? <CircularProgress size={15} /> : <RefreshRoundedIcon />}
+            onClick={() => {
+              generateTourSuggestions();
+            }}
+            disabled={suggestionsLoading || !startCity}
+            sx={{ borderColor: "#6366f1", color: "#4f46e5", borderRadius: "6px", fontWeight: 700, whiteSpace: "nowrap" }}
+          >
+            {suggestionsLoading ? "Rethinking…" : "Rethink suggestions"}
+          </Button>
+        </Box>
+      </Paper>
+
+      {suggestionsError && (
+        <Alert
+          severity="error"
+          sx={{ mb: 2, borderRadius: "6px" }}
+          action={
+            <Button color="inherit" size="small" onClick={generateTourSuggestions}>
+              Try again
+            </Button>
+          }
+        >
+          {suggestionsError}
+        </Alert>
+      )}
+
+      {suggestionsLoading && suggestions.length === 0 ? (
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 10, color: "#64748b" }}>
+          <CircularProgress size={32} sx={{ color: "#6366f1", mb: 2 }} />
+          <Typography sx={{ fontWeight: 700, fontSize: "0.95rem" }}>Finding promising journeys for your city…</Typography>
+          <Typography sx={{ fontSize: "0.78rem", mt: 0.5 }}>This usually takes a few seconds.</Typography>
+        </Box>
+      ) : (
+        <Grid container spacing={2}>
+          {suggestions.map((suggestion, index) => (
+            <Grid key={`${suggestion.title}-${index}`} size={{ xs: 12, sm: 6, md: 3 }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "9px",
+                  overflow: "hidden",
+                  transition: "box-shadow 0.2s, transform 0.2s",
+                  "&:hover": { boxShadow: "0 8px 24px rgba(15, 23, 42, 0.1)", transform: "translateY(-2px)" },
+                }}
+              >
+                <Box sx={{ p: 2, flex: 1 }}>
+                  <Chip
+                    label={`${suggestion.durationDays || 3}D / ${suggestion.durationNights || 2}N`}
+                    size="small"
+                    sx={{ bgcolor: "#eef2ff", color: "#4338ca", fontWeight: 700, borderRadius: "4px", fontSize: "0.68rem", mb: 1.25 }}
+                  />
+                  <Typography sx={{ fontWeight: 800, color: "#0f172a", fontSize: "0.95rem", lineHeight: 1.35 }}>
+                    {suggestion.title}
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 1 }}>
+                    <PlaceRoundedIcon sx={{ fontSize: 15, color: "#ef4444" }} />
+                    <Typography sx={{ color: "#475569", fontSize: "0.74rem", fontWeight: 600 }}>
+                      {startCity} → {suggestion.destination}
+                    </Typography>
+                  </Box>
+                  <Typography sx={{ color: "#64748b", fontSize: "0.76rem", lineHeight: 1.5, mt: 1.25 }}>
+                    {suggestion.shortDescription || suggestion.description}
+                  </Typography>
+                  <Typography sx={{ color: "#334155", fontSize: "0.74rem", fontWeight: 700, mt: 1 }}>
+                    From ₹{Number(suggestion.basePrice || 0).toLocaleString("en-IN")} / person
+                    {suggestion.travelStyles?.length ? ` · ${suggestion.travelStyles.slice(0, 2).join(" · ")}` : ""}
+                  </Typography>
+                  <Typography sx={{ color: "#166534", bgcolor: "#f0fdf4", borderRadius: "5px", p: 1, mt: 1.5, fontSize: "0.72rem", lineHeight: 1.45 }}>
+                    <strong>Why it works:</strong> {suggestion.whyItWorks}
+                  </Typography>
+                </Box>
+                <Box sx={{ p: 1.5, pt: 0 }}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    endIcon={<ArrowForwardRoundedIcon sx={{ fontSize: 15 }} />}
+                    onClick={() => applySuggestion(suggestion)}
+                    sx={{ bgcolor: "#0f172a", color: "#fff", borderRadius: "5px", fontWeight: 700, fontSize: "0.75rem", "&:hover": { bgcolor: "#1e293b" } }}
+                  >
+                    Use this idea
+                  </Button>
+                </Box>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+    </Box>
+  );
+
   // ── Layout ─────────────────────────────────────────────────────────────────
+  if (!manualMode) return renderSuggestionLanding();
+
   return (
-    <Box sx={{ maxWidth: 820, mx: "auto", pb: 8 }}>
+    <Box sx={{ maxWidth: 1080, mx: "auto", pb: 8 }}>
       {/* Page title */}
       <Box sx={{ mb: 3 }}>
         <Typography sx={{ fontWeight: 800, fontSize: "1.3rem", color: "#0f172a" }}>Create a New Tour</Typography>
@@ -1084,7 +1341,7 @@ export default function PartnerCreateTourPage() {
 
       {/* Step progress bar */}
       <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: "flex", gap: 1, mb: 1, flexWrap: "wrap" }}>
+        <Box sx={{ display: "flex", gap: { xs: 0.5, sm: 1 }, mb: 1, flexWrap: "wrap" }}>
           {STEPS.map((s, i) => (
             <Box
               key={s.id}
@@ -1093,6 +1350,8 @@ export default function PartnerCreateTourPage() {
                 display: "flex",
                 alignItems: "center",
                 gap: 0.5,
+                flex: { sm: 1 },
+                minWidth: 0,
                 cursor: i < currentStep ? "pointer" : "default",
               }}
             >
@@ -1124,9 +1383,6 @@ export default function PartnerCreateTourPage() {
               >
                 {s.label}
               </Typography>
-              {i < STEPS.length - 1 && (
-                <Box sx={{ width: 16, height: 1, bgcolor: i < currentStep ? "#059669" : "#e2e8f0", display: { xs: "none", sm: "block" } }} />
-              )}
             </Box>
           ))}
         </Box>

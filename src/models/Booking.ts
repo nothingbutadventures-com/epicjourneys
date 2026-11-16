@@ -42,6 +42,7 @@ export interface IBooking extends Document {
   status: "confirmed" | "pending" | "cancelled";
   bookedByRole: "user" | "partner";
   partnerId?: mongoose.Types.ObjectId;
+  platformCommissionPercent?: number;
   locationId?: mongoose.Types.ObjectId;
   commissionPartnerId?: mongoose.Types.ObjectId | null;
   userId?: mongoose.Types.ObjectId;
@@ -128,6 +129,8 @@ const BookingSchema = new Schema<IBooking>(
       ref: "User",
       default: null,
     },
+    // Snapshot the tour's rate so later rate changes do not rewrite booking history.
+    platformCommissionPercent: { type: Number, default: null, min: 0, max: 100 },
     // The location this booking belongs to. Partners see bookings by location, so a new partner inherits them.
     locationId: { type: Schema.Types.ObjectId, ref: "Destination", default: null, index: true },
     // The partner managing the location when the booking was made. They earn commission on it, even if the location later changes partner.
