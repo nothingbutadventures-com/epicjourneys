@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Alert,
@@ -42,7 +42,7 @@ const priceOf = (t: any) => t.basePriceInr || t.priceInr || 0;
 
 const initialFilters = { search: "", states: [] as string[], cities: [] as string[], styles: [] as string[], rating: "all", length: "all", minPrice: "", maxPrice: "", show: "all" };
 
-export default function TourRequestPage() {
+function TourRequestPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tourCreated = searchParams?.get("created") === "1";
@@ -320,5 +320,13 @@ export default function TourRequestPage() {
 
       <LaunchRequestDialog tour={active} city={city} tokenKey={TOKEN} onClose={() => setActive(null)} onCreated={(id) => router.push(`/partner/requests/${id}`)} />
     </Box>
+  );
+}
+
+export default function TourRequestPage() {
+  return (
+    <Suspense fallback={null}>
+      <TourRequestPageContent />
+    </Suspense>
   );
 }
